@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"d:/Ceybase IT/Project/Restaurant/V1.0.0\" -type f -name \"*.cs\" -exec grep -l \"BaseRepository\\\\|GetConnection\\\\|CreateCommand\" {})",
+      "Bash(xargs ls:*)",
+      "Bash(grep -r 'CREATE TABLE.*\\\\[Restaurant\\\\]' 'd:\\\\Ceybase IT\\\\Project\\\\Restaurant\\\\V1.0.0' --include=*.sql)",
+      "Bash(grep -r \"CREATE.*PROCEDURE.*uspInsertMenuCategory\\\\|CREATE TABLE.*MenuItem\\\\|CREATE TABLE.*MenuCategory\\\\|CREATE TABLE.*Variant\\\\|CREATE TABLE.*Recipe\" 'd:\\\\Ceybase IT\\\\Project\\\\Restaurant\\\\V1.0.0' --include=*.cs --include=*.sql)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"MenuCategoryId\\\\|TargetStationId\\\\|uspGetMenuItemDetails\\\\|uspInsertVariant\\\\|uspInsertRecipe\\\\|uspUpdateVariant\" 'd:\\\\Ceybase IT\\\\Project\\\\Restaurant\\\\V1.0.0' --include=*.sql)",
+      "Bash(find 'd:\\\\Ceybase IT\\\\Project\\\\Restaurant\\\\V1.0.0/PointOfSale.Core' -type f -name *Dto*)"
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="SupplierReturnDS" targetNamespace="http://tempuri.org/SupplierReturnDS.xsd" xmlns:mstns="http://tempuri.org/SupplierReturnDS.xsd" xmlns="http://tempuri.org/SupplierReturnDS.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:element name="SupplierReturnDS" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="rptGetSupplierReturnNote">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ReportTitle" type="xs:string" minOccurs="0" />
+              <xs:element name="CompanyName" type="xs:string" minOccurs="0" />
+              <xs:element name="CompanyRegisterNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="CompanyTaxRegistrationNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="CompanyAddress" type="xs:string" minOccurs="0" />
+              <xs:element name="CompanyContactNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="CompanyEmail" type="xs:string" minOccurs="0" />
+              <xs:element name="CompanyLogo" type="xs:base64Binary" minOccurs="0" />
+              <xs:element name="SupplierReturnId" type="xs:int" minOccurs="0" />
+              <xs:element name="SupplierReturnNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="CreditNoteNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="ReturnedDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="CreatedDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="ApprovedAt" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="ReturnedBy" type="xs:string" minOccurs="0" />
+              <xs:element name="CreatedByName" type="xs:string" minOccurs="0" />
+              <xs:element name="ApprovedByName" type="xs:string" minOccurs="0" />
+              <xs:element name="StorekeeperNote" type="xs:string" minOccurs="0" />
+              <xs:element name="Status" type="xs:string" minOccurs="0" />
+              <xs:element name="ReturnSubTotal" type="xs:decimal" minOccurs="0" />
+              <xs:element name="ReturnDiscountAmount" type="xs:decimal" minOccurs="0" />
+              <xs:element name="ReturnTaxAmount" type="xs:decimal" minOccurs="0" />
+              <xs:element name="ReturnTotalAmount" type="xs:decimal" minOccurs="0" />
+              <xs:element name="SupplierName" type="xs:string" minOccurs="0" />
+              <xs:element name="SupplierRegisterNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="SupplierTaxRegistrationNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="SupplierAddress" type="xs:string" minOccurs="0" />
+              <xs:element name="SupplierContactNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="SupplierEmail" type="xs:string" minOccurs="0" />
+              <xs:element name="LineNo" type="xs:long" minOccurs="0" />
+              <xs:element name="ProductCode" type="xs:string" minOccurs="0" />
+              <xs:element name="ProductName" type="xs:string" minOccurs="0" />
+              <xs:element name="UnitMeasureCode" type="xs:string" minOccurs="0" />
+              <xs:element name="UnitMeasureName" type="xs:string" minOccurs="0" />
+              <xs:element name="BatchId" type="xs:long" minOccurs="0" />
+              <xs:element name="QuantityReturn" type="xs:decimal" minOccurs="0" />
+              <xs:element name="UnitPrice" type="xs:decimal" minOccurs="0" />
+              <xs:element name="LineDiscount" type="xs:decimal" minOccurs="0" />
+              <xs:element name="LineTaxAmount" type="xs:decimal" minOccurs="0" />
+              <xs:element name="ReturnReason" type="xs:string" minOccurs="0" />
+              <xs:element name="LineTotal" type="xs:decimal" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

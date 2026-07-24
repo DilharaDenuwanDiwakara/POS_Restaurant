@@ -1,0 +1,323 @@
+﻿<UserControl x:Class="PointOfSale.UI.Views.Accounts.SupplierPaymentView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PointOfSale.UI.Views.Accounts"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <Grid Margin="0 4 0 0">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Filter Panel -->
+            <Border Grid.Row="0" Style="{StaticResource PanelCardStyle}" Margin="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ComboBox ItemsSource="{Binding Suppliers}"
+                              SelectedItem="{Binding SelectedSupplier, UpdateSourceTrigger=PropertyChanged}"
+                              DisplayMemberPath="SupplierName"
+                              Style="{StaticResource ComboBoxStyle}"
+                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                              Tag="Select Supplier"
+                              VerticalAlignment="Center"
+                              Margin="0,0,12,0"/>
+
+                    <!-- Load Button -->
+                    <Button Grid.Column="1"
+                            Command="{Binding LoadPayablesCommand}"
+                            Style="{StaticResource SearchButtonStyle}"
+                            VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- Data Grid Panel -->
+            <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}" Margin="0 4">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Data Grid Header -->
+                    <Border Grid.Row="0" Background="#F1F2F6" Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Unpaid &amp; Partially Paid Invoices" 
+                                           Style="{StaticResource SubHeaderTextStyle}" 
+                                           VerticalAlignment="Center"
+                                           Margin="0"/>
+
+                                <TextBlock Text="{Binding PayableItems.Count, StringFormat='({0} items)'}"
+                                            Style="{StaticResource LabelStyle }"
+                                            VerticalAlignment="Center"
+                                            Margin="8,0,0,0"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="2"
+                                    Command="{Binding LoadPayablesCommand}" 
+                                    Style="{StaticResource RefreshButtonStyle}" 
+                                    ToolTip="Refresh Payables List"/>
+                            
+                        </Grid>
+                    </Border>
+    
+                    <!-- Data Grid -->
+                    <DataGrid Grid.Row="1" 
+                            ItemsSource="{Binding PayableItems}" 
+                            Style="{StaticResource DataGridStyle}"
+                            AutoGenerateColumns="False"
+                            SelectionMode="Extended"
+                            CanUserAddRows="False"
+                            CanUserDeleteRows="False">
+
+                        <DataGrid.Columns>
+                            <!-- Selection Column -->
+                            <DataGridCheckBoxColumn Header="Select" 
+                                            Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
+                                            Width="80" />
+
+                            <DataGridTextColumn Header="Invoice #" 
+                                            Binding="{Binding InvoiceNumber}" 
+                                            Width="120" 
+                                            IsReadOnly="True"/>
+
+                            <DataGridTextColumn Header="Invoice Date" 
+                                            Binding="{Binding InvoiceDate, StringFormat='{}{0:dd/MM/yyyy}'}" 
+                                            Width="120" 
+                                            IsReadOnly="True"/>
+
+                            <DataGridTextColumn Header="Due Date" 
+                                            Binding="{Binding DueDate, StringFormat='{}{0:dd/MM/yyyy}'}" 
+                                            Width="120" 
+                                            IsReadOnly="True"/>
+
+                            <DataGridTextColumn Header="Total Amount" 
+                                            Binding="{Binding TotalAmount, StringFormat='{}{0:N2}'}" 
+                                            Width="120" 
+                                            ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                            IsReadOnly="True"/>
+
+                            <DataGridTextColumn Header="Paid Amount" 
+                                            Binding="{Binding PaidAmount, StringFormat='{}{0:N2}'}" 
+                                            Width="120" 
+                                            ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                            IsReadOnly="True"/>
+
+                            <DataGridTextColumn Header="Amount Due" 
+                                            Binding="{Binding AmountDue, StringFormat='{}{0:N2}'}" 
+                                            Width="120" 
+                                            ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                            IsReadOnly="True"/>
+
+                            <DataGridTextColumn Header="Status" 
+                                            Binding="{Binding Status}"
+                                            Width="*"
+                                            IsReadOnly="True"/>
+
+
+                            <!-- Editable Payment Amount -->
+                            <DataGridTemplateColumn Header="Payment Amount" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding PaymentAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" 
+                                                IsEnabled="{Binding IsSelected}"
+                                                HorizontalContentAlignment="Right"/>
+
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <!-- Payment Details Panel -->
+            <Border Grid.Row="2" Style="{StaticResource PanelCardStyle}" Margin="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="300"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid >
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0 0 0 12">
+                            <!-- Payment Date -->
+                            <TextBlock Text="Payment Date:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+
+                            <DatePicker SelectedDate="{Binding PaymentDate, UpdateSourceTrigger=PropertyChanged}"
+                                        Style="{StaticResource DatePickerStyle}"
+                                        Width="150"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,24,0"/>
+
+                            <!-- Payment Method -->
+                            <TextBlock Text="Payment Method:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+
+                            <ComboBox ItemsSource="{Binding AvailablePaymentMethods}"
+                                      SelectedItem="{Binding SelectedPaymentMethod, UpdateSourceTrigger=PropertyChanged}"
+                                      Style="{StaticResource ComboBoxStyle}"
+                                      ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                      Width="150"
+                                      VerticalAlignment="Center"
+                                      Tag="Select Method"
+                                      Margin="0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Bank name -->
+                            <TextBlock Text="Bank:"
+                                      Visibility="{Binding IsBankVisible}"
+                                      VerticalAlignment="Center"
+                                      Margin="0 0 12 0"
+                                      Style="{StaticResource LabelStyle}"/>
+
+                            <ComboBox ItemsSource="{Binding AvailableBanks}"
+                                     SelectedItem="{Binding BankName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                     Visibility="{Binding IsBankVisible}"
+                                     IsEditable="True"
+                                     Width="150"
+                                     Margin="0,0,24,0"
+                                     IsTextSearchEnabled="True"
+                                     Style="{StaticResource ComboBoxStyle}"
+                                     ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
+
+                            <!-- Account Number -->
+                            <TextBlock Text="Account Number:"
+                                        Visibility="{Binding IsAccountNumberVisible}"
+                                        Style="{StaticResource LabelStyle}"
+                                        Margin="0 0 12 0"
+                                        VerticalAlignment="Center"/>
+
+                            <TextBox Text="{Binding AccountNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                    Visibility="{Binding IsAccountNumberVisible}"
+                                    MaxLength="20"
+                                    Width="200"
+                                    Margin="0,0,24,0"
+                                    Style="{StaticResource TextBoxStyle}" />
+
+                            <!-- Account Name -->
+                            <TextBlock Text="Account Name:"
+                                      Visibility="{Binding IsAccountNameVisible}"
+                                      Style="{StaticResource LabelStyle}"
+                                      Margin="0 0 12 0"
+                                      VerticalAlignment="Center"/>
+
+                            <TextBox Text="{Binding AccountName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                    Visibility="{Binding IsAccountNameVisible}"
+                                    MaxLength="50"
+                                    Width="250"
+                                    Margin="0,0,24,0"
+                                    Style="{StaticResource TextBoxStyle}"/>
+                        </StackPanel>
+                    </Grid>
+                    <!-- Left Side - Payment Info -->
+
+
+
+                    <!-- Right Side - Summary and Actions -->
+                    <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right">
+                        <!-- Total Summary -->
+                        <Border Background="White" 
+                                BorderBrush="#E1E8ED" 
+                                BorderThickness="1" 
+                                CornerRadius="6" 
+                                Padding="12,8"
+                                Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" 
+                                           Text="Selected Items:" 
+                                           Style="{StaticResource LabelStyle}"
+                                           Margin="0,0,16,4"/>
+
+                                <TextBlock Grid.Row="0" Grid.Column="1" 
+                                           Text="{Binding SelectedItemCount, StringFormat='({0} selected)'}"
+                                           Style="{StaticResource SubHeaderTextStyle}"
+                                           HorizontalAlignment="Right"
+                                           Margin="0,0,0,4"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" 
+                                           Text="Total Payment:" 
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           Foreground="{StaticResource Brush.Text.Primary}"
+                                           Margin="0,4,16,0"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="1" 
+                                           Text="{Binding TotalSelectedPayableAmount, StringFormat='{}{0:N2}'}"
+                                           FontWeight="Bold"
+                                           FontSize="16"
+                                           Foreground="{StaticResource SuccessBrush}"
+                                           HorizontalAlignment="Right"
+                                           Margin="0,4,0,0"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Action Buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Clear Selection"
+                                    Command="{Binding ClearSelectionCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Padding="12,8"
+                                    Margin="0,0,10,0"/>
+
+                            <Button Content="Save Payments"
+                                    Command="{Binding SavePaymentCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Padding="12,8"/>
+
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        </Grid>
+        
+    </Grid>
+</UserControl>

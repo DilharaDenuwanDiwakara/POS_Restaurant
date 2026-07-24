@@ -1,0 +1,266 @@
+<UserControl x:Class="PointOfSale.UI.Views.Purchasing.GoodsReceiveNoteApprovalView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="650"
+             d:DesignWidth="1100">
+
+    <UserControl.Resources>
+        <Style x:Key="DiscrepancyAwareDataGridRowStyle"
+               TargetType="{x:Type DataGridRow}"
+               BasedOn="{StaticResource Style.DataGrid.Row}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasQuantityDiscrepancy}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+    
+    <Grid Margin="0,4,0,0">
+        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,0,4">
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Margin="0,0,12,0">
+                    <TextBlock Text="From Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                    <DatePicker SelectedDate="{Binding SearchDateFrom}"
+                                Style="{StaticResource DatePickerStyle}"
+                                Width="150" Margin="0"/>
+                </StackPanel>
+
+                <StackPanel Margin="0,0,12,0">
+                    <TextBlock Text="To Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                    <DatePicker SelectedDate="{Binding SearchDateTo}"
+                                Style="{StaticResource DatePickerStyle}"
+                                Width="150" Margin="0"/>
+                </StackPanel>
+
+                <StackPanel Margin="0,0,12,0">
+                    <TextBlock Text="Supplier" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                    <ComboBox ItemsSource="{Binding SearchSuppliers}"
+                              DisplayMemberPath="SupplierName"
+                              SelectedValuePath="SupplierId"
+                              SelectedValue="{Binding FilterSupplierId}"
+                              Style="{StaticResource ComboBoxStyle}"
+                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                              Width="220"
+                              IsEditable="True" Margin="0"/>
+                </StackPanel>
+
+                <Button Command="{Binding SearchCommand}"
+                        Margin="0,16,12,0"
+                        Style="{StaticResource SearchButtonStyle}"
+                        Width="80"
+                        Height="30"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}" Margin="0 0 8 0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="Pending GRN Approval Queue"
+                                   Style="{StaticResource SubHeaderTextStyle}"
+                                   VerticalAlignment="Center"/>
+                        <Border Background="{StaticResource BrandBrush}"
+                                CornerRadius="4"
+                                Padding="6,2"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{Binding ApprovalQueue.Count, StringFormat='({0})'}"
+                                       Foreground="White"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"/>
+                        </Border>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding ApprovalQueue}"
+                              SelectedItem="{Binding SelectedGRN}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              SelectionMode="Single"
+                              GridLinesVisibility="Horizontal"
+                              Style="{StaticResource DataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="GRN #" Binding="{Binding GoodsReceiveNoteNumber}" Width="120" Visibility="Collapsed"/>
+                            <DataGridTextColumn Header="Invoice #" Binding="{Binding InvoiceNumber}" Width="100"/>
+                            <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="Auto"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding GoodsReceiveNoteDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
+                            
+                            <DataGridTextColumn Header="Amount" Binding="{Binding TotalAmount, StringFormat=N2}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120" Visibility="Collapsed"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource PanelCardStyle}" Margin="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Vertical" Margin="0,0,0,8">
+                        <TextBlock Text="Selected GRN Details" Style="{StaticResource SubHeaderTextStyle}" Margin="0,0,0,2" Visibility="Collapsed"/>
+                        <TextBlock Text="{Binding SelectedGRN.GoodsReceiveNoteNumber, StringFormat='GRN: {0}'}" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                        <TextBlock Text="{Binding SelectedGRN.PONumberDisplay, StringFormat='PO Number: {0}'}" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                        <TextBlock Text="{Binding SelectedGRN.ReceivedByAuditDisplay, StringFormat='Received By: {0}'}" Style="{StaticResource LabelStyle}"/>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding SelectedGRNLines}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              RowStyle="{StaticResource DiscrepancyAwareDataGridRowStyle}"
+                              Style="{StaticResource DataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Item" Binding="{Binding ProductName}" Width="*"/>
+                            <DataGridTextColumn Header="Ordered Qty" Binding="{Binding QuantityOrdered, StringFormat=N3}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Received Qty" Binding="{Binding QuantityReceived, StringFormat=N3}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, StringFormat=N2}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+
+                            <DataGridTextColumn Header="Discount" Binding="{Binding LineDiscount, StringFormat=N2}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, StringFormat=N2}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            
+                            <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat=N2}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border Grid.Row="2" Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,8,0,0">
+                        <StackPanel>
+                            
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Text="Sub Total:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding SelectedGRN.SubTotal, StringFormat=N2}" FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Bill Discount:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding SelectedGRN.DiscountAmount, StringFormat=N2}" Foreground="Green" FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Tax Amount:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding SelectedGRN.TaxAmount, StringFormat=N2}" FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Net Amount:" Style="{StaticResource LabelStyle}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding SelectedGRN.TotalAmount, StringFormat=N2}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource BrandBrush}"/>
+                            </Grid>
+
+                            <TextBlock Text="Approval/Rejection Reason:" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                            <TextBox Text="{Binding ApproverRemark, UpdateSourceTrigger=PropertyChanged}"
+                                     MaxLength="500"
+                                     VerticalContentAlignment="Center"
+                                     Style="{StaticResource TextBoxStyle}"/>
+
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+
+                        <Button Content="Reject"
+                                Command="{Binding RejectCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Margin="0,0,10,0"/>
+
+                        <Button Content="Approve"
+                                Command="{Binding ApproveCommand}"
+                                Style="{StaticResource PrimaryButtonStyle}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

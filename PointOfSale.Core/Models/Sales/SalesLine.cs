@@ -1,0 +1,287 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
+
+namespace PointOfSale.Core.Models.Sales
+{
+    public class SalesLine : INotifyPropertyChanged
+    {
+        public Action<decimal> OnStockExceeded;
+
+        private int _number;
+        public int Number
+        {
+            get => _number;
+            set => SetProperty(ref _number, value);
+        }
+
+        private int _productId;
+        public int ProductId
+        {
+            get => _productId;
+            set => SetProperty(ref _productId, value);
+        }
+
+        private int? _menuCategoryId;
+        public int? MenuCategoryId
+        {
+            get => _menuCategoryId;
+            set => SetProperty(ref _menuCategoryId, value);
+        }
+
+        private string _productName;
+        public string ProductName
+        {
+            get => _productName;
+            set => SetProperty(ref _productName, value);
+        }
+
+        public decimal AvailableQuantity { get; set; } = decimal.MaxValue;
+
+        private decimal _quantity;
+        public decimal Quantity
+        {
+            get => _quantity;
+            set
+            {
+                decimal finalValue = value;
+
+                if (value > AvailableQuantity)
+                {
+                    OnStockExceeded?.Invoke(AvailableQuantity);
+                    finalValue = AvailableQuantity;
+                }
+                else if (value < 0)
+                {
+                    finalValue = 0;
+                }
+
+                if (SetProperty(ref _quantity, finalValue))
+                {
+                    OnPropertyChanged(nameof(BaseDiscountAmount));
+                    OnPropertyChanged(nameof(LineDiscount));
+                    OnPropertyChanged(nameof(Amount));
+                    OnPropertyChanged(nameof(OfferDisplay));
+                }
+            }
+        }
+
+        private decimal _unitPrice;
+        public decimal UnitPrice
+        {
+            get => _unitPrice;
+            set
+            {
+                if (SetProperty(ref _unitPrice, value))
+                {
+                    OnPropertyChanged(nameof(Amount));
+                }
+            }
+        }
+
+        /// <summary>Tax IDs (System.TaxConfiguration.Id) applicable to this line, carried over from the menu item.</summary>
+        public List<int> TaxIds { get; set; } = new List<int>();
+
+        private decimal _taxAmount;
+        public decimal TaxAmount
+        {
+            get => _taxAmount;
+            set => SetProperty(ref _taxAmount, value);
+        }
+
+        private decimal _manualDiscount;
+        public decimal ManualDiscount
+        {
+            get => _manualDiscount;
+            set
+            {
+                if (SetProperty(ref _manualDiscount, value))
+                {
+                    OnPropertyChanged(nameof(LineDiscount));
+                    OnPropertyChanged(nameof(Amount));
+                    OnPropertyChanged(nameof(OfferDisplay));
+                }
+            }
+        }
+
+        private decimal _baseDiscountPerUnit;
+        public decimal BaseDiscountPerUnit
+        {
+            get => _baseDiscountPerUnit;
+            set
+            {
+                var normalized = value < 0 ? 0 : value;
+                if (SetProperty(ref _baseDiscountPerUnit, normalized))
+                {
+                    OnPropertyChanged(nameof(BaseDiscountAmount));
+                    OnPropertyChanged(nameof(LineDiscount));
+                    OnPropertyChanged(nameof(Amount));
+                    OnPropertyChanged(nameof(OfferDisplay));
+                }
+            }
+        }
+
+        public decimal BaseDiscountAmount => BaseDiscountPerUnit * Quantity;
+
+        private decimal _promoDiscount;
+        public decimal PromoDiscount
+        {
+            get => _promoDiscount;
+            private set
+            {
+                if (SetProperty(ref _promoDiscount, value))
+                {
+                    OnPropertyChanged(nameof(LineDiscount));
+                    OnPropertyChanged(nameof(Amount));
+                    OnPropertyChanged(nameof(OfferDisplay));
+                }
+            }
+        }
+
+        public decimal LineDiscount
+        {
+            get => BaseDiscountAmount + ManualDiscount + PromoDiscount;
+            set
+            {
+                BaseDiscountPerUnit = 0;
+                ManualDiscount = value;
+                PromoDiscount = 0;
+            }
+        }
+
+        public void SetPromoDiscount(decimal amount)
+        {
+            PromoDiscount = amount < 0 ? 0 : amount;
+        }
+
+        public void AddPromoDiscount(decimal amount)
+        {
+            if (amount <= 0)
+                return;
+
+            SetPromoDiscount(PromoDiscount + amount);
+        }
+
+        private bool _isAutoGeneratedPromotionLine;
+        public bool IsAutoGeneratedPromotionLine
+        {
+            get => _isAutoGeneratedPromotionLine;
+            set
+            {
+                if (SetProperty(ref _isAutoGeneratedPromotionLine, value))
+                {
+                    OnPropertyChanged(nameof(IsQuantityLocked));
+                    OnPropertyChanged(nameof(IsPriceLocked));
+                }
+            }
+        }
+
+        private bool _isImportedOrderLine;
+        public bool IsImportedOrderLine
+        {
+            get => _isImportedOrderLine;
+            set
+            {
+                if (SetProperty(ref _isImportedOrderLine, value))
+                {
+                    OnPropertyChanged(nameof(IsQuantityLocked));
+                    OnPropertyChanged(nameof(IsPriceLocked));
+                }
+            }
+        }
+
+        private string _autoRuleName;
+        public string AutoRuleName
+        {
+            get => _autoRuleName;
+            set
+            {
+                if (SetProperty(ref _autoRuleName, value))
+                {
+                    OnPropertyChanged(nameof(OfferDisplay));
+                }
+            }
+        }
+
+        private string _baseDiscountLabel;
+        public string BaseDiscountLabel
+        {
+            get => _baseDiscountLabel;
+            set
+            {
+                if (SetProperty(ref _baseDiscountLabel, value))
+                {
+                    OnPropertyChanged(nameof(OfferDisplay));
+                }
+            }
+        }
+
+        public void ClearAutoRuleName()
+        {
+            AutoRuleName = null;
+        }
+
+        public void AddAutoRuleName(string ruleName)
+        {
+            if (string.IsNullOrWhiteSpace(ruleName))
+                return;
+
+            var names = new List<string>();
+            if (!string.IsNullOrWhiteSpace(AutoRuleName))
+            {
+                names.AddRange(
+                    AutoRuleName
+                        .Split(new[] { " | " }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim()));
+            }
+
+            if (!names.Any(x => string.Equals(x, ruleName, StringComparison.OrdinalIgnoreCase)))
+                names.Add(ruleName.Trim());
+
+            AutoRuleName = string.Join(" | ", names);
+        }
+
+        public string OfferDisplay
+        {
+            get
+            {
+                var parts = new List<string>();
+                var originalAmount = UnitPrice * Quantity;
+
+                if (BaseDiscountAmount > 0)
+                    parts.Add(string.IsNullOrWhiteSpace(BaseDiscountLabel) ? "Item discount" : BaseDiscountLabel);
+
+                if (originalAmount > 0 && LineDiscount >= originalAmount)
+                    parts.Add("FREE ITEM");
+
+                if (!string.IsNullOrWhiteSpace(AutoRuleName))
+                    parts.Add(AutoRuleName);
+
+                return string.Join(" | ", parts.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct());
+            }
+        }
+
+        public bool IsQuantityLocked => IsAutoGeneratedPromotionLine || IsImportedOrderLine;
+        public bool IsPriceLocked => IsAutoGeneratedPromotionLine || IsImportedOrderLine;
+
+        public string Note { get; set; }
+
+        public decimal Amount => (UnitPrice * Quantity) - (BaseDiscountAmount + ManualDiscount + PromoDiscount);
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (Equals(storage, value)) return false;
+            storage = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}

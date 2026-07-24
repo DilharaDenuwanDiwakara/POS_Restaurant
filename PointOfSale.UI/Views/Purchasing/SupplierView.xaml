@@ -1,0 +1,608 @@
+﻿<UserControl x:Class="PointOfSale.UI.Views.Purchasing.SupplierView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PointOfSale.UI.Views.Purchasing"
+             mc:Ignorable="d" 
+             d:DesignHeight="520" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Text="Supplier Management" Style="{StaticResource HeaderTextStyle}"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
+                        <StackPanel>
+                            <TextBlock Text="Supplier Form" Style="{StaticResource SubHeaderTextStyle}" />
+
+                            <TextBlock Text="Supplier Name:" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Name="SupplierNameTextBox"
+                                     Text="{Binding SupplierName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     MaxLength="100"
+                                     CharacterCasing="Upper"
+                                     Style="{StaticResource TextBoxStyle}" 
+                                     Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                     PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <TextBlock Text="Business Registration No:" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding BusinessRegistrationNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     MaxLength="50"
+                                     Style="{StaticResource TextBoxStyle}" 
+                                     CharacterCasing="Upper"
+                                     Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                     PreviewTextInput="AlphaNumericNoSpace_PreviewTextInput"
+                                     DataObject.Pasting="AlphaNumericNoSpace_Pasting"
+                                     PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <TextBlock Text="Tax Registration No:" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding TaxRegistrationNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     MaxLength="50"
+                                     Style="{StaticResource TextBoxStyle}" 
+                                     CharacterCasing="Upper"
+                                     Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                     PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <GroupBox Header="Supplier Contacts" Margin="0,8,0,8">
+                                <StackPanel Margin="6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox Grid.Row="0" Grid.Column="1"
+                                                 Text="{Binding NewContact.ContactName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                 MaxLength="100"
+                                                 Style="{StaticResource TextBoxStyle}"
+                                                 Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                                 PreviewTextInput="AlphaNumericWithSpace_PreviewTextInput"
+                                                 DataObject.Pasting="AlphaNumericWithSpace_Pasting"
+                                                 PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Phone:" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1"
+                                                 Text="{Binding NewContact.PhoneNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                 MaxLength="10"
+                                                 Style="{StaticResource TextBoxStyle}"
+                                                 Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                                 PreviewTextInput="DigitsOnly_PreviewTextInput"
+                                                 DataObject.Pasting="DigitsOnly_Pasting"
+                                                 PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Email:" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox Grid.Row="2" Grid.Column="1"
+                                                 Text="{Binding NewContact.EmailAddress, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                 MaxLength="100"
+                                                 Style="{StaticResource TextBoxStyle}"
+                                                 Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                                 PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
+                                            <CheckBox Content="WhatsApp"
+                                                      IsChecked="{Binding NewContact.IsWhatsApp, UpdateSourceTrigger=PropertyChanged}"
+                                                      Style="{StaticResource CheckBoxStyle}"
+                                                      Margin="0,0,14,0"
+                                                      Focusable="False"/>
+                                            
+                                            <CheckBox Content="Primary"
+                                                      IsChecked="{Binding NewContact.IsPrimary, UpdateSourceTrigger=PropertyChanged}"
+                                                      Style="{StaticResource CheckBoxStyle}"
+                                                      PreviewKeyDown="MoveFocusOnEnter"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Button Content="Add Contact"
+                                            Command="{Binding AddContactCommand}"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            HorizontalAlignment="Right"
+                                            Margin="0,10,0,8"/>
+
+                                    <DataGrid ItemsSource="{Binding ContactsList}"
+                                              MaxHeight="150"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              Style="{StaticResource DataGridStyle}"
+                                              IsReadOnly="True">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Name" Binding="{Binding ContactName}" Width="Auto"/>
+                                            <DataGridTextColumn Header="Phone" Binding="{Binding PhoneNumber}" Width="85"/>
+                                            <DataGridTextColumn Header="Email" Binding="{Binding EmailAddress}" Width="Auto"/>
+                                            <DataGridCheckBoxColumn Header="WA" Binding="{Binding IsWhatsApp}" Width="50"/>
+                                            <DataGridCheckBoxColumn Header="Primary" Binding="{Binding IsPrimary}" Width="65"/>
+                                            <DataGridTemplateColumn Width="75">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                            <Button Content="&#xE70F;"
+                                                                    FontFamily="Segoe MDL2 Assets"
+                                                                    Command="{Binding DataContext.EditContactCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                    CommandParameter="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGridRow}}"
+                                                                    Style="{StaticResource IconOnlyButtonStyle}"
+                                                                    ToolTip="Edit Contact"
+                                                                    Width="24"
+                                                                    Height="24"
+                                                                    Margin="0,0,4,0"/>
+                                                            <Button Command="{Binding DataContext.RemoveContactCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                    CommandParameter="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGridRow}}"
+                                                                    Style="{StaticResource DeleteButtonStyle}"
+                                                                    ToolTip="Delete Contact"
+                                                                    Width="24"
+                                                                    Height="24"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <TextBlock Text="Address:" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"
+                                     MaxLength="255" 
+                                     TextWrapping="Wrap"
+                                     Style="{StaticResource TextBoxStyle}" 
+                                     PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <TextBlock Text="Default Payment Method:" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding AvailablePaymentMethods}"
+                                      SelectedItem="{Binding DefaultPaymentMethod, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                      IsEditable="True"
+                                      Style="{StaticResource ComboBoxStyle}"
+                                      ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                      PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <StackPanel Visibility="{Binding IsAccountNameVisible}" Margin="0,10,0,0">
+                                <TextBlock Text="Account / Payee Name:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding AccountName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                         MaxLength="100"
+                                         CharacterCasing="Upper"
+                                         Style="{StaticResource TextBoxStyle}"
+                                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                         PreviewTextInput="AlphaNumericWithSpace_PreviewTextInput"
+                                         DataObject.Pasting="AlphaNumericWithSpace_Pasting"
+                                         PreviewKeyDown="MoveFocusOnEnter"/>
+                            </StackPanel>
+
+                            <StackPanel Visibility="{Binding IsBankTransferDetailsVisible}">
+
+                                <TextBlock Text="Bank Name:" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding AvailableBanks}"
+                                          SelectedItem="{Binding BankName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                          IsEditable="True"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <TextBlock Text="Bank Branch:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding BankBranch, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                         MaxLength="50"
+                                         Style="{StaticResource TextBoxStyle}" 
+                                         CharacterCasing="Upper"
+                                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                         PreviewTextInput="AlphaNumericWithSpace_PreviewTextInput"
+                                         DataObject.Pasting="AlphaNumericWithSpace_Pasting"
+                                         PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <TextBlock Text="Account Number:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding AccountNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                         MaxLength="50"
+                                         Style="{StaticResource TextBoxStyle}" 
+                                         PreviewTextInput="DigitsOnly_PreviewTextInput"
+                                         DataObject.Pasting="DigitsOnly_Pasting"
+                                         PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            </StackPanel>
+
+                            <CheckBox Content="Is Credit Supplier?"
+                                      IsChecked="{Binding IsCredit, UpdateSourceTrigger=PropertyChanged}"
+                                      Style="{StaticResource CheckBoxStyle}"
+                                      Margin="0,8,0,8" 
+                                      PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <StackPanel Visibility="{Binding IsCreditDetailsVisible}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Margin="0,0,5,0">
+                                        <TextBlock Text="Credit Days:" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox Text="{Binding CreditPeriodDays, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
+                                                 Style="{StaticResource TextBoxStyle}"
+                                                 PreviewKeyDown="MoveFocusOnEnter"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                                        <TextBlock Text="Credit Limit:" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox Text="{Binding CreditLimit, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
+                                                 Style="{StaticResource TextBoxStyle}" 
+                                                 TextAlignment="Right"
+                                                 PreviewKeyDown="MoveFocusOnEnter"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+
+                            <TextBlock Text="Documents:" Style="{StaticResource LabelStyle}"/>
+                            <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4"
+                                    MinHeight="56" Padding="6" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <ItemsControl ItemsSource="{Binding Documents}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,2,0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding DocumentName}"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding DocumentName}"
+                                                               FontSize="12"/>
+                                                    <Button Grid.Column="1"
+                                                            Content="&#xE8A7;"
+                                                            FontFamily="Segoe MDL2 Assets"
+                                                            FontSize="13"
+                                                            ToolTip="Open document"
+                                                            Command="{Binding DataContext.OpenDocumentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource IconOnlyButtonStyle}"
+                                                            Margin="4,0,0,0"/>
+                                                    <Button Grid.Column="2"
+                                                            Content="&#xE74D;"
+                                                            FontFamily="Segoe MDL2 Assets"
+                                                            FontSize="13"
+                                                            ToolTip="Remove document"
+                                                            Command="{Binding DataContext.RemoveDocumentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource IconOnlyButtonStyle}"
+                                                            Foreground="#E74C3C"
+                                                            Margin="2,0,0,0"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Content="Add"
+                                            Command="{Binding AddDocumentCommand}"
+                                            Style="{StaticResource AddButtonStyle}"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,6,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <CheckBox Content="Is Active"
+                                      IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}"
+                                      Style="{StaticResource CheckBoxStyle}"
+                                      Margin="0,0,0,12"
+                                      Focusable="False"/>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#E0E0E0" Padding="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" >
+                            <Button Name="SubmitButton"
+                                    Content="{Binding SaveButtonText}"
+                                    Command="{Binding SaveSupplierCommand}" 
+                                    Style="{StaticResource PrimaryButtonStyle}" 
+                                    Margin="0,0,10,0"/>
+
+                            <Button Content="Edit" 
+                                    Command="{Binding EditSupplierCommand}" 
+                                    Style="{StaticResource SecondaryButtonStyle}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Style="{StaticResource PanelCardStyle}" Margin="0 0 0 4">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Background="#F1F2F6" Padding="12,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Text="Suppliers List" 
+                                           Style="{StaticResource SubHeaderTextStyle}" 
+                                           VerticalAlignment="Center"
+                                           Margin="0"/>
+
+                                <Button Grid.Column="1"
+                                        Command="{Binding LoadSupplierCommand}" 
+                                        Style="{StaticResource RefreshButtonStyle}" 
+                                        ToolTip="Refresh Supplier List"
+                                        Margin="10,0,0,0"/>
+
+                                <TextBox Grid.Column="3"
+                                         Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource SearchTextBoxStyle}"
+                                         VerticalAlignment="Center"
+                                         Width="200"
+                                         Margin="0"/>
+
+                                <Button Grid.Column="4"
+                                        Command="{Binding SearchProductCommand}" 
+                                        Style="{StaticResource SearchButtonStyle}" 
+                                        VerticalAlignment="Center"
+                                        ToolTip="Search Products"
+                                        Margin="5,0,0,0">
+
+                                </Button>
+
+                            </Grid>
+                        </Border>
+
+                        <DataGrid x:Name="SupplierGrid"
+                                  Grid.Row="1"
+                                  ItemsSource="{Binding SuppliersList}"
+                                  SelectedItem="{Binding SelectedSupplier, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource DataGridStyle}"
+                                  Margin="0,4,0,0"
+                                  AutoGenerateColumns="False"
+                                  SelectionMode="Single"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding SupplierId}" Width="Auto" Visibility="Hidden"/>
+                                <DataGridTextColumn Header="Code" Binding="{Binding SupplierCode}" Width="Auto" />
+                                <DataGridTextColumn Header="Supplier Name" Binding="{Binding SupplierName}" Width="Auto" />
+                                <DataGridTextColumn Header="Business Registration" Binding="{Binding BusinessRegistrationNumber}" Width="Auto" />
+                                <DataGridTextColumn Header="Tax Registration" Binding="{Binding TaxRegistrationNumber}" Width="Auto" />
+                                <DataGridTextColumn Header="Contacts Count" Binding="{Binding ContactsCount, Mode=OneWay}" Width="Auto">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell">
+                                            <Setter Property="ToolTip" Value="{Binding ContactDetailsTooltip}"/>
+                                            <Setter Property="ToolTipService.ShowDuration" Value="30000"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="Auto" />
+                                <DataGridTextColumn Header="Payment Method" Binding="{Binding DefaultPaymentMethod}" Width="Auto" />
+                                <DataGridTextColumn Header="Account Name" Binding="{Binding AccountName}" Width="Auto" />
+                                <DataGridTextColumn Header="Acc. No" Binding="{Binding AccountNumber}" Width="Auto" />
+                                <DataGridTextColumn Header="Bank" Binding="{Binding BankName}" Width="Auto" />
+                                <DataGridTextColumn Header="Branch" Binding="{Binding BankBranch}" Width="Auto" />
+                                
+                                <!-- Docs flyout column -->
+                                <DataGridTemplateColumn Header="Docs" Width="75">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid HorizontalAlignment="Center">
+
+                                                <!-- Trigger button: disabled when no documents -->
+                                                <ToggleButton x:Name="DocsToggle"
+                                                              IsEnabled="{Binding HasDocuments}"
+                                                              ToolTip="View attached documents"
+                                                              Cursor="Hand">
+                                                    <ToggleButton.Style>
+                                                        <Style TargetType="ToggleButton">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+                                                            <Setter Property="BorderThickness" Value="1"/>
+                                                            <Setter Property="Padding" Value="8,4"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="ToggleButton">
+                                                                        <Border x:Name="Bg"
+                                                                                Background="{TemplateBinding Background}"
+                                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                                CornerRadius="4"
+                                                                                Padding="{TemplateBinding Padding}">
+                                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                                              VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="Bg" Property="Background" Value="#EFF6FF"/>
+                                                                                <Setter TargetName="Bg" Property="BorderBrush" Value="#2563EB"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsChecked" Value="True">
+                                                                                <Setter TargetName="Bg" Property="Background" Value="#DBEAFE"/>
+                                                                                <Setter TargetName="Bg" Property="BorderBrush" Value="#2563EB"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsEnabled" Value="False">
+                                                                                <Setter TargetName="Bg" Property="Opacity" Value="0.4"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </ToggleButton.Style>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="&#xE8A5;"
+                                                                   FontFamily="Segoe MDL2 Assets"
+                                                                   FontSize="12"
+                                                                   Foreground="#2563EB"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,5,0"/>
+                                                        <TextBlock Text="{Binding DocumentsCount}"
+                                                                   FontSize="12"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#2563EB"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </ToggleButton>
+
+                                                <!-- Flyout popup: IsOpen is TwoWay so StaysOpen=False can uncheck the toggle -->
+                                                <Popup IsOpen="{Binding IsChecked, ElementName=DocsToggle, Mode=TwoWay}"
+                                                       PlacementTarget="{Binding ElementName=DocsToggle}"
+                                                       Placement="Bottom"
+                                                       StaysOpen="False"
+                                                       AllowsTransparency="True"
+                                                       PopupAnimation="Fade">
+                                                    <Border Background="White"
+                                                            BorderBrush="#D1D5DB"
+                                                            BorderThickness="1"
+                                                            CornerRadius="6"
+                                                            Padding="4"
+                                                            MinWidth="210"
+                                                            MaxHeight="280">
+                                                        <Border.Effect>
+                                                            <DropShadowEffect ShadowDepth="3"
+                                                                              BlurRadius="10"
+                                                                              Opacity="0.18"
+                                                                              Direction="270"/>
+                                                        </Border.Effect>
+                                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                            <ItemsControl ItemsSource="{Binding Documents}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <!--
+                                                                            x:Reference SupplierGrid walks up to the DataGrid's DataContext
+                                                                            (SupplierViewModel), bypassing the Popup's broken logical-tree path.
+                                                                        -->
+                                                                        <Button Command="{Binding DataContext.OpenDocumentCommand, Source={x:Reference SupplierGrid}}"
+                                                                                CommandParameter="{Binding}"
+                                                                                HorizontalAlignment="Stretch"
+                                                                                HorizontalContentAlignment="Left"
+                                                                                Cursor="Hand"
+                                                                                ToolTip="{Binding DocumentName}">
+                                                                            <Button.Style>
+                                                                                <Style TargetType="Button">
+                                                                                    <Setter Property="Background" Value="Transparent"/>
+                                                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                                                    <Setter Property="Padding" Value="10,7"/>
+                                                                                    <Setter Property="Template">
+                                                                                        <Setter.Value>
+                                                                                            <ControlTemplate TargetType="Button">
+                                                                                                <Border x:Name="Bg"
+                                                                                                        Background="{TemplateBinding Background}"
+                                                                                                        CornerRadius="4"
+                                                                                                        Padding="{TemplateBinding Padding}">
+                                                                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                                                                      VerticalAlignment="Center"/>
+                                                                                                </Border>
+                                                                                                <ControlTemplate.Triggers>
+                                                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                                                        <Setter TargetName="Bg" Property="Background" Value="#F3F4F6"/>
+                                                                                                    </Trigger>
+                                                                                                    <Trigger Property="IsPressed" Value="True">
+                                                                                                        <Setter TargetName="Bg" Property="Background" Value="#E5E7EB"/>
+                                                                                                    </Trigger>
+                                                                                                </ControlTemplate.Triggers>
+                                                                                            </ControlTemplate>
+                                                                                        </Setter.Value>
+                                                                                    </Setter>
+                                                                                </Style>
+                                                                            </Button.Style>
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <TextBlock Text="&#xE8A7;"
+                                                                                           FontFamily="Segoe MDL2 Assets"
+                                                                                           FontSize="12"
+                                                                                           Foreground="#6B7280"
+                                                                                           VerticalAlignment="Center"
+                                                                                           Margin="0,0,8,0"/>
+                                                                                <TextBlock Text="{Binding DocumentName}"
+                                                                                           FontSize="12"
+                                                                                           Foreground="#111827"
+                                                                                           TextTrimming="CharacterEllipsis"
+                                                                                           MaxWidth="165"
+                                                                                           VerticalAlignment="Center"/>
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </ScrollViewer>
+                                                    </Border>
+                                                </Popup>
+
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridCheckBoxColumn Header="Credit" Binding="{Binding IsCredit}" Width="Auto"/>
+                                
+                                <DataGridTextColumn Header="Credit Limit" Binding="{Binding CreditLimit}" Width="Auto">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Credit Period" Binding="{Binding CreditPeriodDays}" Width="Auto">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="Auto"/>
+                            </DataGrid.Columns>
+
+                        </DataGrid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Export Excel"
+                                Command="{Binding ExportToExcelCommand}" 
+                                Style="{StaticResource ExportExcelButtonStyle}" 
+                                ToolTip="Export List to Excel (.xlsx)"/>
+                        
+                    </StackPanel>
+                </Border>
+
+            </Grid>
+            
+        </Grid>
+    </Grid>
+
+</UserControl>

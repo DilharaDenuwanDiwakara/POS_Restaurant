@@ -1,0 +1,12 @@
+<Window x:Class="PointOfSale.UI.Views.Accounts.SupplierPaymentVoucherViewerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:cr="clr-namespace:SAPBusinessObjects.WPF.Viewer;assembly=SAPBusinessObjects.WPF.Viewer"
+        Title="Supplier Payment Voucher"
+        Height="720"
+        Width="1100"
+        WindowStartupLocation="CenterOwner">
+    <Grid>
+        <cr:CrystalReportsViewer x:Name="ReportViewer" />
+    </Grid>
+</Window>

@@ -1,0 +1,206 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Threading.Tasks;
+using PointOfSale.Core.DTOs;
+using PointOfSale.Core.Interfaces.Repositories.Inventory;
+using PointOfSale.Core.Models.Inventory;
+
+namespace PointOfSale.Infrastructure.Repositories.Inventory
+{
+    public class InventoryRepository : BaseRepository, IInventoryRepository
+    {
+        public InventoryRepository(DatabaseConnection databaseConnection) : base(databaseConnection) { }
+
+        public async Task<long> CreateStockTransferAsync(StockTransfer transfer)
+        {
+            using (var connection = GetConnection()) // Assumes you have a BaseRepository
+            {
+                using (var command = CreateCommand(connection, "[Inventory].[uspInsertStockTransfer]"))
+                {
+                    // Add Header Parameters
+                    command.Parameters.AddWithValue("@BranchId", transfer.BranchId);
+                    command.Parameters.AddWithValue("@FromLocationId", transfer.FromLocationId);
+                    command.Parameters.AddWithValue("@ToLocationId", transfer.ToLocationId);
+                    command.Parameters.AddWithValue("@TransferDate", transfer.TransferDate);
+                    command.Parameters.AddWithValue("@Note", (object)transfer.Note ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@CreatedBy", transfer.CreatedBy); // Usually from UserSession
+
+                    // Add Lines Parameter (Table Valued Parameter)
+                    var linesTable = CreateLinesDataTable(transfer.Lines);
+                    var linesParam = command.Parameters.AddWithValue("@Lines", linesTable);
+                    linesParam.SqlDbType = SqlDbType.Structured;
+                    linesParam.TypeName = "[Inventory].[StockTransferLineType]";
+
+                    // Output Parameter for the new Transfer ID
+                    var outParam = new SqlParameter("@TransferId", SqlDbType.BigInt)
+                    {
+                        Direction = ParameterDirection.Output
+                    };
+                    command.Parameters.Add(outParam);
+
+                    await connection.OpenAsync();
+                    await command.ExecuteNonQueryAsync();
+
+                    return (long)outParam.Value;
+                }
+            }
+        }
+        public async Task ImportOpeningStockAsync(List<OpenStockItemDto> items, int userId, int locationId = 1)
+        {
+            if (items == null || !items.Any()) return;
+
+            // 1. Create a DataTable that matches [Inventory].[dt_OpeningStockImport] EXACTLY
+            var dt = new DataTable();
+            dt.Columns.Add("Code", typeof(string));
+            dt.Columns.Add("Quantity", typeof(decimal));
+            dt.Columns.Add("SellingPrice", typeof(decimal));
+            dt.Columns.Add("UnitCost", typeof(decimal));
+
+            // 2. Populate DataTable
+            foreach (var item in items)
+            {
+                dt.Rows.Add(
+                    item.ProductCode,
+                    item.Quantity,
+                    item.SellingPrice,
+                    item.UnitCost.HasValue ? (object)item.UnitCost.Value : DBNull.Value
+                );
+            }
+
+            try
+            {
+                using (var conn = GetConnection())
+                {
+                    await conn.OpenAsync();
+
+                    // 3. Call the Stored Procedure
+                    using (var cmd = CreateCommand(conn, "[Inventory].[uspImportOpeningStock]"))
+                    {
+                        cmd.Parameters.AddWithValue("@LocationId", locationId);
+                        cmd.Parameters.AddWithValue("@CreatedBy", userId);
+
+                        // 4. Pass the Table Valued Parameter
+                        var tvpParam = cmd.Parameters.AddWithValue("@ImportLines", dt);
+                        tvpParam.SqlDbType = SqlDbType.Structured;
+                        tvpParam.TypeName = "[Inventory].[OpeningStockImportType]";
+
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("Failed to import opening stock. Database error: " + ex.Message, ex);
+            }
+        }
+        private DataTable CreateLinesDataTable(List<StockTransferLine> lines)
+        {
+            var table = new DataTable();
+            // These columns must match [Inventory].[StockTransferLineType] exactly order and type
+            table.Columns.Add("ProductId", typeof(int));
+            table.Columns.Add("BatchId", typeof(long));
+            table.Columns.Add("Quantity", typeof(decimal));
+
+            foreach (var line in lines)
+            {
+                table.Rows.Add(line.ProductId, line.BatchId, line.Quantity);
+            }
+
+            return table;
+        }
+
+        public async Task<IEnumerable<Location>> GetLocationsByBranchAsync(int branchId)
+        {
+            var locations = new List<Location>();
+
+            try
+            {
+                using (var connection = GetConnection())
+                {
+                    using (var command = CreateCommand(connection, "[Inventory].[uspGetLocationsByBranch]"))
+                    {
+                        await connection.OpenAsync();
+
+                        command.Parameters.Add("@BranchId", SqlDbType.Int).Value = branchId;
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                locations.Add(MapLocations(reader));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occured while selecting the location.", ex);
+            }
+            return locations;
+        }
+
+        public async Task<IEnumerable<StockTransfer>> GetAllStockTransfersAsync(int branchId, DateTime? dateFrom, DateTime? dateTo)
+        {
+            var transfers = new List<StockTransfer>();
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[uspGetAllStockTransfers]"))
+                {
+                    command.Parameters.AddWithValue("@BranchId", branchId);
+                    command.Parameters.AddWithValue("@DateFrom", (object)dateFrom ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@DateTo", (object)dateTo ?? DBNull.Value);
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            transfers.Add(MapStockTransfer(reader));
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occurred while retrieving stock transfer history.", ex);
+            }
+
+            return transfers;
+        }
+
+        private StockTransfer MapStockTransfer(IDataRecord record)
+        {
+            return new StockTransfer
+            {
+                TransferId = GetValue<long>(record, "Id"),
+                TransferNumber = GetValue<string>(record, "TransferNumber"),
+                BranchId = GetValue<int>(record, "BranchId"),
+                FromLocationId = GetValue<int>(record, "FromLocationId"),
+                FromLocationName = GetValue<string>(record, "FromLocationName"),
+                ToLocationId = GetValue<int>(record, "ToLocationId"),
+                ToLocationName = GetValue<string>(record, "ToLocationName"),
+                TransferDate = GetValue<DateTime>(record, "TransferDate"),
+                Note = GetValue<string>(record, "Note"),
+                Status = GetValue<string>(record, "Status"),
+                CreatedBy = GetValue<int>(record, "CreatedBy"),
+                Username = GetValue<string>(record, "Username"),
+            };
+        }
+
+        private Location MapLocations(IDataRecord record)
+        {
+            return new Location
+            {
+                Id = GetValue<int>(record, "Id"),
+                BranchId = GetValue<int>(record, "BranchId"),
+                Name = GetValue<string>(record, "LocationName"),
+            };
+        }
+    }
+}

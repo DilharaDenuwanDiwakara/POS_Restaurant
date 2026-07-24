@@ -1,0 +1,256 @@
+<UserControl x:Class="PointOfSale.UI.Views.Sales.DiscountView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="520" d:DesignWidth="1100">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Discount Management" Style="{StaticResource HeaderTextStyle}"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
+                        <StackPanel>
+                            <TextBlock Text="Discount Form" Style="{StaticResource SubHeaderTextStyle}" />
+
+                            <TextBlock Text="Code" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding Code, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     Style="{StaticResource TextBoxStyle}"
+                                     MaxLength="50"
+                                     CharacterCasing="Upper"
+                                     PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <TextBlock Text="Name" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     Style="{StaticResource TextBoxStyle}"
+                                     MaxLength="150"
+                                     CharacterCasing="Upper"
+                                     PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Margin="0 0 8 0">
+                                    <TextBlock Text="Value" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox Text="{Binding DiscountValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             Style="{StaticResource TextBoxStyle}"
+                                             PreviewKeyDown="MoveFocusOnEnter"
+                                             GotFocus="SelectAllText_GotFocus"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Type" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox ItemsSource="{Binding DiscountTypes}"
+                                              SelectedItem="{Binding SelectedDiscountType, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                              Style="{StaticResource ComboBoxStyle}"
+                                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                              PreviewKeyDown="MoveFocusOnEnter"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Minimum Bill Amount" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding MinimumBillAmount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     Style="{StaticResource TextBoxStyle}"
+                                     PreviewKeyDown="MoveFocusOnEnter"
+                                     GotFocus="SelectAllText_GotFocus"/>
+
+                            <TextBlock Text="Maximum Discount Amount (Optional)" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding MaximumDiscountAmount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     Style="{StaticResource TextBoxStyle}"
+                                     PreviewKeyDown="MoveFocusOnEnter"
+                                     GotFocus="SelectAllText_GotFocus"/>
+
+                            <TextBlock Text="Valid From" Style="{StaticResource LabelStyle}"/>
+                            <DatePicker SelectedDate="{Binding ValidFrom, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                        Style="{StaticResource DatePickerStyle}"
+                                        PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <TextBlock Text="Valid To" Style="{StaticResource LabelStyle}"/>
+                            <DatePicker SelectedDate="{Binding ValidTo, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                        Style="{StaticResource DatePickerStyle}"
+                                        PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                                <CheckBox IsChecked="{Binding IsSingleUse}"
+                                          Style="{StaticResource CheckBoxStyle}" VerticalAlignment="Center"
+                                          Content="Single-use"
+                                          Margin="0 0 16 0"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <CheckBox IsChecked="{Binding IsAutoApply}"
+                                          Style="{StaticResource CheckBoxStyle}" VerticalAlignment="Center"
+                                          Content="Auto Apply"
+                                          Margin="0 0 0 0"/>
+
+                            </StackPanel>
+
+                            <StackPanel Visibility="{Binding IsAutoRuleVisible, Converter={StaticResource BoolToVisibility}}" Margin="0,8,0,8">
+                                <TextBlock Text="Apply Scope" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding ApplyScopes}"
+                                          SelectedItem="{Binding SelectedApplyScope, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <TextBlock Text="Menu Category" Style="{StaticResource LabelStyle}"
+                                           Visibility="{Binding IsCategorySelectionVisible, Converter={StaticResource BoolToVisibility}}"/>
+                                
+                                <ComboBox ItemsSource="{Binding MenuCategories}"
+                                          SelectedValue="{Binding SelectedMenuCategoryId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="Name"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                          Visibility="{Binding IsCategorySelectionVisible, Converter={StaticResource BoolToVisibility}}"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <TextBlock Text="Day Filter" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding DayOptions}"
+                                          SelectedItem="{Binding SelectedDayOption, ValidatesOnNotifyDataErrors=True}"
+                                          DisplayMemberPath="Name"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Margin="0,0,6,0">
+                                        <TextBlock Text="Start Time (HH:mm)" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox Text="{Binding StartTimeText, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                 Style="{StaticResource TextBoxStyle}"
+                                                 PreviewKeyDown="MoveFocusOnEnter"
+                                                 GotFocus="SelectAllText_GotFocus"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                        <TextBlock Text="End Time (HH:mm)" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox Text="{Binding EndTimeText, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                 Style="{StaticResource TextBoxStyle}"
+                                                 PreviewKeyDown="MoveFocusOnEnter"
+                                                 GotFocus="SelectAllText_GotFocus"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+
+                            <CheckBox IsChecked="{Binding IsActive}"
+                                      Style="{StaticResource CheckBoxStyle}" 
+                                      VerticalAlignment="Center"
+                                      Content="Active"/>
+
+                           
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#E0E0E0" Padding="0,12,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="{Binding SaveButtonText}"
+                                     Command="{Binding SaveCommand}"
+                                     Style="{StaticResource PrimaryButtonStyle}"
+                                     Margin="0,0,12,0"/>
+
+                            <Button Content="Edit"
+                                     Command="{Binding EditCommand}"
+                                     Style="{StaticResource SecondaryButtonStyle}"
+                                     Margin="0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+                
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Background="#F1F2F6" Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Discount Codes" Style="{StaticResource SubHeaderTextStyle}" VerticalAlignment="Center" Margin="0"/>
+
+                            <Button Grid.Column="1"
+                                    Command="{Binding LoadCommand}"
+                                    Style="{StaticResource RefreshButtonStyle}"
+                                    ToolTip="Refresh"
+                                    Margin="10,0,0,0"/>
+
+                            <Button Grid.Column="3"
+                                    Command="{Binding ToggleActiveCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Content="Toggle Active"/>
+                        </Grid>
+                    </Border>
+
+                    <DataGrid Grid.Row="1"
+                              Margin="0,4,0,0"
+                              ItemsSource="{Binding DiscountList}"
+                              SelectedItem="{Binding SelectedDiscount, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource DataGridStyle}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="100"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding DiscountType}" Width="90"/>
+                            <DataGridTextColumn Header="Value" Binding="{Binding DiscountValue, StringFormat=N2}" Width="80">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="MinimumBillAmount" Binding="{Binding MinimumBillAmount, StringFormat=N2}" Width="150">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Auto" Binding="{Binding IsAutoApply}" Width="80"/>
+                            <DataGridTextColumn Header="Scope" Binding="{Binding ApplyScope}" Width="85"/>
+                            <DataGridTextColumn Header="Category" Binding="{Binding TargetMenuCategoryId}" Width="80"/>
+                            <DataGridTextColumn Header="DayMask" Binding="{Binding DayOfWeekMask}" Width="70"/>
+                            <DataGridTextColumn Header="Time" Binding="{Binding StartTime}" Width="85"/>
+                            <DataGridTextColumn Header="Active" Binding="{Binding IsActive}" Width="65"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

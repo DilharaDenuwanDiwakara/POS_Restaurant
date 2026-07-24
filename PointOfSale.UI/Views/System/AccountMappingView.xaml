@@ -1,0 +1,119 @@
+<UserControl x:Class="PointOfSale.UI.Views.Settings.AccountMappingView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="900">
+    <Grid>
+        <Border Style="{StaticResource PanelCardStyle}">
+            <StackPanel>
+                <TextBlock Text="Financial &amp; Ledger Mappings"
+                           Style="{StaticResource SubHeaderTextStyle}"
+                           Margin="0,0,0,16"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left Column: Assets & Liabilities -->
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Default Cash Account:" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding LedgerAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedCashAccountId, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  HorizontalAlignment="Stretch"/>
+
+                        <TextBlock Text="Default Card / Bank Account:" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding LedgerAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedCardAccountId, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  HorizontalAlignment="Stretch"/>
+
+                        <TextBlock Text="Accounts Receivable (Credit):" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding LedgerAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedArAccountId, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  HorizontalAlignment="Stretch"/>
+
+                        <TextBlock Text="Accounts Payable (Creditor Control):" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding LedgerAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedApAccountId, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  HorizontalAlignment="Stretch"/>
+
+                        <TextBlock Text="Customer Pre-Payment / Advance:" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding LedgerAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedCustomerAdvanceAccountId, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <!-- Right Column: Expenses & Provisions -->
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                        <TextBlock Text="Cash Shortage / Variance Expense:" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding LedgerAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedVarianceAccountId, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  HorizontalAlignment="Stretch"/>
+
+                        <TextBlock Text="Loyalty Points Payable (Liability):" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding LedgerAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedLoyaltyPayableAccountId, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  HorizontalAlignment="Stretch"/>
+
+                        <TextBlock Text="Loyalty Points Expense:" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding LedgerAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedLoyaltyExpenseAccountId, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  HorizontalAlignment="Stretch"/>
+
+                        <TextBlock Text="Free Issue / Complimentary Expense:" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding LedgerAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedFreeIssueAccountId, UpdateSourceTrigger=PropertyChanged}"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                </Grid>
+
+                <Button Content="Update Mappings"
+                        Command="{Binding UpdateAccountMappingsCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Width="Auto"
+                        Padding="20,8"
+                        HorizontalAlignment="Right"
+                        Margin="0,16,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

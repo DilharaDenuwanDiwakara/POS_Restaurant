@@ -1,0 +1,139 @@
+<UserControl x:Class="PointOfSale.UI.Views.Accounts.OpeningBalanceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:viewModels="clr-namespace:PointOfSale.UI.ViewModels.Accounts"
+             mc:Ignorable="d"
+             d:DesignHeight="620"
+             d:DesignWidth="1100">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Opening Balance Entry" Style="{StaticResource HeaderTextStyle}"/>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Bar: As-of date + Equity contra account -->
+            <Border Grid.Row="0" Style="{StaticResource PanelCardStyle}" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="320"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Margin="0,0,12,0">
+                        <TextBlock Text="As Of Date" Style="{StaticResource LabelStyle}"/>
+                        <DatePicker SelectedDate="{Binding AsOfDate, UpdateSourceTrigger=PropertyChanged}"
+                                    IsTodayHighlighted="True"
+                                    Style="{StaticResource DatePickerStyle}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                        <TextBlock Text="Opening Balance Equity Account" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding EquityAccounts}"
+                                  SelectedItem="{Binding SelectedEquityAccount, UpdateSourceTrigger=PropertyChanged}"
+                                  DisplayMemberPath="DisplayName"
+                                  Style="{StaticResource ComboBoxStyle}"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="3"
+                            Command="{Binding LoadCommand}"
+                            Style="{StaticResource RefreshButtonStyle}"
+                            ToolTip="Reload Accounts"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,0,12"/>
+                </Grid>
+            </Border>
+
+            <!-- Account lines grid -->
+            <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              SelectionMode="Single"
+                              ItemsSource="{Binding Lines}"
+                              Style="{StaticResource DataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="GL No" Binding="{Binding AccountCode}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="GL Name" Binding="{Binding AccountName}" Width="*" IsReadOnly="True"/>
+
+                            <DataGridTextColumn Header="Debit" Binding="{Binding DebitAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="140">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Credit" Binding="{Binding CreditAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="140">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Totals + auto contra preview + actions -->
+                    <Border Grid.Row="1" Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1"
+                            CornerRadius="0 0 6 6" Padding="12" Margin="0,4,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel>
+                                <TextBlock Text="{Binding ContraPreview}" Style="{StaticResource CaptionStyle}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="Total Debit: " Style="{StaticResource LabelStyle}"/>
+                                    <TextBlock Text="{Binding TotalDebit, StringFormat=N2}" FontWeight="SemiBold" Margin="0,0,16,0"/>
+                                    <TextBlock Text="Total Credit: " Style="{StaticResource LabelStyle}"/>
+                                    <TextBlock Text="{Binding TotalCredit, StringFormat=N2}" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="Clear"
+                                        Command="{Binding ClearCommand}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Margin="0,0,10,0"/>
+                                <Button Content="Save"
+                                        Command="{Binding SaveCommand}"
+                                        Style="{StaticResource PrimaryButtonStyle}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

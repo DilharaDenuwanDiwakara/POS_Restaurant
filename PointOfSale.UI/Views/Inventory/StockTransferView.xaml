@@ -1,0 +1,288 @@
+<UserControl x:Class="PointOfSale.UI.Views.Inventory.StockTransferView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:PointOfSale.UI.Views.Inventory"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <TabControl Style="{StaticResource TabControlStyle}">
+
+            <!-- ============================================================ -->
+            <!-- TAB 1 : New Transfer                                         -->
+            <!-- ============================================================ -->
+            <TabItem Header=" 🔄 New Transfer " Style="{StaticResource TabItemStyle}">
+                <Grid Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="285"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel>
+                                <TextBlock Text="Transfer Details" Style="{StaticResource SubHeaderTextStyle}"/>
+
+                                <TextBlock Text="Transfer Date:" Style="{StaticResource LabelStyle}"/>
+                                <DatePicker SelectedDate="{Binding TransferDate, UpdateSourceTrigger=PropertyChanged}"
+                                            IsTodayHighlighted="True"
+                                            Style="{StaticResource DatePickerStyle}"
+                                            PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <TextBlock Text="From (Source):" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding Locations}"
+                                          SelectedValue="{Binding FromLocationId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                          DisplayMemberPath="Name"
+                                          SelectedValuePath="Id"
+                                          SelectedIndex="0"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <TextBlock Text="To (Destination):" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding Locations}"
+                                          SelectedValue="{Binding ToLocationId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                          DisplayMemberPath="Name"
+                                          SelectedValuePath="Id"
+                                          SelectedIndex="1"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <TextBlock Text="Reference / Note:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
+                                         MaxLength="500"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         Height="80"
+                                         VerticalContentAlignment="Top"
+                                         Style="{StaticResource TextBoxStyle}"
+                                         PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,20,0,0" HorizontalAlignment="Center">
+                                    <Button Content="Process Transfer"
+                                            Command="{Binding SaveTransferCommand}"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Width="140"
+                                            Margin="0,0,10,0"/>
+
+                                    <Button Content="Clear"
+                                            Command="{Binding ClearCommand}"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Width="100"
+                                            Focusable="False"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1"
+                                    CornerRadius="6" Padding="8" Margin="0,0,0,4">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Text="Add Items" Style="{StaticResource SubHeaderTextStyle}" VerticalAlignment="Center"/>
+
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="100"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Margin="0 0 8 0">
+                                            <TextBlock Text="Code / Barcode:" Style="{StaticResource LabelStyle}"/>
+                                            <TextBox x:Name="BarcodeTextBox"
+                                                     Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                     Style="{StaticResource TextBoxStyle}"
+                                                     PreviewKeyDown="MoveFocusOnEnter"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="0 0 8 0">
+                                            <TextBlock Text="Product:" Style="{StaticResource LabelStyle}"/>
+                                            <ComboBox x:Name="ProductCombobox"
+                                                      ItemsSource="{Binding Products}"
+                                                      SelectedItem="{Binding SelectedProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      DisplayMemberPath="ProductName"
+                                                      IsEditable="True"
+                                                      IsTextSearchEnabled="True"
+                                                      IsTabStop="False"
+                                                      PreviewKeyDown="MoveFocusOnEnter"
+                                                      Style="{StaticResource ComboBoxStyle}"
+                                                      Validation.ErrorTemplate="{StaticResource ErrorTemplate}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Margin="0 0 8 0">
+                                            <TextBlock Text="Available:" Style="{StaticResource LabelStyle}"/>
+                                            <TextBox Text="{Binding SelectedBatch.AvailableQuantity, StringFormat=N3, FallbackValue='-'}"
+                                                     Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                                     IsReadOnly="True"
+                                                     FontWeight="Bold"
+                                                     Foreground="{StaticResource SuccessBrush}"
+                                                     TextAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="3" Margin="0 0 8 0">
+                                            <TextBlock Text="Quantity:" Style="{StaticResource LabelStyle}"/>
+                                            <TextBox x:Name="QtyTextBox"
+                                                     Text="{Binding TransferQuantity, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource TextBoxStyle}"
+                                                     Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                                     GotKeyboardFocus="SelectAllText_GotFocus"
+                                                     PreviewKeyDown="MoveFocusOnEnter"
+                                                     TextAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4">
+                                            <Button x:Name="AddButton"
+                                                    Content="Add"
+                                                    Command="{Binding AddLineCommand}"
+                                                    Style="{StaticResource PrimaryButtonStyle}"
+                                                    Click="AddButton_Click"
+                                                    Width="100" Height="32"
+                                                    Margin="0 20 0 0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <DataGrid Grid.Row="1"
+                                      ItemsSource="{Binding TransferLines}"
+                                      SelectedItem="{Binding SelectedLine}"
+                                      Style="{StaticResource DataGridStyle}"
+                                      Margin="0,4,0,0"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      IsReadOnly="True">
+
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="*"/>
+
+                                    <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat=N3}" Width="120" FontWeight="Bold">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Left"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Cost Price" Binding="{Binding UnitCost, StringFormat=N2}" Width="120">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTemplateColumn Width="80" Header="Action">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="&#xE74D;" FontFamily="Segoe MDL2 Assets"
+                                                        Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        Padding="0" Width="30" Height="25"
+                                                        Foreground="#DC3545" Background="Transparent" BorderThickness="0"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Border Grid.Row="2" Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1"
+                                    CornerRadius="6" Padding="8" Margin="0,4,0,0">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Total Items:" Style="{StaticResource LabelStyle}" Margin="0,0,5,0"/>
+                                        <TextBlock Text="{Binding TransferLines.Count}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                        </Grid>
+                    </Border>
+
+                </Grid>
+            </TabItem>
+
+            <!-- ============================================================ -->
+            <!-- TAB 2 : Transfer History                                     -->
+            <!-- ============================================================ -->
+            <TabItem Header=" 📋 Transfer History " Style="{StaticResource TabItemStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Filter Bar -->
+                    <Border Style="{StaticResource PanelCardStyle}" Margin="0 4 0 0">
+                        <StackPanel Orientation="Horizontal">
+
+                            <StackPanel Margin="0,0,20,0">
+                                <TextBlock Text="From Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                                <DatePicker SelectedDate="{Binding HistoryDateFrom}"
+                                            Style="{StaticResource DatePickerStyle}"
+                                            Width="150" Margin="0"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,20,0">
+                                <TextBlock Text="To Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                                <DatePicker SelectedDate="{Binding HistoryDateTo}"
+                                            Style="{StaticResource DatePickerStyle}"
+                                            Width="150" Margin="0"/>
+                            </StackPanel>
+
+                            <Button Command="{Binding SearchHistoryCommand}"
+                                    Margin="0,16,12,0"
+                                    Style="{StaticResource SearchButtonStyle}"
+                                    Width="80" Height="30"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- History DataGrid -->
+                    <DataGrid Grid.Row="1" Margin="0 4"
+                              ItemsSource="{Binding HistoryList}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="All"
+                              Style="{StaticResource DataGridStyle}">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Transfer #"   Binding="{Binding TransferNumber}"                          Width="130"/>
+                            <DataGridTextColumn Header="From"         Binding="{Binding FromLocationName}"                        Width="160"/>
+                            <DataGridTextColumn Header="To"           Binding="{Binding ToLocationName}"                          Width="160"/>
+                            <DataGridTextColumn Header="Transfer Date" Binding="{Binding TransferDate, StringFormat=dd-MMM-yyyy}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Note"         Binding="{Binding Note}"                                    Width="*"/>
+                            <DataGridTextColumn Header="Status"       Binding="{Binding Status}"                                  Width="110"/>
+                            <DataGridTextColumn Header="Created By"   Binding="{Binding Username}"                                Width="120"/>
+                        </DataGrid.Columns>
+
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
+    </Grid>
+</UserControl>

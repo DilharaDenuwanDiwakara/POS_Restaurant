@@ -1,0 +1,181 @@
+<UserControl x:Class="PointOfSale.UI.Views.Sales.ShiftManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="560" d:DesignWidth="1100">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Shift Reconciliation Dashboard" Style="{StaticResource HeaderTextStyle}"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="600"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Background="#F1F2F6" Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Closed Shifts Pending Audit" Style="{StaticResource SubHeaderTextStyle}" Margin="0"/>
+
+                            <Button Grid.Column="1"
+                                    Command="{Binding RefreshCommand}"
+                                    Style="{StaticResource RefreshButtonStyle}"
+                                    ToolTip="Refresh Shifts"/>
+                        </Grid>
+                    </Border>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding ReconciliationShifts}"
+                              SelectedItem="{Binding SelectedShift, UpdateSourceTrigger=PropertyChanged}"
+                              AutoGenerateColumns="False"
+                              SelectionMode="Single"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              Style="{StaticResource DataGridStyle}"
+                              Margin="0,4,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Cashier" Binding="{Binding CashierName}" Width="*"/>
+                            <DataGridTextColumn Header="Till" Binding="{Binding TillName}" Width="160"/>
+                            <DataGridTextColumn Header="Closed At" Binding="{Binding EndTime, StringFormat='dd-MMM-yyyy HH:mm'}" Width="150"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                <StackPanel>
+                    <TextBlock Text="Manager Audit &amp; Review" Style="{StaticResource SubHeaderTextStyle}"/>
+
+                    <StackPanel Visibility="{Binding HasSelectedShift, Converter={StaticResource BoolToVisibility}}">
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="Cashier" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedShift.CashierName}" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+
+                            <TextBlock Grid.Row="1" Text="Till / Station" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedShift.TillName}" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+
+                            <TextBlock Grid.Row="2" Text="Shift Start Time" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedShift.StartTime, StringFormat='{}{0:dd-MMM-yyyy HH:mm:ss}'}" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+
+                            <TextBlock Grid.Row="3" Text="Shift Closed Time" Style="{StaticResource LabelStyle}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedShift.EndTime, StringFormat='{}{0:dd-MMM-yyyy HH:mm:ss}'}" Style="{StaticResource LabelStyle}"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="System Expected Cash" Style="{StaticResource LabelStyle}" />
+                            <TextBox Grid.Row="1"
+                                     Text="{Binding SelectedSystemCash, Mode=OneWay, StringFormat=N2}"
+                                     Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                     HorizontalContentAlignment="Right"/>
+
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Cashier Declared Cash" Style="{StaticResource LabelStyle}" Margin="8,0,0,0"/>
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="1"
+                                     Text="{Binding SelectedPhysicalCash, Mode=OneWay, StringFormat=N2}"
+                                     Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                     HorizontalContentAlignment="Right"
+                                     Margin="8,0,0,0"/>
+
+                            <TextBlock Grid.Row="2" Text="Expected Card Sales" Style="{StaticResource LabelStyle}" Margin="0,8,0,0"/>
+                            <TextBox Grid.Row="3"
+                                     Text="{Binding ExpectedCardTotal, Mode=OneWay, StringFormat='Rs. {0:N2}'}"
+                                     Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                     HorizontalContentAlignment="Right"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Expected Credit / Bookings" Style="{StaticResource LabelStyle}" Margin="8,8,0,0"/>
+                            <TextBox Grid.Row="3"
+                                     Grid.Column="1"
+                                     Text="{Binding ExpectedCreditTotal, Mode=OneWay, StringFormat='Rs. {0:N2}'}"
+                                     Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                     HorizontalContentAlignment="Right"
+                                     Margin="8,0,0,0"/>
+
+                            <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Text="Cashier Overage/Shortage (Variance)" Style="{StaticResource LabelStyle}" Margin="0,8,0,0"/>
+                            <TextBox Grid.Row="5"
+                                    Grid.ColumnSpan="2"
+                                    Text="{Binding SelectedVariance, Mode=OneWay, StringFormat=N2}"
+                                    HorizontalContentAlignment="Right"
+                                    FontWeight="SemiBold">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox" BasedOn="{StaticResource ReadOnlyTextBoxStyle}">
+                                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSelectedVarianceNegative}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </Grid>
+
+                        <TextBlock Text="Manager Notes / Remarks" Style="{StaticResource LabelStyle}"/>
+                        <TextBox Text="{Binding ManagerNotes, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource TextBoxStyle}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 MinHeight="90"/>
+
+                        <Button Content="Verify &amp; Post to General Ledger"
+                                Command="{Binding PostShiftToLedgerCommand}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Width="240"
+                                HorizontalAlignment="Left"
+                                Margin="0,10,0,0"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Select a closed shift from the left to review cashier-declared cash against system cash."
+                               Style="{StaticResource CaptionStyle}"
+                               Visibility="{Binding HasSelectedShift, Converter={StaticResource InverseBooleanConverter}}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

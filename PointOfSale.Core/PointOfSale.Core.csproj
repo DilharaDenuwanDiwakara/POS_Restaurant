@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{BE1223E0-0ABE-4F7C-9791-1F5F4B928060}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PointOfSale.Core</RootNamespace>
+    <AssemblyName>PointOfSale.Core</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="BCrypt.Net-Next, Version=4.0.3.0, Culture=neutral, PublicKeyToken=1e11be04b6288443, processorArchitecture=MSIL">
+      <HintPath>..\packages\BCrypt.Net-Next.4.0.3\lib\net48\BCrypt.Net-Next.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Enums\GoodsReceiveNoteStatus.cs" />
+    <Compile Include="Enums\PurchaseOrderStatus.cs" />
+    <Compile Include="Enums\SupplierReturnStatus.cs" />
+    <Compile Include="Enums\RoomStatus.cs" />
+    <Compile Include="Enums\RoomType.cs" />
+    <Compile Include="Enums\ItemType.cs" />
+    <Compile Include="Enums\BookingStatus.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\ILocationRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\IPaymentTerminalRepository.cs" />
+    <Compile Include="Interfaces\Repositories\System\IBankRepository.cs" />
+    <Compile Include="Interfaces\Repositories\System\IAccountMappingRepository.cs" />
+    <Compile Include="Models\Accounts\Entities\Account.cs" />
+    <Compile Include="DTOs\AccountDto.cs" />
+    <Compile Include="Models\Accounts\Entities\AccountType.cs" />
+    <Compile Include="DTOs\AvailableQuantityDto.cs" />
+    <Compile Include="DTOs\CategoryLookupItem.cs" />
+    <Compile Include="DTOs\CategoryTreeNode.cs" />
+    <Compile Include="DTOs\CategoryValueDto.cs" />
+    <Compile Include="DTOs\DashboardOverviewDto.cs" />
+    <Compile Include="DTOs\MenuItemDto.cs" />
+    <Compile Include="DTOs\OpenStockItemDto.cs" />
+    <Compile Include="DTOs\OrderItemDto.cs" />
+    <Compile Include="DTOs\ProductLiteDto.cs" />
+    <Compile Include="DTOs\ProductDto.cs" />
+    <Compile Include="DTOs\ProductRawDto.cs" />
+    <Compile Include="DTOs\RegisterDto.cs" />
+    <Compile Include="DTOs\MenuVariantDto.cs" />
+    <Compile Include="DTOs\SalesLineItemDto.cs" />
+    <Compile Include="DTOs\SalesListDto.cs" />
+    <Compile Include="DTOs\ServedOrderDto.cs" />
+    <Compile Include="DTOs\ShiftDto.cs" />
+    <Compile Include="DTOs\ShiftReconciliationDto.cs" />
+    <Compile Include="DTOs\TillShiftStatusDto.cs" />
+    <Compile Include="DTOs\VariantPriceDto.cs" />
+    <Compile Include="Enums\AccountsPaymentMethod.cs" />
+    <Compile Include="Enums\SalesPaymentMethod.cs" />
+    <Compile Include="Enums\SupplierPaymentMethod.cs" />
+    <Compile Include="Exception\ProductImportError.cs" />
+    <Compile Include="Exception\ProductImportResult.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\IAccountingRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\IOpeningBalanceRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\ICustomerAdvanceRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\ICustomerPaymentRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\IExpensesCategoryRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\IExpensesRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\ISupplierAdvanceRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\ISupplierCreditRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\ISupplierPaymentRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IBrandRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\ICategoryRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IInventoryReportRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IInventoryRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IProductBatchRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IProductRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IStockAdjustmentRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IUnitMeasureRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IWastageReasonRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IWastageRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Purchasing\IGoodsPurchaseNoteRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Purchasing\IGoodsReceiveNoteRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Purchasing\ISupplierRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Purchasing\ISupplierReturnRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Restaurant\IMenuCategoryRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Restaurant\IMenuItemRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Restaurant\IMealPeriodRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Restaurant\IOrderRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Restaurant\IRoomBookingRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Restaurant\IStationRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Restaurant\ITableRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\ICashInOutRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\ICustomerRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\IDashboardRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\IDiscountRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\IPromotionRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\IRegisterRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\IShiftRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\ISalesHoldRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\ISalesRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Security\IUserRepository.cs" />
+    <Compile Include="Interfaces\Repositories\System\IBranchRepository.cs" />
+    <Compile Include="Interfaces\Repositories\System\ICompanyRepository.cs" />
+    <Compile Include="Interfaces\Repositories\System\ITaxConfigurationRepository.cs" />
+    <Compile Include="Interfaces\Services\IBarcodeService.cs" />
+    <Compile Include="Interfaces\Services\IConfigurationService.cs" />
+    <Compile Include="Interfaces\Services\IDialogService.cs" />
+    <Compile Include="Interfaces\Services\IExcelService.cs" />
+    <Compile Include="Models\Accounts\DTOs\CustomerAdvance.cs" />
+    <Compile Include="Models\Accounts\DTOs\CustomerAdvanceList.cs" />
+    <Compile Include="Models\Accounts\DTOs\SupplierCredit.cs" />
+    <Compile Include="Models\Accounts\DTOs\SupplierCreditItem.cs" />
+    <Compile Include="Models\Accounts\Entities\CustomerPayment.cs" />
+    <Compile Include="Models\Accounts\Entities\CustomerPaymentLine.cs" />
+    <Compile Include="Models\Accounts\DTOs\CustomerReceivableItem.cs" />
+    <Compile Include="Models\Accounts\DTOs\CustomerReceivable.cs" />
+    <Compile Include="Models\Accounts\DTOs\SupplierAdvanceList.cs" />
+    <Compile Include="Models\Accounts\DTOs\SupplierPayableItem.cs" />
+    <Compile Include="Models\Accounts\DTOs\SupplierAdvance.cs" />
+    <Compile Include="Models\Accounts\DTOs\SupplierPayable.cs" />
+    <Compile Include="Models\Accounts\Entities\Expenses.cs" />
+    <Compile Include="Models\Accounts\Entities\ExpensesCategory.cs" />
+    <Compile Include="Models\Accounts\Entities\OpeningBalanceLine.cs" />
+    <Compile Include="Models\Accounts\Entities\SupplierPayment.cs" />
+    <Compile Include="Models\Accounts\Entities\SupplierPaymentLine.cs" />
+    <Compile Include="Models\Accounts\Entities\SupplierSettlement.cs" />
+    <Compile Include="Models\Common\AuditableEntity.cs" />
+    <Compile Include="Models\Common\BaseEntity.cs" />
+    <Compile Include="Models\Inventory\Brand.cs" />
+    <Compile Include="Models\Inventory\Category.cs" />
+    <Compile Include="Models\Inventory\ItemTypeModel.cs" />
+    <Compile Include="Models\Inventory\Location.cs" />
+    <Compile Include="Models\Inventory\Product.cs" />
+    <Compile Include="Models\Inventory\ProductUnitConversion.cs" />
+    <Compile Include="Models\Inventory\ProductBatch.cs" />
+    <Compile Include="Models\Inventory\StockAdjustment.cs" />
+    <Compile Include="Models\Inventory\StockTransfer.cs" />
+    <Compile Include="Models\Inventory\StockTransferLine.cs" />
+    <Compile Include="Models\Inventory\UnitMeasure.cs" />
+    <Compile Include="Models\Inventory\Wastage.cs" />
+    <Compile Include="Models\Inventory\WastageLine.cs" />
+    <Compile Include="Models\Inventory\WastageReason.cs" />
+    <Compile Include="Models\Purchasing\GoodPurchaseNote.cs" />
+    <Compile Include="Models\Purchasing\GoodsPurchaseNoteLine.cs" />
+    <Compile Include="Models\Purchasing\GoodsReceiveNote.cs" />
+    <Compile Include="Models\Purchasing\GoodsReceiveNoteLine.cs" />
+    <Compile Include="Models\Purchasing\OriginalGrnReturnLine.cs" />
+    <Compile Include="Models\Purchasing\ReturnReasonModel.cs" />
+    <Compile Include="Models\Purchasing\Supplier.cs" />
+    <Compile Include="Models\Purchasing\SupplierContact.cs" />
+    <Compile Include="Models\Purchasing\SupplierDocument.cs" />
+    <Compile Include="Models\Purchasing\SupplierReturn.cs" />
+    <Compile Include="Models\Purchasing\SupplierReturnLine.cs" />
+    <Compile Include="Models\Restaurant\MenuCategory.cs" />
+    <Compile Include="Models\Restaurant\MenuItem.cs" />
+    <Compile Include="Models\Restaurant\MealPeriod.cs" />
+    <Compile Include="Models\Restaurant\MenuRecipe.cs" />
+    <Compile Include="Models\Restaurant\Room.cs" />
+    <Compile Include="Models\Restaurant\RoomBooking.cs" />
+    <Compile Include="Models\Restaurant\Station.cs" />
+    <Compile Include="Models\Restaurant\Table.cs" />
+    <Compile Include="Models\Restaurant\Variant.cs" />
+    <Compile Include="Models\Sales\CashInOut.cs" />
+    <Compile Include="Models\Sales\Customer.cs" />
+    <Compile Include="Models\Sales\DiscountDefinition.cs" />
+    <Compile Include="Models\Sales\DiscountValidationResult.cs" />
+    <Compile Include="Models\Sales\PaymentDetail.cs" />
+    <Compile Include="Models\Sales\PaymentTerminal.cs" />
+    <Compile Include="Models\Sales\PromotionRule.cs" />
+    <Compile Include="Models\Sales\Sale.cs" />
+    <Compile Include="Models\Sales\SalesHold.cs" />
+    <Compile Include="Models\Sales\SalesHoldLine.cs" />
+    <Compile Include="Models\Sales\SalesLine.cs" />
+    <Compile Include="Models\Security\PermissionGroup.cs" />
+    <Compile Include="Models\Security\PermissionNode.cs" />
+    <Compile Include="Models\Security\Roles.cs" />
+    <Compile Include="Models\Security\User.cs" />
+    <Compile Include="Models\System\AccountMappingKeys.cs" />
+    <Compile Include="Models\System\Bank.cs" />
+    <Compile Include="Models\System\Branch.cs" />
+    <Compile Include="Models\System\Company.cs" />
+    <Compile Include="Models\System\TaxConfiguration.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AuthService.cs" />
+    <Compile Include="Interfaces\Services\IAuthService.cs" />
+    <Compile Include="Interfaces\Services\IPasswordHasher.cs" />
+    <Compile Include="Interfaces\Services\IUserSessionService.cs" />
+    <Compile Include="Services\PasswordHasher.cs" />
+    <Compile Include="Services\UserSessionService.cs" />
+    <Compile Include="Services\TaxCalculator.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

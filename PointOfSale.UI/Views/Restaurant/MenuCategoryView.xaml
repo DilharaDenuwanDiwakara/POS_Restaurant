@@ -1,0 +1,201 @@
+﻿<UserControl x:Class="PointOfSale.UI.Views.Restaurant.MenuCategoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PointOfSale.UI.Views.Restaurant"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <!-- Layout define -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Text="Menu Category Management" Style="{StaticResource HeaderTextStyle}"/>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="285"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Panel - Form -->
+            <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Text="Category Form" Style="{StaticResource SubHeaderTextStyle}" />
+
+                    <!-- Category Name -->
+                    <TextBlock Text="Category Name:" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="NameTextBox"
+                             Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                             Style="{StaticResource TextBoxStyle}" 
+                             MaxLength="50"
+                             CharacterCasing="Upper"
+                             PreviewKeyDown="MoveFocusOnEnter"/>
+
+                    <!-- Display Order -->
+                    <TextBlock Text="Display Order:" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="DisplayOrderTextBox"
+                             Text="{Binding DisplayOrder, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                             Style="{StaticResource TextBoxStyle}" 
+                             MaxLength="3"
+                             CharacterCasing="Upper"
+                             PreviewKeyDown="MoveFocusOnEnter"/>
+
+                    <!-- Parent Category -->
+                    <TextBlock Text="Parent Category:" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding ParentCategoryList}"
+                              SelectedValue="{Binding SelectedParentId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                              SelectedValuePath="Id"
+                              TextSearch.TextPath="DisplayName"
+                              Style="{StaticResource ComboBoxStyle}"
+                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                              ItemTemplate="{StaticResource HierarchicalCategoryTemplate}"
+                              PreviewKeyDown="MoveFocusOnEnter"/>
+
+                    <!-- Income Account - parent categories only -->
+                    <StackPanel Visibility="{Binding IsParentCategory, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="Income Account:" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding ChartOfAccounts}"
+                                  DisplayMemberPath="DisplayText"
+                                  SelectedValuePath="Code"
+                                  SelectedValue="{Binding IncomeAccountCode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                  IsEditable="True"
+                                  TextSearch.TextPath="DisplayText"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  PreviewKeyDown="MoveFocusOnEnter"/>
+                    </StackPanel>
+
+                    <!-- Is Active -->
+                    <CheckBox Content="Is Active"
+                              IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource CheckBoxStyle}"
+                              Focusable="False"
+                              Margin="0 8 0 12"/>
+
+                    <!-- Action Buttons -->
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Center">
+                        <Button Content="{Binding SaveButtonText}"
+                                Name="SubmitButton"
+                                Command="{Binding SaveCategoryCommand}" 
+                                Click="Save_Click"
+                                Style="{StaticResource PrimaryButtonStyle}" 
+                                Margin="0,0,12,0"/>
+
+                        <Button Content="Edit" 
+                                Command="{Binding EditCategoryCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"/>
+
+                    </StackPanel>
+
+                </StackPanel>
+            </Border>
+
+            <!-- Right Panel - Data Grid -->
+            <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Data Grid Header -->
+                    <Border Background="#F1F2F6" Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" 
+                                       Text="Category List" 
+                                       Style="{StaticResource SubHeaderTextStyle}" 
+                                       VerticalAlignment="Center"
+                                       Margin="0"/>
+
+                            <Button Grid.Column="1"
+                                    Command="{Binding LoadCategoryCommand}" 
+                                    Style="{StaticResource RefreshButtonStyle}" 
+                                    ToolTip="Refresh Category List"
+                                    Margin="10,0,0,0" />
+
+                            <Button Grid.Column="3"
+                                    Command="{Binding DeleteCategoryCommand}"
+                                    Style="{StaticResource DeleteButtonStyle}"
+                                    ToolTip="Delete Category">
+
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Data Grid -->
+                    <DataGrid Grid.Row="1" 
+                              ItemsSource="{Binding CategoryList}" 
+                              SelectedItem="{Binding SelectedCategory, UpdateSourceTrigger=PropertyChanged}" 
+                              Style="{StaticResource DataGridStyle}"
+                              Margin="0,4,0,0"
+                              AutoGenerateColumns="False"
+                              SelectionMode="Single"
+                              CanUserAddRows="False"
+                              IsReadOnly="True">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"  Visibility="Hidden"/>
+                            <DataGridTextColumn Header="Category Name" Binding="{Binding Name}" Width="Auto"/>
+                            <DataGridTextColumn Header="Sort Order" Binding="{Binding DisplayOrder}" Width="Auto" >
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Parent Category" Binding="{Binding ParentName}" Width="Auto"/>
+                            <DataGridTextColumn Header="Income Account Code" Binding="{Binding IncomeAccountCode}" Width="Auto"/>
+                        </DataGrid.Columns>
+
+                    </DataGrid>
+
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource PanelCardStyle}" Margin="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Hierarchy Tree" Style="{StaticResource SubHeaderTextStyle}"/>
+
+                    <TreeView Grid.Row="1" ItemsSource="{Binding CategoryTree}" BorderThickness="0">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <TextBlock Text="📁" Foreground="{StaticResource SecondaryBrush}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding Name}" Style="{StaticResource LabelStyle}"/>
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="{x:Type TreeViewItem}">
+                                <Setter Property="IsExpanded" Value="False"/>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+
+                    </TreeView>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Grid>
+</UserControl>

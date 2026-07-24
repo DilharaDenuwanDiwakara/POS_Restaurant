@@ -1,0 +1,514 @@
+﻿<UserControl x:Class="PointOfSale.UI.Views.Inventory.ProductView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:PointOfSale.UI.Views.Inventory"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style TargetType="ScrollBar" BasedOn="{StaticResource SalesScrollBarStyle}"/>
+
+        <Style x:Key="UnitConversionPanelStyle" TargetType="Border">
+            <Setter Property="BorderBrush" Value="#D8DEE8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Background" Value="#F8FAFC"/>
+            <Setter Property="Margin" Value="0,4,0,14"/>
+        </Style>
+
+        <Style x:Key="UnitConversionCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#E9EEF6"/>
+            <Setter Property="BorderBrush" Value="#C7D4EA"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="UnitConversionTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Product Management" Style="{StaticResource HeaderTextStyle}"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,10,0" Padding="14">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  PanningMode="VerticalOnly"
+                                  Margin="0,0,-4,0">
+                        <StackPanel Margin="0,0,12,0">
+                            <Grid Margin="0,0,0,12">
+                                <TextBlock Text="Product Form" Style="{StaticResource SubHeaderTextStyle}" />
+
+                                <Button Command="{Binding NewProductCommand}" 
+                                        Style="{StaticResource RefreshButtonStyle}" 
+                                        ToolTip="Reset"
+                                        HorizontalAlignment="Right"/>
+                            </Grid>
+
+                            <!-- Product Name -->
+                            <TextBlock Text="Product Name:" Style="{StaticResource LabelStyle}"/>
+                            <TextBox x:Name="ProductNameTextBox"
+                                     Text="{Binding ProductName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     Style="{StaticResource TextBoxStyle}"
+                                     MaxLength="100"
+                                     CharacterCasing="Upper"
+                                     PreviewKeyDown="MoveFocusOnEnter"
+                                     Validation.ErrorTemplate="{StaticResource ErrorTemplate}"/>
+
+                            <!-- Barcode -->
+                            <TextBlock Text="Barcode:" Style="{StaticResource LabelStyle}"/>
+                            <TextBox x:Name="BarcodeTextBox"
+                                     Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     Style="{StaticResource TextBoxStyle}"
+                                     MaxLength="100"
+                                     PreviewKeyDown="MoveFocusOnEnter"
+                                     Validation.ErrorTemplate="{StaticResource ErrorTemplate}"/>
+
+                            <!-- Category -->
+                            <TextBlock Text="Category:" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="CategoryComboBox"
+                                      ItemsSource="{Binding Categories}"
+                                      SelectedItem="{Binding SelectedCategory, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                      SelectedValuePath="CategoryId"
+                                      DisplayMemberPath="Name"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      TextSearch.TextPath="Name"
+                                      Style="{StaticResource ComboBoxStyle}"
+                                      ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                      PreviewKeyDown="MoveFocusOnEnter"
+                                      Validation.ErrorTemplate="{StaticResource ErrorTemplate}"/>
+
+                            <!-- Item Type -->
+                            <TextBlock Text="Item Type:" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="ItemTypeComboBox"
+                                      ItemsSource="{Binding ItemTypes}"
+                                      SelectedValue="{Binding ItemTypeId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                      SelectedValuePath="Key"
+                                      DisplayMemberPath="Value"
+                                      Style="{StaticResource ComboBoxStyle}"
+                                      ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                      PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <!-- Unit Measure -->
+                            <TextBlock Text="Unit Measure:" Style="{StaticResource LabelStyle}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <ComboBox x:Name="UnitMeasureComboBox"
+                                          ItemsSource="{Binding UnitMeasures}"
+                                          SelectedValue="{Binding UnitMeasureId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                          SelectedValuePath="UnitMeasureId"
+                                          DisplayMemberPath="UnitMeasureName"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"
+                                          Validation.ErrorTemplate="{StaticResource ErrorTemplate}"/>
+
+                                <Button Grid.Column="1"
+                                        Command="{Binding AddUnitMeasureCommand}"
+                                        ToolTip="Add New Unit"
+                                        Margin="4,0,0,0"
+                                        VerticalAlignment="Top"
+                                        Focusable="False"
+                                        Style="{StaticResource AddButtonStyle}"/>
+
+                            </Grid>
+
+                            <Expander Header="Alternative Units (Optional)"
+                                      IsExpanded="False"
+                                      Margin="0,0,0,12"
+                                      Focusable="False">
+                                <Border Style="{StaticResource UnitConversionPanelStyle}">
+                                    <StackPanel>
+                                        <ItemsControl ItemsSource="{Binding UnitConversions}" Margin="0,0,0,6">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Style="{StaticResource UnitConversionCardStyle}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <StackPanel Orientation="Horizontal"
+                                                                        VerticalAlignment="Center">
+                                                                <TextBlock Text="1 "
+                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
+                                                                <TextBlock Text="{Binding DataContext.BaseUnitMeasureName, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
+                                                                <TextBlock Text=" = "
+                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
+                                                                <TextBlock Text="{Binding ConversionRate, StringFormat=N4}"
+                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
+                                                                <TextBlock Text=" "
+                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
+                                                                <TextBlock Text="{Binding TargetUnitMeasureName}"
+                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
+                                                            </StackPanel>
+
+                                                            <Button Grid.Column="1"
+                                                                    Command="{Binding DataContext.RemoveUnitConversionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource DeleteButtonStyle}"
+                                                                    Width="30"
+                                                                    Height="30"
+                                                                    Margin="10,0,0,0"
+                                                                    Padding="0"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <Border BorderBrush="#C7D4EA"
+                                                BorderThickness="1"
+                                                CornerRadius="7"
+                                                Padding="10"
+                                                Background="#F3F7FC">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="92"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Margin="0,0,8,0">
+                                                    <TextBlock Text="TO UOM" Style="{StaticResource LabelStyle}"/>
+                                                    <ComboBox ItemsSource="{Binding UnitMeasures}"
+                                                              SelectedItem="{Binding SelectedTargetUnitMeasure, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                              DisplayMemberPath="UnitMeasureName"
+                                                              Style="{StaticResource ComboBoxStyle}"
+                                                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                                              Margin="0"/>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                                    <TextBlock Text="FACTOR" Style="{StaticResource LabelStyle}"/>
+                                                    <TextBox Text="{Binding ConversionRate, UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{StaticResource TextBoxStyle}"
+                                                             Margin="0"/>
+                                                </StackPanel>
+
+                                                <Button Grid.Column="2"
+                                                        Content="Add"
+                                                        Command="{Binding AddUnitConversionCommand}"
+                                                        Style="{StaticResource PrimaryButtonStyle}"
+                                                        Width="58"
+                                                        Margin="0,18,0,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </Expander>
+
+                            <!-- Reorder Point & Max Stock Qty -->
+                            <Grid Margin="0 0 0 12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Reorder Point -->
+                                <TextBlock Text="Min Stock Qty:" Style="{StaticResource LabelStyle}" Margin="0 0 8 0"/>
+                                <TextBox x:Name="ReorderPointTextBox" Grid.Row="1"
+                                         Text="{Binding ReorderPoint, UpdateSourceTrigger=PropertyChanged}"
+                                         MaxLength="5"
+                                         Style="{StaticResource TextBoxStyle}" 
+                                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                         PreviewKeyDown="MoveFocusOnEnter"
+                                         GotKeyboardFocus="SelectAllText_GotFocus"
+                                         Margin="0 0 8 0"/>
+
+                                <!-- Max Stock Qty -->
+                                <TextBlock Grid.Column="1" Text="Max Stock Qty:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="MaxStockQuantityTextBox" Grid.Column="1" Grid.Row="1"
+                                         Text="{Binding MaxStockQuantity, UpdateSourceTrigger=PropertyChanged}"
+                                         MaxLength="5"
+                                         Style="{StaticResource TextBoxStyle}"
+                                         PreviewKeyDown="MoveFocusOnEnter"
+                                         GotKeyboardFocus="SelectAllText_GotFocus"
+                                         Margin="0"/>
+
+                            </Grid>
+
+                            <!-- Additional Quantity Point & Wastage Percent -->
+                            <Grid Margin="0 0 0 12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Additional Stock -->
+                                <TextBlock Text="Add. Stock Qty:" Style="{StaticResource LabelStyle}" Margin="0 0 8 0"/>
+                                <TextBox x:Name="AdditionalStockQuantityTextBox" Grid.Row="1"
+                                         Text="{Binding AdditionalStockQuantity, UpdateSourceTrigger=PropertyChanged}"
+                                         MaxLength="5"
+                                         Style="{StaticResource TextBoxStyle}" 
+                                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                         PreviewKeyDown="MoveFocusOnEnter"
+                                         Focusable="False"
+                                         GotKeyboardFocus="SelectAllText_GotFocus"
+                                         Margin="0 0 8 0"/>
+
+                                <!-- Wastage Percent -->
+                                <TextBlock Grid.Column="1" Text="Wastage %:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="WastagePercentage" Grid.Column="1" Grid.Row="1"
+                                         Text="{Binding WastagePercentage, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
+                                         MaxLength="5"
+                                         Style="{StaticResource TextBoxStyle}"
+                                         PreviewKeyDown="MoveFocusOnEnter"
+                                         Focusable="False"
+                                         GotKeyboardFocus="SelectAllText_GotFocus"
+                                         Margin="0"/>
+
+                            </Grid>
+
+                            <!-- Status Flags -->
+                            <StackPanel Margin="0,8,0,8">
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+
+                                    <CheckBox Content="Track Expiry Date"
+                                              IsChecked="{Binding TrackExpiry, UpdateSourceTrigger=PropertyChanged}"
+                                              Style="{StaticResource CheckBoxStyle}"
+                                              PreviewKeyDown="MoveFocusOnEnter"
+                                              Margin="0,0,25,0"/>
+
+                                    <CheckBox Content="Purchasable"
+                                              IsChecked="{Binding IsPurchasable, UpdateSourceTrigger=PropertyChanged}"
+                                              Style="{StaticResource CheckBoxStyle}"
+                                              Focusable="False"/>
+
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox x:Name="IsActiveCheckBox"
+                                              Content="Is Active"
+                                              IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}"
+                                              Style="{StaticResource CheckBoxStyle}"
+                                              Focusable="False"
+                                              Margin="0,0,25,0"/>
+
+                                    <CheckBox Content="Is Tax Applicable"
+                                              IsChecked="{Binding IsTaxApplicable, UpdateSourceTrigger=PropertyChanged}"
+                                              Style="{StaticResource CheckBoxStyle}"
+                                              Focusable="False"/>
+                                </StackPanel>
+
+                            </StackPanel>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#E0E0E0" Padding="0,12,0,0">
+                        <!-- Action Buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            
+                            <Button x:Name="SaveButton"
+                                    Content="{Binding SaveButtonText}"
+                                    Command="{Binding SaveProductCommand}" 
+                                    Click="SaveButton_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}" 
+                                    Margin="0,0,10,0"/>
+
+                            <Button Content="Edit" 
+                                    Command="{Binding EditProductCommand}" 
+                                    Style="{StaticResource SecondaryButtonStyle}"/>
+
+                        </StackPanel>
+
+                    </Border>
+
+                </Grid>
+                
+                
+            </Border>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Style="{StaticResource PanelCardStyle}" Margin="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Background="#F1F2F6" Padding="12,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Text="Product List" 
+                                           Style="{StaticResource SubHeaderTextStyle}" 
+                                           VerticalAlignment="Center"
+                                           Margin="0"/>
+
+                                <Grid Grid.Column="2" VerticalAlignment="Center" Width="220" Margin="15,0,0,0">
+                                    <TextBox x:Name="SearchInput"
+                                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource SearchTextBoxStyle}"
+                                             CharacterCasing="Upper"
+                                             PreviewTextInput="AlphaNumericWithSpace_PreviewTextInput"
+                                             DataObject.Pasting="AlphaNumericWithSpace_Pasting" 
+                                             Margin="0"/>
+
+                                    <TextBlock Text="code / Name"
+                                               Foreground="DarkGray"
+                                               Margin="10,0,0,0"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Hidden"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Text, ElementName=SearchInput}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Text, ElementName=SearchInput}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+
+                                <Button Grid.Column="3"
+                                        Command="{Binding SearchProductCommand}" 
+                                        Style="{StaticResource SearchButtonStyle}" 
+                                        ToolTip="Search Products"
+                                        Margin="5,0,0,0">
+
+                                </Button>
+
+
+                                <Button Grid.Column="5"
+                                        Command="{Binding DeleteProductCommand}" 
+                                        Style="{StaticResource DeleteButtonStyle}" 
+                                        ToolTip="Delete Product"
+                                        IsEnabled="False">
+
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- Data Grid -->
+                        <DataGrid Grid.Row="1" 
+                                  ItemsSource="{Binding ProductList}" 
+                                  SelectedItem="{Binding SelectedProduct, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
+                                  Style="{StaticResource DataGridStyle}"
+                                  Margin="0,4,0,0"
+                                  AutoGenerateColumns="False"
+                                  SelectionMode="Single"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding ProductId}" Width="Auto" Visibility="Hidden"/>
+                                <DataGridTextColumn Header="Product Code" Binding="{Binding ProductCode}" Width="Auto"/>
+                                <DataGridTextColumn Header="Barcode" Binding="{Binding Barcode}" Width="Auto"/>
+                                <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="Auto" />
+                                <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="Auto" />
+                                <DataGridTextColumn Header="Item Type" Binding="{Binding ItemTypeName}" Width="Auto" />
+                                <DataGridTextColumn Header="Unit Measure" Binding="{Binding UnitMeasureName}" Width="Auto" />
+                                <DataGridTextColumn Header="Reorder Point" Binding="{Binding ReorderPoint}" Width="Auto" >
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Max Stock Qty" Binding="{Binding MaxStockQuantity}" Width="Auto" >
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Add.Stock Qty" Binding="{Binding AdditionalStockQuantity}" Width="Auto" >
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Wastage %" Binding="{Binding WastagePercentage}" Width="Auto">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                
+                                <DataGridCheckBoxColumn Header="Purchasable" Binding="{Binding IsPurchasable}" Width="Auto" />
+                                <DataGridCheckBoxColumn Header="TrackExpiry" Binding="{Binding TrackExpiry}" Width="Auto" />
+                                <DataGridCheckBoxColumn Header="Taxable" Binding="{Binding IsTaxApplicable}" Width="Auto" />
+                                <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="Auto" />
+
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                    </Grid>
+                </Border>
+
+            </Grid>
+            
+        </Grid>
+        
+    </Grid>
+
+</UserControl>

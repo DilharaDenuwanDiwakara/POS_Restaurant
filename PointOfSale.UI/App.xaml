@@ -1,0 +1,301 @@
+﻿<Application x:Class="PointOfSale.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:PointOfSale.UI"
+             xmlns:viewssecurity="clr-namespace:PointOfSale.UI.Views.Security"
+             xmlns:viewssecuritydialog="clr-namespace:PointOfSale.UI.Views.Security.Dialogs"
+             xmlns:viewmodelssecurity="clr-namespace:PointOfSale.UI.ViewModels.Security"
+             xmlns:viewspurchasing="clr-namespace:PointOfSale.UI.Views.Purchasing"
+             xmlns:viewmodelspurchasing="clr-namespace:PointOfSale.UI.ViewModels.Purchasing"
+             xmlns:viewrestaurant="clr-namespace:PointOfSale.UI.Views.Restaurant"
+             xmlns:viewrestaurantdialog="clr-namespace:PointOfSale.UI.Views.Restaurant.Dialogs"
+             xmlns:viewmodelrestaurant="clr-namespace:PointOfSale.UI.ViewModels.Restaurant"
+             xmlns:viewinventory="clr-namespace:PointOfSale.UI.Views.Inventory"
+             xmlns:viewinventorydialog="clr-namespace:PointOfSale.UI.Views.Inventory.Dialogs"
+             xmlns:viewmodelinventory="clr-namespace:PointOfSale.UI.ViewModels.Inventory"
+             xmlns:viewsales ="clr-namespace:PointOfSale.UI.Views.Sales"
+             xmlns:viewsalesdialog ="clr-namespace:PointOfSale.UI.Views.Sales.Dialogs"
+             xmlns:viewmodelsales="clr-namespace:PointOfSale.UI.ViewModels.Sales"
+             xmlns:viewaccountsdialog="clr-namespace:PointOfSale.UI.Views.Accounts.Dialogs"
+             xmlns:viewaccounts="clr-namespace:PointOfSale.UI.Views.Accounts"
+             xmlns:viewmodelaccounts="clr-namespace:PointOfSale.UI.ViewModels.Accounts"
+             xmlns:viewsystem="clr-namespace:PointOfSale.UI.Views.Settings"
+             xmlns:viewmodelsystem="clr-namespace:PointOfSale.UI.ViewModels.Settings"
+             xmlns:viewmodelshell="clr-namespace:PointOfSale.UI.ViewModels.Shell"
+             xmlns:viewshell="clr-namespace:PointOfSale.UI.Views.Shell">
+    
+    <Application.Resources>
+
+        <ResourceDictionary>
+
+            <!-- Merged Styles -->
+            <ResourceDictionary.MergedDictionaries>
+                
+                <!-- Converters -->
+                <ResourceDictionary Source="/Resources/Converters.xaml"/>
+                
+                <ResourceDictionary Source="/Resources/Themes/Colors.xaml"/>
+                <ResourceDictionary Source="/Resources/Themes/Icons.xaml"/>
+
+                
+
+                <ResourceDictionary Source="/Resources/Components/Text.xaml"/>
+                <ResourceDictionary Source="/Resources/Components/Buttons.xaml"/>
+                <ResourceDictionary Source="/Resources/Components/Inputs.xaml"/>
+                <ResourceDictionary Source="/Resources/Components/Containers.xaml"/>
+                <ResourceDictionary Source="/Resources/Components/DataGrids.xaml"/>
+
+                <ResourceDictionary Source="/Resources/Styles/MainViewStyle.xaml"/>
+                <ResourceDictionary Source="/Resources/Styles/SalesStyles.xaml"/>
+                
+            </ResourceDictionary.MergedDictionaries>
+
+            <DropShadowEffect x:Key="DropShadowEffect"
+                              BlurRadius="7"
+                              ShadowDepth="3"
+                              Direction="270"
+                              Color="Black"
+                              Opacity="0.15"/>
+
+            <!-- Data  template -->
+            <DataTemplate DataType="{x:Type viewmodelssecurity:UserViewModel}">
+                <viewssecurity:UserView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelssecurity:UserProfileViewModel}">
+                <viewssecuritydialog:UserProfileWindow/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelssecurity:DeviceRegistrationViewModel}">
+                <viewssecuritydialog:DeviceRegistrationWindow/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelssecurity:LoginViewModel}">
+                <viewssecurity:LoginView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelshell:DashboardViewModel}">
+                <viewshell:Dashboard/>
+            </DataTemplate>
+
+            <!-- Purchasing -->
+            <DataTemplate DataType="{x:Type viewmodelspurchasing:SupplierViewModel}">
+                <viewspurchasing:SupplierView/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelspurchasing:GoodsReceiveNoteViewModel}">
+                <viewspurchasing:GoodsReceiveNoteView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelspurchasing:GoodsReceiveNoteApprovalViewModel}">
+                <viewspurchasing:GoodsReceiveNoteApprovalView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelspurchasing:GoodsPurchaseNoteViewModel}">
+                <viewspurchasing:GoodsPurchaseNoteView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelspurchasing:GoodsPurchaseNoteApprovalViewModel}">
+                <viewspurchasing:GoodsPurchaseNoteApprovalView/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelspurchasing:SupplierReturnViewModel}">
+                <viewspurchasing:SupplierReturnView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelspurchasing:SupplierReturnApprovalViewModel}">
+                <viewspurchasing:SupplierReturnApprovalView/>
+            </DataTemplate>
+
+            <!-- Restaurant -->
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:TableViewModel}">
+                <viewrestaurant:TableView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:RoomRegisterViewModel}">
+                <viewrestaurant:RoomRegisterView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:RoomBookingViewModel}">
+                <viewrestaurant:RoomBookingView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:MenuItemViewModel}">
+                <viewrestaurant:MenuItemView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:MenuCategoryViewModel}">
+                <viewrestaurant:MenuCategoryView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:MenuItemListViewModel}">
+                <viewrestaurant:MenuItemListView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:StationViewModel}">
+                <viewrestaurantdialog:StationWindow/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:MealPeriodViewModel}">
+                <viewrestaurantdialog:MealPeriodWindow/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:PriceUpdateViewModel}">
+                <viewrestaurantdialog:PriceUpdateWindow/>
+            </DataTemplate>
+
+            <!-- Inventory -->
+            
+            <DataTemplate DataType="{x:Type viewmodelinventory:CategoryViewModel}">
+                <viewinventory:CategoryView/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelinventory:ProductViewModel}">
+                <viewinventory:ProductView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelinventory:ProductListViewModel}">
+                <viewinventory:ProductListView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelinventory:UnitMeasureViewModel}">
+                <viewinventorydialog:UnitMeasureWindow/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelinventory:WastageReasonViewModel}">
+                <viewinventorydialog:WastageReason/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelinventory:BatchSelectionViewModel}">
+                <viewinventory:BatchSelectionView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelinventory:StockTransferViewModel}">
+                <viewinventory:StockTransferView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelinventory:BarcodePrintViewModel}">
+                <viewinventory:BarcodePrintView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelinventory:InventoryReportViewModel}">
+                <viewinventory:InventoryReportView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelinventory:StockAdjustmentViewModel}">
+                <viewinventory:StockAdjustmentView/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelinventory:WastageViewModel}">
+                <viewinventory:WastageView/>
+            </DataTemplate>
+
+
+            <!-- Sales -->
+            <DataTemplate DataType="{x:Type viewmodelsales:CustomerViewModel}">
+                <viewsales:CustomerView/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelsales:CashInOutViewModel}">
+                <viewsalesdialog:CashInOutWindow/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelsales:SalesListViewModel}">
+                <viewsales:SalesListView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelsales:ShiftManagementViewModel}">
+                <viewsales:ShiftManagementView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelsales:DiscountViewModel}">
+                <viewsales:DiscountView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelsales:PromotionViewModel}">
+                <viewsales:PromotionView/>
+            </DataTemplate>
+
+            <!-- Accounts -->
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:AccountRegisterViewModel}">
+                <viewaccounts:AccountRegisterView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:OpeningBalanceViewModel}">
+                <viewaccounts:OpeningBalanceView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:AccountTypeRegisterViewModel}">
+                <viewaccounts:AccountTypeRegisterWindow/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelaccounts:ExpensesViewModel}">
+                <viewaccounts:ExpensesView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:ExpensesCategoryViewModel}">
+                <viewaccountsdialog:ExpensesCategoryWindow/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:SupplierPaymentTabViewModel}">
+                <viewaccounts:SupplierPaymentTabView/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelaccounts:SupplierPaymentViewModel}">
+                <viewaccounts:SupplierPaymentView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:SupplierAdvanceViewModel}">
+                <viewaccounts:SupplierAdvanceView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:SupplierSettlementViewModel}">
+                <viewaccounts:SupplierSettlementView/>
+            </DataTemplate>
+            
+            <DataTemplate DataType="{x:Type viewmodelaccounts:CustomerPaymentViewModel}">
+                <viewaccounts:CustomerPaymentView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:CustomerAdvanceViewModel}">
+                <viewaccounts:CustomerAdvanceView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:CustomerSettlementViewModel}">
+                <viewaccounts:CustomerSettlementView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelaccounts:CustomerPaymentTabViewModel}">
+                <viewaccounts:CustomerPaymentTabView/>
+            </DataTemplate>
+
+            <!-- System -->
+            <DataTemplate DataType="{x:Type viewmodelsystem:SettingsTabViewModel}">
+                <viewsystem:SettingsTabView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelsystem:CompanySettingsViewModel}">
+                <viewsystem:CompanySettingsView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelsystem:TaxConfigurationViewModel}">
+                <viewsystem:TaxConfigurationView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelsystem:BankViewModel}">
+                <viewsystem:BankView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelsystem:PaymentTerminalViewModel}">
+                <viewsystem:PaymentTerminalView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelsystem:AccountMappingViewModel}">
+                <viewsystem:AccountMappingView/>
+            </DataTemplate>
+        </ResourceDictionary>
+        
+    </Application.Resources>
+</Application>
+

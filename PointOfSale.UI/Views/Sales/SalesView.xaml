@@ -1,0 +1,1031 @@
+<Window x:Class="PointOfSale.UI.Views.Sales.SalesView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PointOfSale.UI.Views.Sales"
+        xmlns:enums="clr-namespace:PointOfSale.Core.Enums;assembly=PointOfSale.Core"
+        mc:Ignorable="d"
+        Title="SalesView"
+        WindowState="Maximized"
+        MinHeight="760"
+        MinWidth="1366"
+        ResizeMode="CanResizeWithGrip"
+        FontFamily="Segoe UI">
+
+    <Window.Resources>
+        <Style TargetType="ScrollBar" BasedOn="{StaticResource SalesScrollBarStyle}"/>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="F1"
+                    Command="{Binding SelectPaymentMethodCommand}"
+                    CommandParameter="{x:Static enums:SalesPaymentMethod.CASH}" />
+        <KeyBinding Key="F2"
+                    Command="{Binding SelectPaymentMethodCommand}"
+                    CommandParameter="{x:Static enums:SalesPaymentMethod.CARD}" />
+        <KeyBinding Key="F3"
+                    Command="{Binding SelectPaymentMethodCommand}"
+                    CommandParameter="{x:Static enums:SalesPaymentMethod.CREDIT}" />
+        <KeyBinding Key="Delete" Command="{Binding RemoveItemCommand}" />
+    </Window.InputBindings>
+
+    <Grid Style="{StaticResource SalesMainGridStyle}">
+        <Border Background="#90000000"
+                Panel.ZIndex="100"
+                Visibility="{Binding IsOverlayVisible, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}"/>
+
+        <Grid Margin="24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="13*"/>
+                <ColumnDefinition Width="7*" MinWidth="420"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0"
+                  Grid.Column="0"
+                  Margin="0,0,18,18">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Orders line" Style="{StaticResource SalesViewTitleStyle}"/>
+                        <TextBlock Text="{Binding ServedOrders.Count, StringFormat=' ({0})'}"
+                                   Style="{StaticResource SalesViewCountStyle}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Content="Refresh"
+                                Command="{Binding RefreshOrdersCommand}"
+                                ToolTip="Refresh Orders"
+                                Style="{StaticResource RefreshOrdersPillButtonStyle}"/>
+                    </StackPanel>
+                </Grid>
+
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding ServedOrders}"
+                         SelectedItem="{Binding SelectedServedOrder}"
+                         Style="{StaticResource OrdersListBoxStyle}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource OrderCardStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Grid>
+                                        <TextBlock Text="{Binding OrderNumber}"
+                                                   Style="{StaticResource OrderNumberTextStyle}"/>
+                                        <Border HorizontalAlignment="Right"
+                                                Style="{StaticResource OrderTablePillStyle}">
+                                            <TextBlock Text="{Binding TableName}"
+                                                       Style="{StaticResource OrderTablePillTextStyle}"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding TableName}"
+                                               Style="{StaticResource OrderCustomerTextStyle}"/>
+
+                                    <!-- // TODO: ServedOrderDto needs item count and status fields to replace these placeholder order-card visuals. -->
+                                    <Grid Grid.Row="2" Margin="0,2,0,8">
+                                        <TextBlock Text="4 Items"
+                                                   Style="{StaticResource OrderMetaTextStyle}"/>
+                                        <TextBlock Text="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}"
+                                                   Style="{StaticResource OrderAmountTextStyle}"/>
+                                    </Grid>
+
+                                    <Border Grid.Row="3"
+                                            Style="{StaticResource StatusProgressPillStyle}">
+                                        <TextBlock Text="In Progress"
+                                                   Style="{StaticResource StatusProgressTextStyle}"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,0,18,18"
+                    Style="{StaticResource SalesSectionCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="310"/>
+                            <ColumnDefinition Width="260"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Menu" Style="{StaticResource SalesViewTitleStyle}"/>
+                            <TextBlock Text="{Binding FilteredProducts.Count, StringFormat=' ({0})'}"
+                                       Style="{StaticResource SalesViewCountStyle}"/>
+                        </StackPanel>
+
+                        <TextBox x:Name="BarcodeTextBox"
+                                 Grid.Column="1"
+                                 Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                 Style="{StaticResource ProductInputStyle}"
+                                 KeyDown="BarcodeTextBox_KeyDown"
+                                 PreviewTextInput="AlphanumericOnly_PreviewTextInput"
+                                 DataObject.Pasting="AlphanumericOnly_Pasting"
+                                 Tag="Search or scan code"/>
+
+                        <ComboBox x:Name="ProductComboBox"
+                                  Grid.Column="2"
+                                  Margin="12,0,0,0"
+                                  ItemsSource="{Binding FilteredProducts}"
+                                  SelectedItem="{Binding SelectedProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                  TextSearch.TextPath="DisplayName"
+                                  IsTextSearchEnabled="True"
+                                  IsEditable="True"
+                                  Style="{StaticResource SalesComboStyle}"
+                                  KeyDown="ProductComboBox_KeyDown">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,2,0,2">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding OfferSummary}"
+                                                   Foreground="#C96A00"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="{Binding HasOffer, Converter={StaticResource BoolToVisibility}}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding Categories}"
+                             SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                             Style="{StaticResource CategoryChipListStyle}"
+                             Margin="0,16,0,18">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Name}"
+                                        Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource CategoryChipButtonStyle}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding FilteredProducts}"
+                             SelectedItem="{Binding SelectedProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MenuProductListStyle}"
+                             ScrollViewer.PanningMode="VerticalOnly"
+                             ScrollViewer.CanContentScroll="True"
+                             Stylus.IsFlicksEnabled="False">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="5"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource MenuProductCardStyle}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <Border Grid.Row="0"
+                                                Height="108"
+                                                MaxHeight="108"
+                                                Margin="8"
+                                                Style="{StaticResource MenuImagePlaceholderStyle}">
+                                            <Grid ClipToBounds="True">
+                                                <Grid>
+                                                    <Ellipse Width="48"
+                                                             Height="48"
+                                                             Stroke="#CBD5E1"
+                                                             StrokeThickness="2"/>
+                                                    <Path Width="28"
+                                                          Height="28"
+                                                          Stretch="Uniform"
+                                                          Fill="#94A3B8"
+                                                          Data="M4,18 L9,9 L13,14 L16,10 L22,18 Z M6,20 H22 V22 H6 Z"/>
+                                                </Grid>
+                                                <Image Source="{Binding ImageUrl, IsAsync=True, TargetNullValue={x:Null}, FallbackValue={x:Null}}"
+                                                       MaxHeight="108"
+                                                       Stretch="UniformToFill"
+                                                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <StackPanel Grid.Row="1" Margin="5">
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       TextWrapping="Wrap"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxHeight="40"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource SalesTextBrush}"/>
+                                            <TextBlock Text="{Binding DefaultPrice, StringFormat='Rs. {0:N2}'}"
+                                                       Foreground="{StaticResource SalesAccentBrush}"
+                                                       FontWeight="Bold"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+
+                                        <Button Grid.Row="2"
+                                                Content="Add item"
+                                                Height="45"
+                                                Command="{Binding DataContext.AddProductCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MenuCardAddButtonStyle}"
+                                                ClickMode="Release"
+                                                Focusable="False"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2"
+                    Grid.Column="0"
+                    Margin="0,0,18,0"
+                    Style="{StaticResource ActionStripStyle}">
+                <UniformGrid Columns="5" Rows="1">
+                    <Button Content="Cancel Invoice"
+                            Command="{Binding CancelInvoiceCommand}"
+                            Style="{StaticResource CancelInvoiceButtonStyle}" />
+
+                    <Button Content="Cash In-Out"
+                            Command="{Binding OpenCashInOutCommand}"
+                            Style="{StaticResource ReturnButtonStyle}"/>
+
+                    <Button Content="Room Booking"
+                            Command="{Binding OpenRoomBookingCommand}"
+                            Style="{StaticResource HoldButtonStyle}"/>
+
+                    <Button Content="Close Shift"
+                            Command="{Binding CloseShiftCommand}"
+                            Style="{StaticResource ReturnButtonStyle}"/>
+
+                    <Button Content="Discount"
+                            Command="{Binding EnableDiscountCommad}"
+                            Style="{StaticResource SearchActionButtonStyle}"/>
+
+                    <Button Content="RE-PRINT" Style="{StaticResource RePrintButtonStyle}" Visibility="Collapsed"/>
+                    <Button Content="RECALL (F10)"
+                            Command="{Binding RecallSaleCommand}"
+                            Style="{StaticResource RecallButtonStyle}"
+                            Visibility="Collapsed"/>
+                </UniformGrid>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Grid.RowSpan="3"
+                    Style="{StaticResource OrderDetailsPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Order Details" Style="{StaticResource OrderDetailsTitleStyle}"/>
+                            <Button Grid.Column="1"
+                                    Content="Switch to Dashboard"
+                                    Command="{Binding OpenAdminDashboardCommand}"
+                                    Visibility="{Binding CanAccessAdminPanel, Converter={StaticResource BoolToVisibility}}"
+                                    Style="{StaticResource RefreshOrdersPillButtonStyle}"
+                                    Margin="0,0,12,0"/>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding CurrentUser.FullName}"
+                                       Style="{StaticResource UserTextStyle}"/>
+                        </Grid>
+
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Date" Style="{StaticResource DetailsLabelStyle}"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding CurrentDateTime, StringFormat='{}{0:dddd, dd MMMM yyyy}'}"
+                                       Style="{StaticResource DetailsValueStyle}"/>
+                        </Grid>
+
+                        <TextBlock Text="Customer Name" Style="{StaticResource DetailsFieldHeaderStyle}" Margin="0,18,0,0"/>
+
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ComboBox ItemsSource="{Binding FilteredCustomers}"
+                                      SelectedItem="{Binding SelectedCustomer, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                      Text="{Binding CustomerSearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                      IsDropDownOpen="{Binding IsCustomerDropDownOpen, Mode=TwoWay}"
+                                      SelectedValuePath="Id"
+                                      TextSearch.TextPath="CustomerName"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="False"
+                                      StaysOpenOnEdit="True"
+                                      Style="{StaticResource CustomerComboStyle}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding CustomerName}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding ContactNumber}"
+                                                       Foreground="{StaticResource Brush.Text.Muted}"
+                                                       FontSize="11"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <Button Grid.Column="1"
+                                    Style="{StaticResource AddButtonStyle}"
+                                    Background="{StaticResource SalesAccentBrush}"
+                                    Margin="8,0,0,0"
+                                    Height="38"
+                                    Width="38"
+                                    Command="{Binding AddCustomerCommand}"/>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Visibility="Collapsed">
+                            <TextBlock Text="Outstanding Balance" Style="{StaticResource BalanceLabelStyle}"/>
+                            <TextBlock Text="{Binding OutstandingBalance, StringFormat='Rs. {0:N2}'}" Style="{StaticResource BalanceValueStyle}"/>
+                        </StackPanel>
+
+                        <Border Style="{StaticResource ProductImageBorderStyle}" Visibility="Collapsed">
+                            <Image x:Name="ProductImage" Style="{StaticResource ProductImageStyle}"/>
+                        </Border>
+                    </StackPanel>
+
+                    <Grid Grid.Row="1" Margin="0,14,0,0">
+                            <DataGrid ItemsSource="{Binding CartItems}"
+                                      SelectedItem="{Binding SelectedCartItem}"
+                                      Style="{StaticResource SalesDataGridStyle}"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
+                                        <Setter Property="MinHeight" Value="48"/>
+                                    </Style>
+                                </DataGrid.RowStyle>
+
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Product Code" Width="120" Binding="{Binding ProductCode}" Visibility="Hidden"/>
+
+                                    <DataGridTextColumn Header="Product Name" Width="Auto" MinWidth="110" Binding="{Binding ProductName}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextWrapping" Value="Wrap"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                                <Setter Property="ToolTip" Value="{Binding ProductName}"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Note" Width="65" Binding="{Binding Note}" Visibility="Collapsed">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                                <Setter Property="ToolTip" Value="{Binding Note}"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Offer" Width="Auto" Binding="{Binding OfferDisplay}" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                                <Setter Property="ToolTip" Value="{Binding OfferDisplay}"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Unit Cost" Width="120" Binding="{Binding UnitCost}" Visibility="Collapsed"/>
+
+                                    <DataGridTextColumn Header="Price" Binding="{Binding UnitPrice, StringFormat=N2}" Width="Auto" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Discount" Width="Auto" Binding="{Binding LineDiscount, StringFormat=N2}" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTemplateColumn Header="Qty" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Grid HorizontalAlignment="Center">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <Button Grid.Column="0"
+                                                            Content="-"
+                                                            Command="{Binding DataContext.DecreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource QuantityStepperButtonStyle}"/>
+
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Quantity}"
+                                                               Style="{StaticResource QuantityDisplayTextStyle}"/>
+
+                                                    <Button Grid.Column="2"
+                                                            Content="+"
+                                                            Command="{Binding DataContext.IncreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource QuantityStepperButtonStyle}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="Total" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Amount, StringFormat=N2}" TextAlignment="Right" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="" Width="42">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="X"
+                                                        Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource PaymentDeleteButtonStyle}"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                    </Grid>
+
+                    <StackPanel Grid.Row="2" Margin="0,8,0,14">
+                            <Border Style="{StaticResource SummaryBorderStyle}" Margin="0,0,0,14">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="Total Items" Style="{StaticResource SummaryLabelStyle}" Visibility="Collapsed"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding CartItems.Count, StringFormat='{}{0} items'}"
+                                               Style="{StaticResource SummaryValueStyle}"
+                                               Visibility="Collapsed"/>
+
+                                    <TextBlock Grid.Row="1" Text="SUB TOTAL" Style="{StaticResource SummaryLabelStyle}"/>
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="1"
+                                               Text="{Binding SubTotal, StringFormat='Rs. {0:N2}', UpdateSourceTrigger=PropertyChanged}"
+                                               Style="{StaticResource SummaryValueStyle}"/>
+
+                                    <TextBlock Grid.Row="2" Text="Tax" Style="{StaticResource SummaryLabelStyle}" Visibility="Collapsed"/>
+                                    <TextBlock Grid.Row="2"
+                                               Grid.Column="1"
+                                               Text="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}"
+                                               Style="{StaticResource SummaryValueStyle}"
+                                               Visibility="Collapsed"/>
+
+                                    <TextBlock Grid.Row="3" Text="BILL DISCOUNT %" Style="{StaticResource DiscountLabelStyle}"/>
+                                    <TextBox x:Name="TxtLineDiscountPercent"
+                                             Grid.Row="3"
+                                             Grid.Column="1"
+                                             Text="{Binding LineDiscountPercent, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                             Style="{StaticResource DiscountValueStyle}"
+                                             IsEnabled="{Binding IsDiscountEnabled}"/>
+
+                                    <StackPanel Grid.Row="4"
+                                                Grid.ColumnSpan="2"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Right">
+                                        <Button Content="5%"
+                                                Command="{Binding ApplyQuickDiscountCommand}"
+                                                CommandParameter="5"
+                                                Style="{StaticResource QuickDiscountButtonStyle}"/>
+                                        <Button Content="10%"
+                                                Command="{Binding ApplyQuickDiscountCommand}"
+                                                CommandParameter="10"
+                                                Style="{StaticResource QuickDiscountButtonStyle}"/>
+                                        <Button Content="15%"
+                                                Command="{Binding ApplyQuickDiscountCommand}"
+                                                CommandParameter="15"
+                                                Style="{StaticResource QuickDiscountButtonStyle}"/>
+                                        <Button Content="Clear"
+                                                Command="{Binding ApplyQuickDiscountCommand}"
+                                                CommandParameter="Clear"
+                                                Style="{StaticResource QuickDiscountButtonStyle}"
+                                                Margin="0,8,0,0"/>
+                                    </StackPanel>
+
+                                    <Grid Grid.Row="5"
+                                          Grid.ColumnSpan="2"
+                                          Visibility="{Binding HasAppliedDiscount, Converter={StaticResource BoolToVisibility}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding AppliedDiscountLabel}"
+                                                   Style="{StaticResource DiscountLabelStyle}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding AppliedDiscountAmount, StringFormat='- Rs. {0:N2}'}"
+                                                   Style="{StaticResource SummaryValueStyle}"/>
+                                    </Grid>
+
+                                    <Rectangle Grid.Row="6"
+                                               Grid.ColumnSpan="2"
+                                               Height="1"
+                                               Fill="#E5E7EB"
+                                               Margin="0,12"/>
+
+                                    <TextBlock Grid.Row="7" Text="NET AMOUNT" Style="{StaticResource NetAmountLabelStyle}"/>
+                                    <TextBlock Grid.Row="7"
+                                               Grid.Column="1"
+                                               Text="{Binding NetAmount, StringFormat='Rs. {0:N2}', UpdateSourceTrigger=PropertyChanged}"
+                                               Style="{StaticResource NetAmountValueStyle}"/>
+                                </Grid>
+                            </Border>
+
+                            <UniformGrid Columns="3" Margin="0,0,0,14">
+                                <Button Content="Cash (F1)"
+                                        Command="{Binding SelectPaymentMethodCommand}"
+                                        CommandParameter="{x:Static enums:SalesPaymentMethod.CASH}"
+                                        Style="{StaticResource PaymentModeButtonStyle}"/>
+                                <Button Content="Card (F2)"
+                                        Command="{Binding SelectPaymentMethodCommand}"
+                                        CommandParameter="{x:Static enums:SalesPaymentMethod.CARD}"
+                                        Style="{StaticResource PaymentModeButtonStyle}"/>
+                                <Button Content="Store Credit (F3)"
+                                        Command="{Binding SelectPaymentMethodCommand}"
+                                        CommandParameter="{x:Static enums:SalesPaymentMethod.CREDIT}"
+                                        Style="{StaticResource PaymentModeButtonStyle}"/>
+                            </UniformGrid>
+
+                            <Border x:Name="PaymentPanel"
+                                    Style="{StaticResource PaymentPanelBorderStyle}"
+                                    Visibility="{Binding IsPaymentInputVisible, Converter={StaticResource BoolToVisibility}}"
+                                    Margin="0,0,0,14">
+                                <Grid>
+                                    <Grid MinHeight="132"
+                                          Visibility="{Binding IsPaymentTypeCash, Converter={StaticResource BoolToVisibility}}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Text="CASH"
+                                                   Style="{StaticResource PaymentHeaderStyle}"
+                                                   Margin="0,0,0,10"/>
+
+                                        <TextBlock Grid.Row="1"
+                                                   Text="Customer Gave:"
+                                                   Style="{StaticResource InputLabelStyle}"
+                                                   Margin="0,0,0,6"/>
+
+                                        <Grid Grid.Row="2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox x:Name="TxtAmountGiven"
+                                                     Style="{StaticResource CashInputStyle}"
+                                                     Text="{Binding CurrentPaymentAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
+                                                     PreviewTextInput="DecimalAmount_PreviewTextInput"
+                                                     DataObject.Pasting="DecimalAmount_Pasting"
+                                                     InputScope="Number"/>
+
+                                            <Button Grid.Column="1"
+                                                    Content="ADD"
+                                                    Command="{Binding AddPaymentCommand}"
+                                                    Style="{StaticResource AddPaymentButtonStyle}"
+                                                    Margin="8,0,0,0"/>
+                                        </Grid>
+
+                                        <TextBlock Grid.Row="3"
+                                                   Text="{Binding PaymentErrorMessage}"
+                                                   Style="{StaticResource PaymentErrorTextStyle}"/>
+                                    </Grid>
+
+                                    <Grid MinHeight="180"
+                                          Visibility="{Binding IsPaymentTypeCard, Converter={StaticResource BoolToVisibility}}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0"
+                                                   Text="CARD PAYMENT"
+                                                   Style="{StaticResource PaymentHeaderStyle}"
+                                                   Margin="0,0,0,10"/>
+
+                                        <Grid Grid.Row="1" Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                                <TextBlock Text="Select Terminal:"
+                                                           Style="{StaticResource InputLabelStyle}"
+                                                           Margin="0,0,0,6"/>
+                                                <ComboBox ItemsSource="{Binding PaymentTerminals}"
+                                                          SelectedItem="{Binding SelectedPaymentTerminal, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                                          DisplayMemberPath="TerminalName"
+                                                          Style="{StaticResource PaymentTerminalStyle}"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                                <TextBlock Text="Reference No / Auth Code (4 digits):"
+                                                           Style="{StaticResource InputLabelStyle}"
+                                                           Margin="0,0,0,6"/>
+                                                <TextBox x:Name="CardReferenceNumberTextBox"
+                                                         Text="{Binding ReferenceNumber, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                         Style="{StaticResource CashInputStyle}"
+                                                         PreviewTextInput="DigitsOnly_PreviewTextInput"
+                                                         DataObject.Pasting="DigitsOnly_Pasting"
+                                                         InputScope="Number"
+                                                         TextAlignment="Left"
+                                                         MaxLength="4"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <TextBlock Grid.Row="2"
+                                                   Text="Amount:"
+                                                   Style="{StaticResource InputLabelStyle}"
+                                                   Margin="0,0,0,6"/>
+
+                                        <Grid Grid.Row="3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox Style="{StaticResource CashInputStyle}"
+                                                     Text="{Binding CurrentPaymentAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
+                                                     PreviewTextInput="DecimalAmount_PreviewTextInput"
+                                                     DataObject.Pasting="DecimalAmount_Pasting"
+                                                     InputScope="Number"/>
+
+                                            <Button Grid.Column="1"
+                                                    Content="ADD"
+                                                    Command="{Binding AddPaymentCommand}"
+                                                    Style="{StaticResource AddPaymentButtonStyle}"
+                                                    Margin="8,0,0,0"/>
+                                        </Grid>
+
+                                        <TextBlock Grid.Row="4"
+                                                   Text="{Binding PaymentErrorMessage}"
+                                                   Style="{StaticResource PaymentErrorTextStyle}"/>
+                                    </Grid>
+
+                                    <Grid MinHeight="160"
+                                          Visibility="{Binding IsPaymentTypeCredit, Converter={StaticResource BoolToVisibility}}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0"
+                                                   Text="STORE CREDIT"
+                                                   Style="{StaticResource PaymentHeaderStyle}"
+                                                   Margin="0,0,0,10"/>
+
+                                        <TextBlock Grid.Row="1"
+                                                   Text="Reference (Signee / PO / Emp ID):"
+                                                   Style="{StaticResource InputLabelStyle}"
+                                                   Margin="0,0,0,6"/>
+
+                                        <Grid Grid.Row="2" Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox Grid.Column="0"
+                                                     x:Name="StoreCreditReferenceNumberTextBox"
+                                                     Text="{Binding ReferenceNumber, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                     Style="{StaticResource CashInputStyle}"
+                                                     PreviewTextInput="AlphanumericOnly_PreviewTextInput"
+                                                     DataObject.Pasting="AlphanumericOnly_Pasting"
+                                                     TextAlignment="Left"
+                                                     MaxLength="50"/>
+
+                                            <Button Grid.Column="1"
+                                                    Content="ADD"
+                                                    Command="{Binding AddPaymentCommand}"
+                                                    Style="{StaticResource AddPaymentButtonStyle}"
+                                                    Margin="8,0,0,0"/>
+                                        </Grid>
+
+                                        <Border Grid.Row="3"
+                                                Background="#FFFBEB"
+                                                BorderBrush="{StaticResource WarningBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="10"
+                                                Padding="10,8"
+                                                Margin="0,0,0,10">
+                                            <TextBlock Text="Requires Customer Selection"
+                                                       Foreground="{StaticResource WarningBrush}"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       TextWrapping="Wrap"/>
+                                        </Border>
+
+                                        <TextBlock Grid.Row="4"
+                                                   Text="{Binding PaymentErrorMessage}"
+                                                   Style="{StaticResource PaymentErrorTextStyle}"/>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <StackPanel Visibility="{Binding IsPaymentWorkflowVisible, Converter={StaticResource BoolToVisibility}}"
+                                        Margin="0,0,0,14">
+                                <Border Style="{StaticResource AppliedPaymentsBorderStyle}"
+                                        Visibility="{Binding IsPaymentGridVisible, Converter={StaticResource BoolToVisibility}}"
+                                        Margin="0,0,0,10">
+                                    <DataGrid ItemsSource="{Binding AppliedPayments}"
+                                              Visibility="{Binding IsPaymentGridVisible, Converter={StaticResource BoolToVisibility}}"
+                                              Style="{StaticResource AppliedPaymentsDataGridStyle}"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              CanUserResizeRows="False"
+                                              HeadersVisibility="Column"
+                                              SelectionMode="Single">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Method"
+                                                                Binding="{Binding PaymentMethod}"
+                                                                Width="*"
+                                                                IsReadOnly="True"/>
+                                            <DataGridTextColumn Header="Amount"
+                                                                Binding="{Binding Amount, StringFormat=N2}"
+                                                                Width="110"
+                                                                IsReadOnly="True">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="TextAlignment" Value="Right"/>
+                                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                            <DataGridTemplateColumn Header="" Width="42">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="X"
+                                                                Command="{Binding DataContext.RemovePaymentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource PaymentDeleteButtonStyle}"
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Border>
+
+                                <Border Style="{StaticResource ChangeBorderStyle}">
+                                    <Grid>
+                                        <TextBlock Text="REMAINING:"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource ChangeLabelTextStyle}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TextBlock Text="CHANGE DUE:"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource ChangeLabelTextStyle}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TextBlock Text="{Binding RemainingBalance, StringFormat='Rs. {0:N2}'}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource ChangeAmountTextStyle}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TextBlock Text="{Binding ChangeDueAmount, StringFormat='Rs. {0:N2}'}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource ChangeAmountTextStyle}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                    </StackPanel>
+
+                            <Grid Grid.Row="2" Visibility="Collapsed">
+                                <Button Content="SEND SMS (F5)"
+                                        Style="{StaticResource SMSButtonStyle}"
+                                        Command="{Binding SaveSaleCommand}"/>
+                                <Button Content="SAVE &amp; PRINT (F6)"
+                                        Style="{StaticResource PrintButtonStyle}"
+                                        Command="{Binding SaveAndPrintCommand}"/>
+                            </Grid>
+
+                            <Grid Grid.Row="2" Visibility="Collapsed">
+                                <Border Style="{StaticResource KeypadBorderStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="3*"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <UniformGrid Columns="3" Style="{StaticResource KeypadGridStyle}">
+                                            <Button Content="7" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="8" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="9" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="4" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="5" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="6" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="1" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="2" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="3" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="C" Style="{StaticResource ClearKeyButtonStyle}" Click="ClearKeyButton_Click"/>
+                                            <Button Content="0" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                            <Button Content="." Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                                        </UniformGrid>
+
+                                        <Grid Grid.Column="1">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Button Grid.Row="0"
+                                                    Style="{StaticResource NumberButtonStyle}"
+                                                    Click="BackspaceButton_Click"
+                                                    ToolTip="Backspace">
+                                                <Viewbox Width="20" Height="20">
+                                                    <Path Fill="{StaticResource Brush.Text.Primary}"
+                                                          Data="M22,3H7C6.31,3 5.77,3.35 5.41,3.88L0,12L5.41,20.12C5.77,20.65 6.31,21 7,21H22C23.11,21 24,20.11 24,19V5C24,3.89 23.11,3 22,3M19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12L19,15.59Z"/>
+                                                </Viewbox>
+                                            </Button>
+
+                                            <Button Grid.Row="1"
+                                                    Grid.RowSpan="3"
+                                                    Height="Auto"
+                                                    Style="{StaticResource NumberButtonStyle}"
+                                                    Background="#2563EB"
+                                                    Foreground="White"
+                                                    BorderBrush="#2563EB"
+                                                    Click="EnterKeyButton_Click"
+                                                    ToolTip="Enter">
+                                                <Viewbox Width="26" Height="26">
+                                                    <Path Fill="White"
+                                                          Data="M19,7V11H5.83L8.42,8.41L7,7L2,12L7,17L8.41,15.59L5.83,13H21V7H19Z"/>
+                                                </Viewbox>
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                    <Grid Grid.Row="3" Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Content="Save Only"
+                                Command="{Binding SaveSaleCommand}"
+                                Style="{StaticResource SaveSaleSecondaryButtonStyle}"
+                                Margin="0,0,6,0"/>
+
+                        <Button Grid.Column="1"
+                                Content="Save &amp; Print"
+                                Command="{Binding SaveAndPrintCommand}"
+                                Style="{StaticResource PlaceOrderButtonStyle}"
+                                Margin="6,0,0,0"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

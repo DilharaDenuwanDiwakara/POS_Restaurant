@@ -1,0 +1,224 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style x:Key="Style.DataGrid.ColumnHeader" TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="#F8F9FA"/>
+        <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#E0E0E0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeader">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Style.DataGrid.Cell" TargetType="DataGridCell">
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridCell">
+                    <Border Background="Transparent" 
+                        BorderThickness="0" 
+                        SnapsToDevicePixels="True">
+                        <ContentPresenter VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="Style.DataGrid.Row" TargetType="DataGridRow">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="BorderBrush" Value="#F0F0F0"/>
+        <Setter Property="Height" Value="42"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#F5F7FA"/>
+            </Trigger>
+
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="#E8F0FE"/>
+                <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="DataGridStyle" TargetType="DataGrid">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderBrush" Value="#E0E0E0"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="RowHeaderWidth" Value="0"/>
+        <Setter Property="GridLinesVisibility" Value="All"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="#F0F0F0"/>
+        <Setter Property="VerticalGridLinesBrush" Value="#F0F0F0"/>
+
+        <Setter Property="RowBackground" Value="White"/>
+        <Setter Property="AlternatingRowBackground" Value="White"/>
+        <Setter Property="Foreground" Value="#333333"/>
+        <Setter Property="FontSize" Value="13"/>
+
+        <Setter Property="AutoGenerateColumns" Value="False"/>
+        <Setter Property="CanUserAddRows" Value="False"/>
+        <Setter Property="CanUserDeleteRows" Value="False"/>
+        <Setter Property="CanUserResizeRows" Value="False"/>
+        <Setter Property="SelectionMode" Value="Single"/>
+        <Setter Property="SelectionUnit" Value="FullRow"/>
+
+        <Setter Property="ColumnHeaderStyle" Value="{StaticResource Style.DataGrid.ColumnHeader}"/>
+        <Setter Property="CellStyle" Value="{StaticResource Style.DataGrid.Cell}"/>
+        <Setter Property="RowStyle" Value="{StaticResource Style.DataGrid.Row}"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGrid">
+                    <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="4"
+                        Padding="0">
+                        <ScrollViewer x:Name="DG_ScrollViewer" Focusable="false">
+                            <ScrollViewer.Template>
+                                <ControlTemplate TargetType="ScrollViewer">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <DataGridColumnHeadersPresenter x:Name="PART_ColumnHeadersPresenter" 
+                                                                    Grid.Column="0" Grid.Row="0"/>
+
+                                        <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" 
+                                                            Grid.Column="0" Grid.Row="1" 
+                                                            CanContentScroll="{TemplateBinding CanContentScroll}"/>
+
+                                        <ScrollBar x:Name="PART_VerticalScrollBar" 
+                                               Grid.Column="1" Grid.Row="1" 
+                                               Orientation="Vertical"
+                                               ViewportSize="{TemplateBinding ViewportHeight}"
+                                               Maximum="{TemplateBinding ScrollableHeight}"
+                                               Value="{TemplateBinding VerticalOffset}"
+                                               Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+
+                                        <ScrollBar x:Name="PART_HorizontalScrollBar" 
+                                               Grid.Column="0" Grid.Row="2" 
+                                               Orientation="Horizontal"
+                                               ViewportSize="{TemplateBinding ViewportWidth}"
+                                               Maximum="{TemplateBinding ScrollableWidth}"
+                                               Value="{TemplateBinding HorizontalOffset}"
+                                               Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
+                                    </Grid>
+                                </ControlTemplate>
+                            </ScrollViewer.Template>
+                            <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="StatusPillBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource StatusPendingBackgroundBrush}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="8,2"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="MinWidth" Value="84"/>
+
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Status}" Value="PENDING">
+                <Setter Property="Background" Value="{StaticResource StatusPendingBackgroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="PENDING_APPROVAL">
+                <Setter Property="Background" Value="{StaticResource StatusPendingBackgroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="DRAFT">
+                <Setter Property="Background" Value="{StaticResource StatusPendingBackgroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="APPROVED">
+                <Setter Property="Background" Value="{StaticResource StatusApprovedBackgroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="PARTIALLY_RECEIVED">
+                <Setter Property="Background" Value="{StaticResource StatusPartiallyReceivedBackgroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="COMPLETED">
+                <Setter Property="Background" Value="{StaticResource StatusCompletedBackgroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="POSTED">
+                <Setter Property="Background" Value="{StaticResource StatusCompletedBackgroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="REJECTED">
+                <Setter Property="Background" Value="{StaticResource StatusRejectedBackgroundBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="StatusPillTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource StatusPendingForegroundBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Status}" Value="PENDING">
+                <Setter Property="Foreground" Value="{StaticResource StatusPendingForegroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="PENDING_APPROVAL">
+                <Setter Property="Foreground" Value="{StaticResource StatusPendingForegroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="DRAFT">
+                <Setter Property="Foreground" Value="{StaticResource StatusPendingForegroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="APPROVED">
+                <Setter Property="Foreground" Value="{StaticResource StatusApprovedForegroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="PARTIALLY_RECEIVED">
+                <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="COMPLETED">
+                <Setter Property="Foreground" Value="{StaticResource StatusCompletedForegroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="POSTED">
+                <Setter Property="Foreground" Value="{StaticResource StatusCompletedForegroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="REJECTED">
+                <Setter Property="Foreground" Value="{StaticResource StatusRejectedForegroundBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+</ResourceDictionary>

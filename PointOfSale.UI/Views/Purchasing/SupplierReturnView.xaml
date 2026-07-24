@@ -1,0 +1,438 @@
+﻿<UserControl x:Class="PointOfSale.UI.Views.Purchasing.SupplierReturnView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PointOfSale.UI.Views.Purchasing"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <Grid>
+
+        <TabControl Style="{StaticResource TabControlStyle}">
+
+            <TabItem Header=" ↩ New Return " Style="{StaticResource TabItemStyle}">
+                <Grid Margin="0,4,0,0">
+                    
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="285"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left Panel - Return Header -->
+                    <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}" Margin="0 0 8 0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel>
+                                <TextBlock Text="Return Form" Style="{StaticResource SubHeaderTextStyle}"/>
+
+                                <TextBlock Text="Return Date:" Style="{StaticResource LabelStyle}"/>
+                                <DatePicker SelectedDate="{Binding ReturnDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                IsTodayHighlighted="True"
+                                                Style="{StaticResource DatePickerStyle}"
+                                                Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                                PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <TextBlock Text="Supplier:" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox x:Name="SupplierComboBox"
+                                              ItemsSource="{Binding Suppliers}"
+                                              SelectedItem="{Binding SelectedSupplier, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                              DisplayMemberPath="SupplierName"
+                                              Style="{StaticResource ComboBoxStyle}"
+                                              IsEnabled="False"
+                                              PreviewKeyDown="MoveFocusOnEnter"
+                                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
+
+                                <TextBlock Text="Return From (Location)" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding Locations}"
+                                              SelectedValue="{Binding LocationId}"
+                                              DisplayMemberPath="Name"
+                                              SelectedValuePath="Id"
+                                              Style="{StaticResource ComboBoxStyle}"/>
+
+                                <TextBlock Text="Return By:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="ReturnByTextBox"
+                                         Text="{Binding ReturnedBy, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                         Style="{StaticResource TextBoxStyle}" 
+                                         MaxLength="100"
+                                         CharacterCasing="Upper"
+                                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                         PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <TextBlock Text="Note:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             Style="{StaticResource TextBoxStyle}" 
+                                             MaxLength="500"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             Height="60"
+                                             VerticalContentAlignment="Top"
+                                             Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                             PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,24,0,0" HorizontalAlignment="Center">
+                                    <Button x:Name="SaveButton"
+                                                Content="Save"
+                                                Command="{Binding SaveSupplierReturnCommand, UpdateSourceTrigger=PropertyChanged}" 
+                                                Style="{StaticResource PrimaryButtonStyle}" 
+                                                Margin="0,0,12,0"/>
+
+                                    <Button Content="Clear" 
+                                                Command="{Binding NewSupplierReturnCommand}" 
+                                                Style="{StaticResource SecondaryButtonStyle}"
+                                                Margin="0"
+                                                Focusable="False"/>
+
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Right Panel - Items Management -->
+                    <Border Grid.Column="2" Style="{StaticResource PanelCardStyle}" Margin="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Item Entry Form -->
+                            <Border Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1" 
+                                        CornerRadius="6" Padding="8" Margin="0,0,0,4">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Text="Add Item" Style="{StaticResource SubHeaderTextStyle}" />
+
+                                    <Grid Grid.Row="1" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="80"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Margin="0 0 8 0">
+                                            <TextBlock Text="Code / Barcode:" Style="{StaticResource LabelStyle}" />
+                                            <TextBox x:Name="BarcodeTextBox"
+                                                         Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                         Style="{StaticResource TextBoxStyle}"
+                                                         PreviewKeyDown="MoveFocusOnEnter"
+                                                         Margin="0"/>
+
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="0 0 8 0">
+                                            <TextBlock Text="Product:" Style="{StaticResource LabelStyle}"/>
+                                            <ComboBox x:Name="ProductComboBox"
+                                                    ItemsSource="{Binding Products}"
+                                                    SelectedItem="{Binding SelectedProduct, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                                    SelectedValuePath="ProductId"
+                                                    DisplayMemberPath="ProductName"
+                                                    IsEditable="True"
+                                                    IsTextSearchEnabled="True"
+                                                    TextSearch.TextPath="ProductName"
+                                                    Style="{StaticResource ComboBoxStyle}"
+                                                    ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                                    Margin="0"
+                                                    PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Margin="0 0 8 0">
+                                            <TextBlock Text="UOM:" Style="{StaticResource LabelStyle}"/>
+                                            <Border Background="#EAF2FB" BorderBrush="#5B8DB8" BorderThickness="1"
+                                                    CornerRadius="4" Height="30" VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding SelectedUnitMeasureName}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           FontSize="12" FontWeight="SemiBold" Foreground="#2C5F8A"
+                                                           Padding="4,0"/>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="3" Margin="0 0 8 0">
+                                            <TextBlock Text="Reason:" Style="{StaticResource LabelStyle}"/>
+                                            <ComboBox ItemsSource="{Binding ReturnReasons}"
+                                                      SelectedValue="{Binding SelectedLineReturnReasonId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                                      DisplayMemberPath="Description"
+                                                      SelectedValuePath="Id"
+                                                      Style="{StaticResource ComboBoxStyle}"
+                                                      ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                                      Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                                      Margin="0"
+                                                      PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4" Margin="0 0 8 0">
+                                            <TextBlock Text="Qty:" Style="{StaticResource LabelStyle}" />
+                                            <TextBox x:Name="QuantityTextBox"
+                                                    Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                    Style="{StaticResource TextBoxStyle}"
+                                                    GotFocus="SelectAllText_GotFocus"
+                                                    PreviewKeyDown="MoveFocusOnEnter"
+                                                    Margin="0"/>
+
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="5" Margin="0 0 8 0">
+                                            <TextBlock Text="Cost Price:" Style="{StaticResource LabelStyle}"/>
+                                            <TextBox x:Name="UnitPriceTextBox"
+                                                     Text="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, StringFormat=N2}"
+                                                     TextAlignment="Right"
+                                                     Style="{StaticResource TextBoxStyle}"
+                                                     IsReadOnly="True"
+                                                     Margin="0"
+                                                     GotFocus="SelectAllText_GotFocus"
+                                                     PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="6">
+                                            <TextBlock Text="" Style="{StaticResource LabelStyle}"/>
+                                            <Button x:Name="AddItemButton"
+                                                    Content="Add"
+                                                    Command="{Binding AddLineCommand}"
+                                                    Style="{StaticResource PrimaryButtonStyle}"
+                                                    Width="80"
+                                                    Height="30"
+                                                    Click="AddItemButton_Click"/>
+
+                                        </StackPanel>
+
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Row="1" Background="#F1F2F6" Padding="12,8" Visibility="Collapsed">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" 
+                                               Text="Items List" 
+                                               Style="{StaticResource SubHeaderTextStyle}" 
+                                               VerticalAlignment="Center"/>
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                        <Button Command="{Binding DeleteItemCommand}" 
+                                                Style="{StaticResource DeleteButtonStyle}" 
+                                                ToolTip="Delete Selected Item">
+
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Item Grid Data -->
+                            <DataGrid Grid.Row="2" 
+                                          ItemsSource="{Binding SupplierReturnLines}" 
+                                          SelectedItem="{Binding SelectedItem, UpdateSourceTrigger=PropertyChanged}" 
+                                          Style="{StaticResource DataGridStyle}"
+                                          Margin="0,4,0,0"
+                                          AutoGenerateColumns="False"
+                                          SelectionMode="Single"
+                                          CanUserAddRows="False"
+                                          IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Item Id" Binding="{Binding ProductId, UpdateSourceTrigger=PropertyChanged}" Width="60" MinWidth="120" Visibility="Hidden"/>
+                                    <DataGridTextColumn Header="Batch Id" Binding="{Binding BatchId, UpdateSourceTrigger=PropertyChanged}" Width="60" MinWidth="120" Visibility="Hidden"/>
+                                    <DataGridTextColumn Header="Item Name" Binding="{Binding ProductName}" Width="*" MinWidth="120" />
+                                    <DataGridTextColumn Header="UOM" Binding="{Binding UnitMeasure}" Width="80"/>
+                                    <DataGridTextColumn Header="Reason" Binding="{Binding ReturnReasonDescription}" Width="150" />
+                                    <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, StringFormat=N3}" Width="80">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="100" >
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Sub Total" Binding="{Binding LineSubTotal, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="100">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Discount" Binding="{Binding LineDiscount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="90">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Tax" Binding="{Binding TaxAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="90">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, UpdateSourceTrigger=PropertyChanged}" Width="100">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!-- Total Summary Section -->
+                            <Border Grid.Row="3" Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1" 
+                                     CornerRadius="6" Padding="8" Margin="0,4,0,0">
+
+                                <StackPanel HorizontalAlignment="Right" Width="280">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Text="Sub Total:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" 
+                                                   Text="{Binding SubTotal, StringFormat=N2}"
+                                                   FontWeight="SemiBold"
+                                                   TextAlignment="Right"/>
+
+                                        <TextBlock Grid.Row="1" Text="Discount:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" 
+                                                   Text="{Binding DiscountAmount, StringFormat=N2}"
+                                                   FontWeight="SemiBold"
+                                                   TextAlignment="Right"/>
+
+                                        <TextBlock Grid.Row="2" Text="Tax:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" 
+                                                   Text="{Binding TaxAmount, StringFormat=N2}"
+                                                   FontWeight="SemiBold"
+                                                   TextAlignment="Right"/>
+
+                                        <TextBlock Grid.Row="3" Text="NET AMOUNT:" Style="{StaticResource SubHeaderTextStyle}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,6,0,0"/>
+                                        <TextBlock Grid.Column="1" 
+                                                   Grid.Row="3"
+                                                   Text="{Binding NetAmount, StringFormat=N2}"
+                                                   FontSize="18"
+                                                   FontWeight="Bold"
+                                                   TextAlignment="Right"
+                                                   Foreground="{StaticResource BrandBrush}"/>
+
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    
+                </Grid>
+            </TabItem>
+
+            <TabItem Header=" 📋 Return History " Style="{StaticResource TabItemStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Style="{StaticResource PanelCardStyle}" Margin="0 4 0 0">
+                        <StackPanel Orientation="Horizontal">
+
+                            <StackPanel Margin="0,0,20,0">
+                                <TextBlock Text="From Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                                <DatePicker SelectedDate="{Binding SearchDateFrom}" 
+                                            Style="{StaticResource DatePickerStyle}"
+                                            Width="150"
+                                            Margin="0"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,20,0">
+                                <TextBlock Text="To Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                                <DatePicker SelectedDate="{Binding SearchDateTo}" 
+                                            Style="{StaticResource DatePickerStyle}"
+                                            Width="150"
+                                            Margin="0"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,12,0">
+                                <TextBlock Text="Supplier" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                                <ComboBox ItemsSource="{Binding SearchSuppliers}" 
+                                          DisplayMemberPath="SupplierName" 
+                                          SelectedValuePath="SupplierId"
+                                          SelectedValue="{Binding FilterSupplierId}"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                          Width="200"
+                                          IsEditable="True"
+                                          Margin="0"/>
+                            </StackPanel>
+
+                            <Button Command="{Binding SearchCommand}" 
+                                    Margin="0,16,12,0" 
+                                    Style="{StaticResource SearchButtonStyle}"
+                                    Width="80" Height="30"/>
+                            
+                        </StackPanel>
+                    </Border>
+
+                    <DataGrid Grid.Row="1" Margin="0 4" 
+                              ItemsSource="{Binding HistoryList}"
+                              SelectedItem="{Binding SelectedHistoryReturn}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              Style="{StaticResource DataGridStyle}">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Return ID" Binding="{Binding SupplierReturnId}" Width="100" Visibility="Collapsed"/>
+                            <DataGridTextColumn Header="Return #" Binding="{Binding ReturnNumber}" Width="120"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding ReturnDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
+                            <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="*"/>
+                            <DataGridTextColumn Header="Returned By" Binding="{Binding ReturnedBy}" Width="100"/>
+                            <DataGridTemplateColumn Header="Net Amount" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding NetAmount, StringFormat=N2}" TextAlignment="Right" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+
+                    </DataGrid>
+
+                    <Border Grid.Row="2" Style="{StaticResource PanelCardStyle}" Margin="0">
+                        <TextBlock Text="{Binding ResultCountMessage}" HorizontalAlignment="Right" Foreground="Gray"/>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
+    </Grid>
+</UserControl>

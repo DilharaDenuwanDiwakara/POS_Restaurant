@@ -1,0 +1,516 @@
+<UserControl x:Class="PointOfSale.UI.Views.Restaurant.MenuItemView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PointOfSale.UI.Views.Restaurant"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Menu Item Registration" Style="{StaticResource HeaderTextStyle}"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="285"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Text="Item Image" Style="{StaticResource SubHeaderTextStyle}"/>
+
+                    <Border Height="200" Background="#F1F2F6" CornerRadius="6" Margin="0,0,0,10" BorderBrush="#E0E0E0" BorderThickness="1">
+                        <Grid>
+                            <Image Source="{Binding ImageUrl}" Stretch="UniformToFill"/>
+                            <TextBlock Text="No Image" 
+                                       VerticalAlignment="Center" HorizontalAlignment="Center" 
+                                       Foreground="#A0A0A0" 
+                                       Visibility="{Binding ImageUrl, Converter={StaticResource NullToVisibilityConverter}}"/>
+                        </Grid>
+                    </Border>
+
+                    <Button Content="Upload Image" 
+                            Command="{Binding UploadImageCommand}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Width="Auto"
+                            Margin="0,0,0,20"/>
+
+                    <Separator Margin="0,0,0,15" Background="#E0E0E0"/>
+
+                    <TextBlock Text="Status Configuration" Style="{StaticResource SubHeaderTextStyle}"/>
+
+                    <CheckBox Content="Is Active" 
+                              IsChecked="{Binding IsActive, Mode=TwoWay}"
+                              Style="{StaticResource CheckBoxStyle}" 
+                              Margin="0,0,0,10"/>
+
+                    <TextBlock Text="Item is visible in POS system" Style="{StaticResource CaptionStyle}" Margin="25,-8,0,10"/>
+
+                    <CheckBox Content="Is Available (In Stock)" 
+                              IsChecked="{Binding IsAvailable, Mode=TwoWay}"
+                              Style="{StaticResource CheckBoxStyle}"
+                              Margin="0,0,0,10"/>
+
+                    <TextBlock Text="Uncheck to mark as 'Sold Out'" Style="{StaticResource CaptionStyle}" Margin="25,-8,0,0"/>
+
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Item Details" Style="{StaticResource SubHeaderTextStyle}" Margin="0,0,0,4"/>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.ColumnSpan="2" Margin="0">
+                            <TextBlock Text="Item Name:" Style="{StaticResource LabelStyle}"/>
+                            <TextBox x:Name="TxtItemName"
+                                     Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     Style="{StaticResource TextBoxStyle}" MaxLength="100"
+                                     PreviewKeyDown="MoveFocusOnEnter"
+                                     Margin="0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Margin="0,8,8,0">
+                            <TextBlock Text="Category:" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="CmbCategory"
+                                      ItemsSource="{Binding Categories}"
+                                      SelectedValue="{Binding SelectedCategoryId, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                      DisplayMemberPath="Name" SelectedValuePath="Id"
+                                      Style="{StaticResource ComboBoxStyle}"
+                                      PreviewKeyDown="MoveFocusOnEnter"
+                                      Margin="0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0 8 0 0">
+                            
+                            <TextBlock Text="Target Station (Kitchen/Bar):" Style="{StaticResource LabelStyle}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <ComboBox x:Name="CmbTargetStation"
+                                          ItemsSource="{Binding Stations}"
+                                          SelectedValue="{Binding SelectedStationId, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                          DisplayMemberPath="Name" SelectedValuePath="Id"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"
+                                          Margin="0"/>
+
+                                <Button Grid.Column="1"
+                                        Command="{Binding AddStationCommand}"
+                                        ToolTip="Add New Station"
+                                        Margin="4,0,0,0"
+                                        VerticalAlignment="Top"
+                                        Focusable="False"
+                                        Style="{StaticResource AddButtonStyle}"/>
+                                
+                            </Grid>
+                            
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0 8 0 0">
+                            <TextBlock Text="Description:" Style="{StaticResource LabelStyle}"/>
+                            <TextBox x:Name="TxtDescription"
+                                     Text="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource TextBoxStyle}"
+                                     Height="40"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     MaxLength="500"
+                                     VerticalContentAlignment="Top"
+                                     PreviewKeyDown="MoveFocusOnEnter"/>
+
+                            <TextBlock Text="Applicable Taxes:" Style="{StaticResource LabelStyle}" Margin="0,0,0,4"/>
+                            <ItemsControl ItemsSource="{Binding AvailableTaxes}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Margin="0,0,12,6"
+                                                  IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  Style="{StaticResource CheckBoxStyle}">
+                                            <TextBlock>
+                                                <Run Text="{Binding TaxCode}"/>
+                                                <Run Text=" - "/>
+                                                <Run Text="{Binding TaxName}"/>
+                                                <Run Text=" ("/>
+                                                <Run Text="{Binding Rate, StringFormat={}{0:0.####}%}"/>
+                                                <Run Text=")"/>
+                                            </TextBlock>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <CheckBox x:Name="ChkNoVariant"
+                                      Content="No Variant (Standard Item)"
+                                      IsChecked="{Binding IsNoVariant, Mode=TwoWay}"
+                                      Checked="NoVariant_Checked"
+                                      Style="{StaticResource CheckBoxStyle}"
+                                      PreviewKeyDown="MoveFocusOnEnter"
+                                      Margin="0,8,0,0"/>
+                            
+                        </StackPanel>
+                        
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+                        <TabControl x:Name="MenuItemTabs"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Margin="0,4,0,0"
+                                    PreviewKeyDown="MenuItemTabs_PreviewKeyDown">
+
+                            <TabControl.Resources>
+                                <Style TargetType="TabItem">
+                                    <Setter Property="FontSize" Value="13"/>
+                                    <Setter Property="Padding" Value="15,8"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="TabItem">
+                                                <Border Name="Border" BorderThickness="0,0,0,2" BorderBrush="Transparent" Margin="0,0,10,0">
+                                                    <ContentPresenter x:Name="ContentSite"
+                                                                      VerticalAlignment="Center"
+                                                                      HorizontalAlignment="Center"
+                                                                      ContentSource="Header"
+                                                                      Margin="10,5"/>
+                                                    
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Border" Property="BorderBrush" Value="#007BFF"/>
+                                                        <Setter Property="Foreground" Value="#007BFF"/>
+                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </TabControl.Resources>
+
+                            <TabItem x:Name="PricingTabItem" Header="Pricing &amp; Portions">
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Border Background="#F1F2F6" Padding="8" CornerRadius="6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="1.5*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Margin="0,0,8,0">
+                                                <TextBlock Text="Variant Name" Style="{StaticResource LabelStyle}"/>
+                                                
+                                                <TextBox x:Name="TxtVariantName"
+                                                         Text="{Binding NewVariantName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                         CharacterCasing="Upper"
+                                                         Style="{StaticResource TextBoxStyle}"
+                                                         IsEnabled="{Binding IsVariantInputEnabled}"
+                                                         Margin="0"
+                                                         PreviewKeyDown="MoveFocusOnEnter"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                                <TextBlock Text="Portion Size" Style="{StaticResource LabelStyle}"/>
+                                                <TextBox x:Name="TxtPortionSize"
+                                                         Text="{Binding NewVariantPortion, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                         Style="{StaticResource TextBoxStyle}"
+                                                         IsEnabled="{Binding IsVariantInputEnabled}"
+                                                         Margin="0"
+                                                         PreviewKeyDown="MoveFocusOnEnter"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                                <TextBlock Text="Price (LKR)" Style="{StaticResource LabelStyle}"/>
+                                                <TextBox x:Name="TxtVariantPrice"
+                                                         Text="{Binding NewVariantPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
+                                                         Style="{StaticResource TextBoxStyle}"
+                                                         HorizontalContentAlignment="Right"
+                                                         Margin="0"
+                                                         PreviewKeyDown="MoveFocusOnEnter"
+                                                         GotKeyboardFocus="QtyTextBox_GotKeyboardFocus"/>
+
+                                                <StackPanel Orientation="Horizontal"
+                                                            Margin="0,4,0,0"
+                                                            Visibility="{Binding IsTaxBreakdownVisible, Converter={StaticResource BoolToVisibility}}">
+                                                    <TextBlock FontSize="11" Foreground="#5B6F8A">
+                                                        <Run Text="Base Price: Rs. "/>
+                                                        <Run Text="{Binding TaxExclusivePrice, StringFormat={}{0:N2}, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                    <TextBlock Text=" | " FontSize="11" Foreground="#8A98A8"/>
+                                                    <TextBlock FontSize="11" Foreground="#5B6F8A">
+                                                        <Run Text="VAT (18%): Rs. "/>
+                                                        <Run Text="{Binding CalculatedTaxAmount, StringFormat={}{0:N2}, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <Button x:Name="BtnAddVariant"
+                                                    Grid.Column="3" Content="Add"
+                                                    Command="{Binding AddVariantCommand}"
+                                                    Style="{StaticResource PrimaryButtonStyle}"
+                                                    Height="32" Width="60"
+                                                    VerticalAlignment="Bottom"
+                                                    PreviewKeyDown="BtnAddVariant_PreviewKeyDown"
+                                                    Click="BtnAddVariant_Click"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <DataGrid Grid.Row="1" ItemsSource="{Binding Variants}" 
+                                              SelectedItem="{Binding SelectedVariantForRecipe, Mode=TwoWay}"
+                                              AutoGenerateColumns="False" CanUserAddRows="False"
+                                              Style="{StaticResource DataGridStyle}" Margin="0,4,0,0">
+                                        
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                                            <DataGridTextColumn Header="Portion" Binding="{Binding PortionSize}" Width="*"/>
+                                            <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=N2}" Width="*">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="TextAlignment" Value="Right" />
+                                                        <Setter Property="Margin" Value="0,0,5,0" />
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+
+                                            <DataGridTemplateColumn Header="Action" Width="60">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Command="{Binding DataContext.RemoveVariantCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                                CommandParameter="{Binding}" Content="X" Foreground="Red" Background="Transparent" BorderThickness="0"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </TabItem>
+
+                            <TabItem x:Name="BomTabItem" Header="Bill of Material (BOM)">
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <TextBlock Text="Configure Recipe for:" VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="SemiBold"/>
+                                        <ComboBox ItemsSource="{Binding Variants}" 
+                                                  SelectedItem="{Binding SelectedVariantForRecipe, Mode=TwoWay}"
+                                                  DisplayMemberPath="Name"
+                                                  Width="200"
+                                                  Style="{StaticResource ComboBoxStyle}"
+                                                  Margin="0"/>
+                                        
+                                    </StackPanel>
+
+                                    <Border Grid.Row="1" Background="#FFF8E1" BorderBrush="#FFE0B2" BorderThickness="1" Padding="8" CornerRadius="6">
+                                        <Grid IsEnabled="{Binding IsRecipeInputEnabled}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="0.8*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Margin="0,0,8,0">
+                                                <TextBlock Text="Ingredient (Product)" Style="{StaticResource LabelStyle}" Foreground="#5D4037" />
+                                                <ComboBox x:Name="CmbRecipeProduct"
+                                                          ItemsSource="{Binding Products}" 
+                                                          SelectedItem="{Binding SelectedRecipeProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                          DisplayMemberPath="ProductName"
+                                                          IsEditable="True"
+                                                          IsTextSearchEnabled="True"
+                                                          TextSearch.TextPath="ProductName"
+                                                          Style="{StaticResource ComboBoxStyle}"
+                                                          Margin="0"
+                                                          PreviewKeyDown="MoveFocusOnEnter"/>
+                                                
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                                <TextBlock Text="Unit Measure" Style="{StaticResource LabelStyle}" Foreground="#5D4037"/>
+                                                <ComboBox ItemsSource="{Binding AvailableUnits}"
+                                                          SelectedItem="{Binding SelectedRecipeUnit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                          DisplayMemberPath="UnitCode"
+                                                          Style="{StaticResource ComboBoxStyle}"
+                                                          Height="30"
+                                                          Margin="0"
+                                                          PreviewKeyDown="MoveFocusOnEnter"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                                <TextBlock Text="Qty Needed" Style="{StaticResource LabelStyle}" Foreground="#5D4037"/>
+                                                <TextBox Text="{Binding RecipeQuantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
+                                                         Style="{StaticResource TextBoxStyle}"
+                                                         Margin="0"
+                                                         GotFocus="SelectAllText_GotFocus"
+                                                         PreviewKeyDown="MoveFocusOnEnter"
+                                                         GotKeyboardFocus="QtyTextBox_GotKeyboardFocus"
+                                                         PreviewMouseLeftButtonDown="QtyTextBox_PreviewMouseLeftButtonDown"
+                                                         PreviewTextInput="QtyTextBox_PreviewTextInput"
+                                                         MaxLength="5"/>
+                                            </StackPanel>
+
+                                            <Button Grid.Column="3" Content="Add Item" 
+                                                    Command="{Binding AddIngredientCommand}" 
+                                                    Style="{StaticResource SecondaryButtonStyle}" 
+                                                    Height="32" VerticalAlignment="Bottom"
+                                                    Margin="0"/>
+                                            
+                                        </Grid>
+                                    </Border>
+
+                                    <DataGrid Grid.Row="2" 
+                                              ItemsSource="{Binding SelectedVariantForRecipe.RecipeLines}"
+                                              AutoGenerateColumns="False" CanUserAddRows="False"
+                                              Style="{StaticResource DataGridStyle}" Margin="0,4,0,0">
+
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Ingredient" Binding="{Binding ProductName}" Width="2*"/>
+                                            <DataGridTextColumn Header="Unit Measure" Binding="{Binding UnitName}" Width="*"/>
+                                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="*"/>
+
+                                            <DataGridTextColumn Header="Unit Cost (LKR)" Binding="{Binding CostPerUnit, StringFormat={}{0:N2}}" Width="*">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                        <Setter Property="Margin" Value="0,0,8,0"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                            <DataGridTextColumn Header="Line Cost (LKR)" Binding="{Binding TotalCost, StringFormat={}{0:N2}}" Width="*">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                        <Setter Property="Margin" Value="0,0,8,0"/>
+                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+
+                                            <DataGridTemplateColumn Header="Action" Width="100">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="X" 
+                                                                Command="{Binding DataContext.RemoveIngredientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                                CommandParameter="{Binding}"
+                                                                Foreground="Red" 
+                                                                Background="Transparent" 
+                                                                BorderThickness="0"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+
+                                    <TextBlock Grid.Row="2" Text="Select a variant above to configure its recipe."
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Gray"
+                                               Visibility="{Binding SelectedVariantForRecipe, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Inverse}"/>
+
+                                    <!-- Financial Summary Panel -->
+                                    <Border Grid.Row="3" Margin="0,12,0,0" Padding="16,12"
+                                            Background="{StaticResource Brush.Card.Surface}"
+                                            BorderBrush="{StaticResource Brush.Card.Border}"
+                                            BorderThickness="1" CornerRadius="8"
+                                            Effect="{StaticResource DropShadowEffect}"
+                                            Visibility="{Binding SelectedVariantForRecipe, Converter={StaticResource NullToVisibilityConverter}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="RECIPE COST" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding TotalRecipeCost, StringFormat={}{0:N2}}" FontSize="18" FontWeight="Bold"/>
+                                            </StackPanel>
+
+                                            <Border Grid.Column="1" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Card.Border}" Padding="16,0,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="SELLING PRICE" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding SelectedVariantForRecipe.Price, StringFormat={}{0:N2}}" FontSize="18" FontWeight="Bold"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Grid.Column="2" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Card.Border}" Padding="16,0,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="GROSS PROFIT" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding GrossProfit, StringFormat={}{0:N2}}" FontSize="18" FontWeight="Bold"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Grid.Column="3" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Card.Border}" Padding="16,0,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="MARGIN" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding ProfitMarginPercent, StringFormat={}{0:N1}%}" FontSize="18" FontWeight="Bold"
+                                                               Foreground="{Binding ProfitMarginPercent, Converter={StaticResource MarginColorConverter}}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+
+                                </Grid>
+                            </TabItem>
+                            
+                        </TabControl>
+                    </Grid>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                        <Button Content="Clear Form" 
+                                Command="{Binding ClearCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}" 
+                                Margin="0,0,10,0"
+                                Focusable="False"/>
+
+                        <Button Content="{Binding SubmitButtonText}" 
+                                Command="{Binding SaveItemCommand}" 
+                                Style="{StaticResource PrimaryButtonStyle}" />
+                    </StackPanel>
+
+                </Grid>
+            </Border>
+            
+        </Grid>
+        
+    </Grid>
+    
+</UserControl>
