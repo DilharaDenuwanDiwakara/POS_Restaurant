@@ -79,7 +79,7 @@
                             <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="Auto"/>
                             <DataGridTextColumn Header="Date" Binding="{Binding OrderDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
 
-                            <DataGridTextColumn Header="Amount" Binding="{Binding TotalAmount, StringFormat=N2}" Width="120">
+                            <DataGridTextColumn Header="Amount" Binding="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -133,7 +133,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, StringFormat=N2}" Width="120">
+                            <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -141,7 +141,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Line Discount" Binding="{Binding LineDiscount, StringFormat=N2}" Width="120" IsReadOnly="True">
+                            <DataGridTextColumn Header="Line Discount" Binding="{Binding LineDiscount, StringFormat='Rs. {0:N2}'}" Width="120" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -149,7 +149,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, StringFormat=N2}" Width="110" IsReadOnly="True">
+                            <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}" Width="110" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -157,7 +157,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat=N2}" Width="120" IsReadOnly="True">
+                            <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat='Rs. {0:N2}'}" Width="120" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -185,16 +185,16 @@
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Text="Sub Total:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" Margin="0,0,0,6"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedPO.SubTotal, StringFormat={}{0:N2}}" FontWeight="SemiBold" TextAlignment="Right" Margin="0,0,0,6"/>
+                                <TextBlock Grid.Column="1" Text="{Binding SelectedPO.SubTotal, StringFormat='Rs. {0:N2}'}" FontWeight="SemiBold" TextAlignment="Right" HorizontalAlignment="Right" Margin="0,0,0,6"/>
 
                                 <TextBlock Grid.Row="1" Text="Bill Discount:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" Margin="0,0,0,6"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPO.DiscountAmount, StringFormat=N2}" FontWeight="SemiBold" TextAlignment="Right" Margin="0,0,0,6"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPO.DiscountAmount, StringFormat='Rs. {0:N2}'}" FontWeight="SemiBold" TextAlignment="Right" HorizontalAlignment="Right" Margin="0,0,0,6"/>
 
                                 <TextBlock Grid.Row="2" Text="Total Tax:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" Margin="0,0,0,8"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPO.TaxAmount, StringFormat=N2}" FontWeight="SemiBold" TextAlignment="Right" Margin="0,0,0,8"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPO.TaxAmount, StringFormat='Rs. {0:N2}'}" FontWeight="SemiBold" TextAlignment="Right" HorizontalAlignment="Right" Margin="0,0,0,8"/>
 
                                 <TextBlock Grid.Row="3" Text="GRAND TOTAL:" Style="{StaticResource LabelStyle}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedPO.TotalAmount, StringFormat=N2}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" TextAlignment="Right"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedPO.TotalAmount, StringFormat='Rs. {0:N2}'}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" TextAlignment="Right" HorizontalAlignment="Right"/>
                             </Grid>
 
                             <TextBlock Text="Remarks:" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>

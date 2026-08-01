@@ -93,12 +93,11 @@ namespace PointOfSale.Core.Models.Purchasing
                 {
                     _taxAmount = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(LineTotal));
                 }
             }
         }
 
-        public decimal LineTotal => Math.Round((QuantityOrdered * UnitPrice) - LineDiscount + TaxAmount, 2);
+        public decimal LineTotal => Math.Round((QuantityOrdered * UnitPrice) - LineDiscount, 2);
     }
 }
 

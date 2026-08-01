@@ -15,6 +15,7 @@ namespace PointOfSale.Core.Models.Inventory
         // You can populate these from the SelectedProduct/SelectedBatch in the ViewModel
         public string ProductName { get; set; }
         public string ProductCode { get; set; }
+        public string UnitMeasureCode { get; set; }
         public DateTime? ExpiryDate { get; set; }
         public decimal UnitCost { get; set; }
         public decimal LineTotal => Quantity * UnitCost;

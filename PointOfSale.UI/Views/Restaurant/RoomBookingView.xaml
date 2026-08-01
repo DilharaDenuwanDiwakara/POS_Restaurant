@@ -263,7 +263,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
-                                <DataGridTextColumn Header="Advance" Binding="{Binding AdvancePayment, StringFormat='Rs. {0:N2}'}" Width="100">
+                                <DataGridTextColumn Header="Advance" Binding="{Binding AdvancePayment, StringFormat='Rs. {0:N2}'}" Width="100" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Right"/>

@@ -298,7 +298,7 @@
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
                                             <DataGridTextColumn Header="Portion" Binding="{Binding PortionSize}" Width="*"/>
-                                            <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=N2}" Width="*">
+                                            <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="TextAlignment" Value="Right" />
@@ -310,8 +310,10 @@
                                             <DataGridTemplateColumn Header="Action" Width="60">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <Button Command="{Binding DataContext.RemoveVariantCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                                                CommandParameter="{Binding}" Content="X" Foreground="Red" Background="Transparent" BorderThickness="0"/>
+                                                        <Button Command="{Binding DataContext.RemoveVariantCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource DeleteButtonStyle}"
+                                                                ToolTip="Remove variant"/>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
@@ -407,7 +409,7 @@
                                             <DataGridTextColumn Header="Unit Measure" Binding="{Binding UnitName}" Width="*"/>
                                             <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="*"/>
 
-                                            <DataGridTextColumn Header="Unit Cost (LKR)" Binding="{Binding CostPerUnit, StringFormat={}{0:N2}}" Width="*">
+                                            <DataGridTextColumn Header="Unit Cost (LKR)" Binding="{Binding CostPerUnit, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -415,7 +417,7 @@
                                                     </Style>
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
-                                            <DataGridTextColumn Header="Line Cost (LKR)" Binding="{Binding TotalCost, StringFormat={}{0:N2}}" Width="*">
+                                            <DataGridTextColumn Header="Line Cost (LKR)" Binding="{Binding TotalCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -428,12 +430,10 @@
                                             <DataGridTemplateColumn Header="Action" Width="100">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <Button Content="X" 
-                                                                Command="{Binding DataContext.RemoveIngredientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                        <Button Command="{Binding DataContext.RemoveIngredientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                                 CommandParameter="{Binding}"
-                                                                Foreground="Red" 
-                                                                Background="Transparent" 
-                                                                BorderThickness="0"/>
+                                                                Style="{StaticResource DeleteButtonStyle}"
+                                                                ToolTip="Remove ingredient"/>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
@@ -461,20 +461,20 @@
 
                                             <StackPanel Grid.Column="0">
                                                 <TextBlock Text="RECIPE COST" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding TotalRecipeCost, StringFormat={}{0:N2}}" FontSize="18" FontWeight="Bold"/>
+                                                <TextBlock Text="{Binding TotalRecipeCost, StringFormat='Rs. {0:N2}'}" FontSize="18" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Right"/>
                                             </StackPanel>
 
                                             <Border Grid.Column="1" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Card.Border}" Padding="16,0,0,0">
                                                 <StackPanel>
                                                     <TextBlock Text="SELLING PRICE" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
-                                                    <TextBlock Text="{Binding SelectedVariantForRecipe.Price, StringFormat={}{0:N2}}" FontSize="18" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding SelectedVariantForRecipe.Price, StringFormat='Rs. {0:N2}'}" FontSize="18" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Right"/>
                                                 </StackPanel>
                                             </Border>
 
                                             <Border Grid.Column="2" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Card.Border}" Padding="16,0,0,0">
                                                 <StackPanel>
                                                     <TextBlock Text="GROSS PROFIT" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
-                                                    <TextBlock Text="{Binding GrossProfit, StringFormat={}{0:N2}}" FontSize="18" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding GrossProfit, StringFormat='Rs. {0:N2}'}" FontSize="18" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Right"/>
                                                 </StackPanel>
                                             </Border>
 

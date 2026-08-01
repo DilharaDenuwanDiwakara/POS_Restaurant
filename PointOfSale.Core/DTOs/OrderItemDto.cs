@@ -12,5 +12,6 @@ namespace PointOfSale.Core.DTOs
         public string Note { get; set; }
         public string OfferName { get; set; }
         public bool IsFreeItem { get; set; }
+        public string DisplayName => MenuVariantDto.FormatDisplayName(ProductName, VariantName);
     }
 }

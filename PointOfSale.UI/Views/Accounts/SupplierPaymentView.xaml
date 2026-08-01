@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="PointOfSale.UI.Views.Accounts.SupplierPaymentView"
+<UserControl x:Class="PointOfSale.UI.Views.Accounts.SupplierPaymentView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -117,22 +117,22 @@
                                             IsReadOnly="True"/>
 
                             <DataGridTextColumn Header="Total Amount" 
-                                            Binding="{Binding TotalAmount, StringFormat='{}{0:N2}'}" 
+                                            Binding="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}" 
                                             Width="120" 
                                             ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                            IsReadOnly="True"/>
+                                            IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
 
                             <DataGridTextColumn Header="Paid Amount" 
-                                            Binding="{Binding PaidAmount, StringFormat='{}{0:N2}'}" 
+                                            Binding="{Binding PaidAmount, StringFormat='Rs. {0:N2}'}" 
                                             Width="120" 
                                             ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                            IsReadOnly="True"/>
+                                            IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
 
                             <DataGridTextColumn Header="Amount Due" 
-                                            Binding="{Binding AmountDue, StringFormat='{}{0:N2}'}" 
+                                            Binding="{Binding AmountDue, StringFormat='Rs. {0:N2}'}" 
                                             Width="120" 
                                             ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                            IsReadOnly="True"/>
+                                            IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
 
                             <DataGridTextColumn Header="Status" 
                                             Binding="{Binding Status}"
@@ -141,7 +141,7 @@
 
 
                             <!-- Editable Payment Amount -->
-                            <DataGridTemplateColumn Header="Payment Amount" Width="150">
+                            <DataGridTemplateColumn Header="Payment Amount" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBox Text="{Binding PaymentAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" 
@@ -290,11 +290,12 @@
                                            Margin="0,4,16,0"/>
 
                                 <TextBlock Grid.Row="1" Grid.Column="1" 
-                                           Text="{Binding TotalSelectedPayableAmount, StringFormat='{}{0:N2}'}"
+                                           Text="{Binding TotalSelectedPayableAmount, StringFormat='Rs. {0:N2}'}"
+                                           TextAlignment="Right"
+                                           HorizontalAlignment="Right"
                                            FontWeight="Bold"
                                            FontSize="16"
                                            Foreground="{StaticResource SuccessBrush}"
-                                           HorizontalAlignment="Right"
                                            Margin="0,4,0,0"/>
                             </Grid>
                         </Border>

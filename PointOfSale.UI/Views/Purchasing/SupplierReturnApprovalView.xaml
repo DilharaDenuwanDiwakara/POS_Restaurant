@@ -80,7 +80,7 @@
                             <DataGridTextColumn Header="Return Note #" Binding="{Binding ReturnNumber}" Width="120"/>
                             <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="Auto"/>
                             <DataGridTextColumn Header="Date" Binding="{Binding ReturnDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
-                            <DataGridTextColumn Header="Amount" Binding="{Binding NetAmount, StringFormat=N2}" Width="120">
+                            <DataGridTextColumn Header="Amount" Binding="{Binding NetAmount, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -172,21 +172,21 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitPrice, StringFormat=N2}" Width="105">
+                            <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitPrice, StringFormat='Rs. {0:N2}'}" Width="105" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Discount" Binding="{Binding LineDiscount, StringFormat=N2}" Width="95">
+                            <DataGridTextColumn Header="Discount" Binding="{Binding LineDiscount, StringFormat='Rs. {0:N2}'}" Width="95" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Tax" Binding="{Binding TaxAmount, StringFormat=N2}" Width="95">
+                            <DataGridTextColumn Header="Tax" Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}" Width="95" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -194,7 +194,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Reason" Binding="{Binding ReturnReasonDescription}" Width="150"/>
-                            <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat=N2}" Width="110">
+                            <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat='Rs. {0:N2}'}" Width="110" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -214,7 +214,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Sub Total:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedReturn.SubTotal, StringFormat=N2}" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedReturn.SubTotal, StringFormat='Rs. {0:N2}'}" FontWeight="SemiBold" TextAlignment="Right" HorizontalAlignment="Right"/>
                                 </Grid>
 
                                 <Grid Margin="0,0,0,6">
@@ -223,7 +223,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Total Discount:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedReturn.DiscountAmount, StringFormat=N2}" Foreground="Green" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedReturn.DiscountAmount, StringFormat='Rs. {0:N2}'}" Foreground="Green" FontWeight="SemiBold" TextAlignment="Right" HorizontalAlignment="Right"/>
                                 </Grid>
 
                                 <Grid Margin="0,0,0,6">
@@ -232,7 +232,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Total Tax:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedReturn.TaxAmount, StringFormat=N2}" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedReturn.TaxAmount, StringFormat='Rs. {0:N2}'}" FontWeight="SemiBold" TextAlignment="Right" HorizontalAlignment="Right"/>
                                 </Grid>
 
                                 <Grid Margin="0,0,0,8">
@@ -242,10 +242,12 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Net Amount:" Style="{StaticResource LabelStyle}" FontWeight="Bold" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1"
-                                               Text="{Binding SelectedReturn.NetAmount, StringFormat=N2}"
+                                               Text="{Binding SelectedReturn.NetAmount, StringFormat='Rs. {0:N2}'}"
                                                FontSize="18"
                                                FontWeight="Bold"
-                                               Foreground="{StaticResource BrandBrush}"/>
+                                               Foreground="{StaticResource BrandBrush}"
+                                               TextAlignment="Right"
+                                               HorizontalAlignment="Right"/>
                                 </Grid>
                             </StackPanel>
 

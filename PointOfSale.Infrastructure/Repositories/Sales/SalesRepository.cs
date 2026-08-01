@@ -38,7 +38,11 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 await connection.OpenAsync();
                 await command.ExecuteNonQueryAsync();
 
-                return (long)command.Parameters["@SalesId"].Value;
+                var salesIdValue = command.Parameters["@SalesId"].Value;
+                if (salesIdValue == DBNull.Value || Convert.ToInt64(salesIdValue) <= 0)
+                    throw new InvalidOperationException("The sale was not saved. The database did not return a valid sales id.");
+
+                return Convert.ToInt64(salesIdValue);
             }
         }
 
@@ -48,7 +52,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             using (var conn = GetConnection())
             using (var cmd = CreateCommand(conn, "[Sales].[uspGetSalesInvoice]"))
             {
-                cmd.Parameters.Add("@SalesId", SqlDbType.Int).Value = salesId;
+                cmd.Parameters.Add("@SalesId", SqlDbType.BigInt).Value = salesId;
                 conn.Open();
                 using (var reader = cmd.ExecuteReader())
                 {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
+using PointOfSale.Core.Enums;
 using PointOfSale.Core.Interfaces.Repositories.Purchasing;
 using PointOfSale.Core.Models.Purchasing;
 
@@ -31,6 +32,47 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 return Convert.ToInt64(command.Parameters["@PurchaseNoteId"].Value);
             }
         }
+
+        public async Task<int> UpsertDraftPurchaseOrderAsync(GoodPurchaseNote header, IEnumerable<GoodsPurchaseNoteLine> lines)
+        {
+            if (header == null)
+            {
+                throw new ArgumentNullException(nameof(header));
+            }
+
+            using (var connection = GetConnection())
+            using (var command = CreateCommand(connection, "[Purchasing].[uspUpsertDraftPurchaseOrder]"))
+            {
+                AddDraftParameters(command, header);
+                AddLineItemsParameter(command, lines ?? new List<GoodsPurchaseNoteLine>(), "@OrderLines");
+
+                await connection.OpenAsync();
+
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+        }
+
+        public async Task<int> SubmitDraftPurchaseOrderAsync(GoodPurchaseNote header, IEnumerable<GoodsPurchaseNoteLine> lines)
+        {
+            if (header == null)
+            {
+                throw new ArgumentNullException(nameof(header));
+            }
+
+            using (var connection = GetConnection())
+            using (var command = CreateCommand(connection, "[Purchasing].[uspSubmitDraftPurchaseOrder]"))
+            {
+                AddDraftSubmitParameters(command, header);
+                AddLineItemsParameter(command, lines ?? new List<GoodsPurchaseNoteLine>(), "@OrderLines");
+
+                await connection.OpenAsync();
+
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+        }
+
         public async Task<IEnumerable<GoodPurchaseNote>> GetAllAsync(int branchId, int? supplierId, DateTime? dateFrom, DateTime? dateTo)
         {
             var purchaseNotes = new List<GoodPurchaseNote>();
@@ -216,7 +258,53 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 note.ExpectedDeliveryDate.HasValue ? (object)note.ExpectedDeliveryDate.Value : DBNull.Value;
             command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = note.CreatedBy;
         }
+
+        private void AddDraftParameters(SqlCommand command, GoodPurchaseNote note)
+        {
+            command.Parameters.Add("@Id", SqlDbType.Int).Value = Convert.ToInt32(note.GoodsPurchaseNoteId);
+            command.Parameters.Add("@BranchId", SqlDbType.Int).Value = note.BranchId;
+            command.Parameters.Add("@SupplierId", SqlDbType.Int).Value =
+                note.SupplierId > 0 ? (object)note.SupplierId : DBNull.Value;
+            command.Parameters.Add("@PONumber", SqlDbType.VarChar, 50).Value =
+                string.IsNullOrWhiteSpace(note.PONumber) ? (object)DBNull.Value : note.PONumber.Trim();
+            AddDecimalParameter(command, "@SubTotal", note.SubTotal);
+            AddDecimalParameter(command, "@DiscountAmount", note.DiscountAmount);
+            AddDecimalParameter(command, "@TaxAmount", note.TaxAmount);
+            command.Parameters.Add("@Note", SqlDbType.NVarChar).Value =
+                string.IsNullOrWhiteSpace(note.Note) ? (object)DBNull.Value : note.Note.Trim();
+            command.Parameters.Add("@Status", SqlDbType.NVarChar, 50).Value =
+                string.IsNullOrWhiteSpace(note.Status) ? PurchaseOrderStatus.DRAFT.ToString() : note.Status.Trim();
+            command.Parameters.Add("@OrderBy", SqlDbType.VarChar, 100).Value =
+                string.IsNullOrWhiteSpace(note.OrderBy) ? string.Empty : note.OrderBy.Trim();
+            command.Parameters.Add("@OrderDate", SqlDbType.Date).Value = note.OrderDate.Date;
+            command.Parameters.Add("@ExpectedDeliveryDate", SqlDbType.Date).Value =
+                note.ExpectedDeliveryDate.HasValue ? (object)note.ExpectedDeliveryDate.Value.Date : DBNull.Value;
+            command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = note.CreatedBy;
+        }
+
+        private void AddDraftSubmitParameters(SqlCommand command, GoodPurchaseNote note)
+        {
+            command.Parameters.Add("@Id", SqlDbType.BigInt).Value = note.GoodsPurchaseNoteId;
+            command.Parameters.Add("@BranchId", SqlDbType.Int).Value = note.BranchId;
+            command.Parameters.Add("@SupplierId", SqlDbType.Int).Value = note.SupplierId;
+            AddDecimalParameter(command, "@SubTotal", note.SubTotal);
+            AddDecimalParameter(command, "@DiscountAmount", note.DiscountAmount);
+            AddDecimalParameter(command, "@TaxAmount", note.TaxAmount);
+            command.Parameters.Add("@Note", SqlDbType.NVarChar).Value =
+                string.IsNullOrWhiteSpace(note.Note) ? (object)DBNull.Value : note.Note.Trim();
+            command.Parameters.Add("@OrderBy", SqlDbType.NVarChar, 100).Value =
+                string.IsNullOrWhiteSpace(note.OrderBy) ? string.Empty : note.OrderBy.Trim();
+            command.Parameters.Add("@OrderDate", SqlDbType.Date).Value = note.OrderDate.Date;
+            command.Parameters.Add("@ExpectedDeliveryDate", SqlDbType.Date).Value =
+                note.ExpectedDeliveryDate.HasValue ? (object)note.ExpectedDeliveryDate.Value.Date : DBNull.Value;
+        }
+
         private void AddLineItemsParameter(SqlCommand command, IEnumerable<GoodsPurchaseNoteLine> lines)
+        {
+            AddLineItemsParameter(command, lines, "@PurchaseLines");
+        }
+
+        private void AddLineItemsParameter(SqlCommand command, IEnumerable<GoodsPurchaseNoteLine> lines, string parameterName)
         {
             var table = new DataTable();
             table.Columns.Add("ProductId", typeof(int));
@@ -236,9 +324,9 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 );
             }
 
-            var param = command.Parameters.AddWithValue("@PurchaseLines", table);
-            param.SqlDbType = SqlDbType.Structured;
+            var param = command.Parameters.Add(parameterName, SqlDbType.Structured);
             param.TypeName = "Purchasing.GoodsPurchaseNoteLineType";
+            param.Value = table;
         }
         private void AddOutputParameter(SqlCommand command)
         {

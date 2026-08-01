@@ -32,6 +32,8 @@ namespace PointOfSale.Core.Models.Purchasing
 
         public string SupplierName { get; set; }
         public string Username { get; set; }
+        public bool IsDraft =>
+            string.Equals(Status?.Trim(), "DRAFT", StringComparison.OrdinalIgnoreCase);
         public List<GoodsPurchaseNoteLine> Lines { get; set; } = new List<GoodsPurchaseNoteLine>();
     }
 }

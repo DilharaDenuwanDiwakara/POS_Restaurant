@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -34,9 +35,18 @@ namespace PointOfSale.Core.DTOs
 
         public bool HasOffer => !string.IsNullOrWhiteSpace(OfferSummary);
 
-        public string DisplayName => string.IsNullOrEmpty(VariantName)
-                                    ? MenuItemName
-                                    : $"{MenuItemName} - {VariantName}";
+        public string DisplayName => FormatDisplayName(MenuItemName, VariantName);
+
+        public static string FormatDisplayName(string itemName, string variantName)
+        {
+            if (string.IsNullOrWhiteSpace(variantName) ||
+                string.Equals(variantName.Trim(), "STANDARD", StringComparison.OrdinalIgnoreCase))
+            {
+                return itemName;
+            }
+
+            return $"{itemName} - {variantName.Trim()}";
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

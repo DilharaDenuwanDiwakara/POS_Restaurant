@@ -144,6 +144,7 @@
     <Compile Include="Interfaces\Services\IConfigurationService.cs" />
     <Compile Include="Interfaces\Services\IDialogService.cs" />
     <Compile Include="Interfaces\Services\IExcelService.cs" />
+    <Compile Include="Interfaces\Services\ISalesInvoiceReportPreviewService.cs" />
     <Compile Include="Models\Accounts\DTOs\CustomerAdvance.cs" />
     <Compile Include="Models\Accounts\DTOs\CustomerAdvanceList.cs" />
     <Compile Include="Models\Accounts\DTOs\SupplierCredit.cs" />

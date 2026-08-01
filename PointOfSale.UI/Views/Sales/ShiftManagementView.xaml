@@ -110,14 +110,14 @@
 
                             <TextBlock Grid.Row="0" Text="System Expected Cash" Style="{StaticResource LabelStyle}" />
                             <TextBox Grid.Row="1"
-                                     Text="{Binding SelectedSystemCash, Mode=OneWay, StringFormat=N2}"
+                                     Text="{Binding SelectedSystemCash, Mode=OneWay, StringFormat='Rs. {0:N2}'}"
                                      Style="{StaticResource ReadOnlyTextBoxStyle}"
                                      HorizontalContentAlignment="Right"/>
 
                             <TextBlock Grid.Row="0" Grid.Column="1" Text="Cashier Declared Cash" Style="{StaticResource LabelStyle}" Margin="8,0,0,0"/>
                             <TextBox Grid.Row="1"
                                      Grid.Column="1"
-                                     Text="{Binding SelectedPhysicalCash, Mode=OneWay, StringFormat=N2}"
+                                     Text="{Binding SelectedPhysicalCash, Mode=OneWay, StringFormat='Rs. {0:N2}'}"
                                      Style="{StaticResource ReadOnlyTextBoxStyle}"
                                      HorizontalContentAlignment="Right"
                                      Margin="8,0,0,0"/>
@@ -139,7 +139,7 @@
                             <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Text="Cashier Overage/Shortage (Variance)" Style="{StaticResource LabelStyle}" Margin="0,8,0,0"/>
                             <TextBox Grid.Row="5"
                                     Grid.ColumnSpan="2"
-                                    Text="{Binding SelectedVariance, Mode=OneWay, StringFormat=N2}"
+                                    Text="{Binding SelectedVariance, Mode=OneWay, StringFormat='Rs. {0:N2}'}"
                                     HorizontalContentAlignment="Right"
                                     FontWeight="SemiBold">
                                 <TextBox.Style>

@@ -10,7 +10,7 @@
 
         <TabControl Style="{StaticResource TabControlStyle}">
 
-            <TabItem Header=" ↩ New Return " Style="{StaticResource TabItemStyle}">
+            <TabItem Header=" ? New Return " Style="{StaticResource TabItemStyle}">
                 <Grid Margin="0,4,0,0">
                     
                     <Grid.ColumnDefinitions>
@@ -257,7 +257,7 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="100" >
+                                    <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="100"  HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -265,7 +265,7 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Sub Total" Binding="{Binding LineSubTotal, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="100">
+                                    <DataGridTextColumn Header="Sub Total" Binding="{Binding LineSubTotal, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="100" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -273,7 +273,7 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Discount" Binding="{Binding LineDiscount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="90">
+                                    <DataGridTextColumn Header="Discount" Binding="{Binding LineDiscount, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="90" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -281,7 +281,7 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Tax" Binding="{Binding TaxAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="90">
+                                    <DataGridTextColumn Header="Tax" Binding="{Binding TaxAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="90" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -289,7 +289,7 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, UpdateSourceTrigger=PropertyChanged}" Width="100">
+                                    <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="100" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -319,26 +319,26 @@
 
                                         <TextBlock Text="Sub Total:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="1" 
-                                                   Text="{Binding SubTotal, StringFormat=N2}"
+                                                   Text="{Binding SubTotal, StringFormat='Rs. {0:N2}'}"
                                                    FontWeight="SemiBold"
-                                                   TextAlignment="Right"/>
+                                                   TextAlignment="Right" HorizontalAlignment="Right"/>
 
                                         <TextBlock Grid.Row="1" Text="Discount:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Row="1" Grid.Column="1" 
-                                                   Text="{Binding DiscountAmount, StringFormat=N2}"
+                                                   Text="{Binding DiscountAmount, StringFormat='Rs. {0:N2}'}"
                                                    FontWeight="SemiBold"
-                                                   TextAlignment="Right"/>
+                                                   TextAlignment="Right" HorizontalAlignment="Right"/>
 
                                         <TextBlock Grid.Row="2" Text="Tax:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Row="2" Grid.Column="1" 
-                                                   Text="{Binding TaxAmount, StringFormat=N2}"
+                                                   Text="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}"
                                                    FontWeight="SemiBold"
-                                                   TextAlignment="Right"/>
+                                                   TextAlignment="Right" HorizontalAlignment="Right"/>
 
                                         <TextBlock Grid.Row="3" Text="NET AMOUNT:" Style="{StaticResource SubHeaderTextStyle}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,6,0,0"/>
                                         <TextBlock Grid.Column="1" 
                                                    Grid.Row="3"
-                                                   Text="{Binding NetAmount, StringFormat=N2}"
+                                                   Text="{Binding NetAmount, StringFormat='Rs. {0:N2}'}"
                                                    FontSize="18"
                                                    FontWeight="Bold"
                                                    TextAlignment="Right"
@@ -353,7 +353,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header=" 📋 Return History " Style="{StaticResource TabItemStyle}">
+            <TabItem Header=" Return History " Style="{StaticResource TabItemStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -416,10 +416,10 @@
                             <DataGridTextColumn Header="Date" Binding="{Binding ReturnDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
                             <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="*"/>
                             <DataGridTextColumn Header="Returned By" Binding="{Binding ReturnedBy}" Width="100"/>
-                            <DataGridTemplateColumn Header="Net Amount" Width="120">
+                            <DataGridTemplateColumn Header="Net Amount" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding NetAmount, StringFormat=N2}" TextAlignment="Right" />
+                                        <TextBlock Text="{Binding NetAmount, StringFormat='Rs. {0:N2}'}" TextAlignment="Right" HorizontalAlignment="Right" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

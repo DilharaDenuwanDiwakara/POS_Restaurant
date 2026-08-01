@@ -1,4 +1,4 @@
-﻿<Window x:Class="PointOfSale.UI.Views.Sales.Dialogs.CashInOutWindow"
+<Window x:Class="PointOfSale.UI.Views.Sales.Dialogs.CashInOutWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -159,7 +159,7 @@
                                 <DataGridTextColumn Header="Id" Binding="{Binding TransactionId}" Width="Auto"  Visibility="Hidden"/>
                                 <DataGridTextColumn Header="User" Binding="{Binding CreatedBy}" Width="Auto" Visibility="Hidden"/>
                                 <DataGridTextColumn Header="Cash-In or Out" Binding="{Binding TransactionType}" Width="Auto" />
-                                <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="150" />
+                                <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='Rs. {0:N2}'}" Width="150"  HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" ElementStyle="{StaticResource RightAlignedTextStyle}"/>
                                 <DataGridTextColumn Header="Description" Binding="{Binding Reason}" Width="*"/>
                             </DataGrid.Columns>
                         </DataGrid>

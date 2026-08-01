@@ -9,6 +9,8 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
     public interface IGoodsPurchaseNoteRepository
     {
         Task<long> CreateAsync(GoodPurchaseNote goodsPurchaseNote);
+        Task<int> UpsertDraftPurchaseOrderAsync(GoodPurchaseNote header, IEnumerable<GoodsPurchaseNoteLine> lines);
+        Task<int> SubmitDraftPurchaseOrderAsync(GoodPurchaseNote header, IEnumerable<GoodsPurchaseNoteLine> lines);
         Task<IEnumerable<GoodPurchaseNote>> GetAllAsync(int branchId, int? supplierId, DateTime? dateFrom, DateTime? dateTo);
 
         Task<IEnumerable<GoodPurchaseNote>> GetPendingReceiptPOsAsync();

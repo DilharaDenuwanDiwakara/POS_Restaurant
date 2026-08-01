@@ -35,7 +35,7 @@
                 Panel.ZIndex="100"
                 Visibility="{Binding IsOverlayVisible, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}"/>
 
-        <Grid Margin="24">
+        <Grid Margin="12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="13*"/>
                 <ColumnDefinition Width="7*" MinWidth="420"/>
@@ -49,7 +49,7 @@
 
             <Grid Grid.Row="0"
                   Grid.Column="0"
-                  Margin="0,0,18,18">
+                  Margin="0,0,12,12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -131,7 +131,7 @@
 
             <Border Grid.Row="1"
                     Grid.Column="0"
-                    Margin="0,0,18,18"
+                    Margin="0,0,12,12"
                     Style="{StaticResource SalesSectionCardStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -284,7 +284,7 @@
 
             <Border Grid.Row="2"
                     Grid.Column="0"
-                    Margin="0,0,18,0"
+                    Margin="0,0,12,0"
                     Style="{StaticResource ActionStripStyle}">
                 <UniformGrid Columns="5" Rows="1">
                     <Button Content="Cancel Invoice"
@@ -423,7 +423,7 @@
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Product Code" Width="120" Binding="{Binding ProductCode}" Visibility="Hidden"/>
 
-                                    <DataGridTextColumn Header="Product Name" Width="Auto" MinWidth="110" Binding="{Binding ProductName}">
+                                    <DataGridTextColumn Header="Product Name" Width="Auto" Binding="{Binding ProductName}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextWrapping" Value="Wrap"/>
@@ -453,9 +453,9 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Unit Cost" Width="120" Binding="{Binding UnitCost}" Visibility="Collapsed"/>
+                                    <DataGridTextColumn Header="Unit Cost" Width="120" Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}" Visibility="Collapsed" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" ElementStyle="{StaticResource RightAlignedTextStyle}"/>
 
-                                    <DataGridTextColumn Header="Price" Binding="{Binding UnitPrice, StringFormat=N2}" Width="Auto" IsReadOnly="True">
+                                    <DataGridTextColumn Header="Price" Binding="{Binding UnitPrice, StringFormat='Rs. {0:N2}'}" Width="Auto" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -464,7 +464,7 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Discount" Width="Auto" Binding="{Binding LineDiscount, StringFormat=N2}" IsReadOnly="True">
+                                    <DataGridTextColumn Header="Discount" Width="Auto" Binding="{Binding LineDiscount, StringFormat='Rs. {0:N2}'}" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -503,21 +503,21 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <DataGridTemplateColumn Header="Total" Width="Auto">
+                                    <DataGridTemplateColumn Header="Total" Width="Auto" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding Amount, StringFormat=N2}" TextAlignment="Right" />
+                                                <TextBlock Text="{Binding Amount, StringFormat='Rs. {0:N2}'}" TextAlignment="Right" HorizontalAlignment="Right" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <DataGridTemplateColumn Header="" Width="42">
+                                    <DataGridTemplateColumn Header="Action" Width="42">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Content="X"
-                                                        Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                <Button Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                         CommandParameter="{Binding}"
-                                                        Style="{StaticResource PaymentDeleteButtonStyle}"
+                                                        Style="{StaticResource DeleteButtonStyle}"
+                                                        ToolTip="Remove item"
                                                         HorizontalAlignment="Center"
                                                         VerticalAlignment="Center"/>
                                             </DataTemplate>
@@ -626,15 +626,15 @@
                             </Border>
 
                             <UniformGrid Columns="3" Margin="0,0,0,14">
-                                <Button Content="Cash (F1)"
+                                <Button Content="CASH (F1)"
                                         Command="{Binding SelectPaymentMethodCommand}"
                                         CommandParameter="{x:Static enums:SalesPaymentMethod.CASH}"
                                         Style="{StaticResource PaymentModeButtonStyle}"/>
-                                <Button Content="Card (F2)"
+                                <Button Content="CARD (F2)"
                                         Command="{Binding SelectPaymentMethodCommand}"
                                         CommandParameter="{x:Static enums:SalesPaymentMethod.CARD}"
                                         Style="{StaticResource PaymentModeButtonStyle}"/>
-                                <Button Content="Store Credit (F3)"
+                                <Button Content="STAFF CREDIT (F3)"
                                         Command="{Binding SelectPaymentMethodCommand}"
                                         CommandParameter="{x:Static enums:SalesPaymentMethod.CREDIT}"
                                         Style="{StaticResource PaymentModeButtonStyle}"/>
@@ -774,7 +774,7 @@
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Grid.Row="0"
-                                                   Text="STORE CREDIT"
+                                                   Text="STAFF CREDIT"
                                                    Style="{StaticResource PaymentHeaderStyle}"
                                                    Margin="0,0,0,10"/>
 
@@ -846,9 +846,9 @@
                                                                 Width="*"
                                                                 IsReadOnly="True"/>
                                             <DataGridTextColumn Header="Amount"
-                                                                Binding="{Binding Amount, StringFormat=N2}"
+                                                                Binding="{Binding Amount, StringFormat='Rs. {0:N2}'}"
                                                                 Width="110"
-                                                                IsReadOnly="True">
+                                                                IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="TextAlignment" Value="Right"/>
@@ -856,13 +856,13 @@
                                                     </Style>
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
-                                            <DataGridTemplateColumn Header="" Width="42">
+                                            <DataGridTemplateColumn Header="Action" Width="42">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <Button Content="X"
-                                                                Command="{Binding DataContext.RemovePaymentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        <Button Command="{Binding DataContext.RemovePaymentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                                 CommandParameter="{Binding}"
-                                                                Style="{StaticResource PaymentDeleteButtonStyle}"
+                                                                Style="{StaticResource DeleteButtonStyle}"
+                                                                ToolTip="Remove payment"
                                                                 HorizontalAlignment="Center"
                                                                 VerticalAlignment="Center"/>
                                                     </DataTemplate>

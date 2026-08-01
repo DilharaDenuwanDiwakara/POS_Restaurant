@@ -363,6 +363,8 @@
     </Compile>
     <Compile Include="Stubs\CrystalReportsStubs.cs" Condition="'$(HasCrystalReports)' != 'true'" />
     <Compile Include="Services\DialogService.cs" />
+    <Compile Include="Services\SalesInvoiceReportPreviewService.cs" Condition="'$(HasCrystalReports)' == 'true'" />
+    <Compile Include="Services\UnavailableSalesInvoiceReportPreviewService.cs" Condition="'$(HasCrystalReports)' != 'true'" />
     <Compile Include="Services\CloudStorageService.cs" />
     <Compile Include="ViewModels\Accounts\AccountRegisterViewModel.cs" />
     <Compile Include="ViewModels\Accounts\OpeningBalanceViewModel.cs" />
@@ -391,6 +393,7 @@
     <Compile Include="ViewModels\Inventory\WastageViewModel.cs" />
     <Compile Include="ViewModels\Purchasing\GoodsPurchaseNoteApprovalViewModel.cs" />
     <Compile Include="ViewModels\Purchasing\GoodsPurchaseNoteViewModel.cs" />
+    <Compile Include="ViewModels\Purchasing\PurchaseOrderSummaryModel.cs" />
     <Compile Include="ViewModels\Purchasing\GoodsReceiveNoteApprovalViewModel.cs" />
     <Compile Include="ViewModels\Purchasing\GoodsReceiveNoteViewModel.cs" />
     <Compile Include="ViewModels\Purchasing\SupplierReturnApprovalViewModel.cs" />

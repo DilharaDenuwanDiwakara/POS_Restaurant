@@ -4,15 +4,13 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using CrystalDecisions.CrystalReports.Engine;
-using CrystalDecisions.Shared;
+using System.Windows.Threading;
 using PointOfSale.Core.Enums;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
@@ -23,6 +21,8 @@ using PointOfSale.Core.Models.Purchasing;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
 using PointOfSale.UI.DataSets;
+using PointOfSale.UI.Reports;
+using PointOfSale.UI.Views.Sales;
 
 namespace PointOfSale.UI.ViewModels.Purchasing
 {
@@ -34,6 +34,10 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         private readonly IGoodsReceiveNoteRepository _goodsReceiveNoteRepository;
         private readonly ITaxConfigurationRepository _taxConfigurationRepository;
         private readonly IUserSessionService _userSessionService;
+        private readonly DispatcherTimer _draftAutoSaveTimer;
+        private bool _isResettingPurchaseOrder;
+        private bool _isDraftAutoSaveInProgress;
+        private bool _draftAutoSaveQueuedWhileSaving;
         private decimal _inputTaxRate;
 
         private decimal _lastGrnCostPrice;
@@ -58,11 +62,21 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             _userSessionService = userSessionService;
 
             GoodsPurchaseNoteLines = new ObservableCollection<GoodsPurchaseNoteLine>();
+            GoodsPurchaseNoteLines.CollectionChanged += GoodsPurchaseNoteLines_CollectionChanged;
+
+            _draftAutoSaveTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
+            _draftAutoSaveTimer.Tick += DraftAutoSaveTimer_Tick;
 
             AddLineCommand = new RelayCommand(_ => AddLineItem(), _ => CanAddItem);
             SavePOCommand = new AsyncRelayCommand(async _ => await CreateGoodsPurchaseNoteAsync(), _ => CanSavePO);
             NewPOCommand = new RelayCommand(_ => CreateNewPO());
             SearchCommand = new AsyncRelayCommand(async _ => await SearchPOsAsync());
+            LoadDraftPOCommand = new AsyncRelayCommand(async parameter => await LoadDraftPurchaseOrderAsync(GetPurchaseOrder(parameter)));
+            DeleteDraftPOCommand = new AsyncRelayCommand(async parameter => await DeleteDraftPurchaseOrderAsync(GetPurchaseOrder(parameter)));
+            PrintPurchaseOrderCommand = new AsyncRelayCommand(async parameter => await PrintPurchaseOrderAsync(parameter));
             RemoveLineCommand = new RelayCommand<GoodsPurchaseNoteLine>(RemoveLineItem);
 
             this.PropertyChanged += (s, e) =>
@@ -77,13 +91,11 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                     (AddLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
                     (SavePOCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
                 }
-            };
 
-            // Also update Save button when items are added/removed from the grid
-            GoodsPurchaseNoteLines.CollectionChanged += (s, e) =>
-            {
-                (SavePOCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
-                CalculateTotals();
+                if (IsDraftHeaderProperty(e.PropertyName))
+                {
+                    ScheduleDraftAutoSave();
+                }
             };
 
             _ = LoadTaxRateAsync();
@@ -113,11 +125,25 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             private set => SetProperty(ref _searchSuppliers, value);
         }
 
-        private ObservableCollection<GoodPurchaseNote> _historyList;
-        public ObservableCollection<GoodPurchaseNote> HistoryList
+        private ObservableCollection<PurchaseOrderSummaryModel> _historyList;
+        public ObservableCollection<PurchaseOrderSummaryModel> HistoryList
         {
             get => _historyList;
             set => SetProperty(ref _historyList, value);
+        }
+
+        private int _currentOrderId;
+        public int CurrentOrderId
+        {
+            get => _currentOrderId;
+            set => SetProperty(ref _currentOrderId, value);
+        }
+
+        private int _selectedTabIndex;
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set => SetProperty(ref _selectedTabIndex, value);
         }
 
         private int _filterSupplierId;
@@ -337,6 +363,9 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public ICommand SavePOCommand { get; set; }
         public ICommand NewPOCommand { get; }
         public ICommand SearchCommand { get; set; }
+        public ICommand LoadDraftPOCommand { get; }
+        public ICommand DeleteDraftPOCommand { get; }
+        public ICommand PrintPurchaseOrderCommand { get; }
         public ICommand RemoveLineCommand { get; }
         public ICommand SearchBarcodeCommand { get; }
         #endregion
@@ -394,7 +423,13 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                         string.Equals(x.Status, FilterStatus.Value.ToString(), StringComparison.OrdinalIgnoreCase));
                 }
 
-                HistoryList = new ObservableCollection<GoodPurchaseNote>(results);
+                HistoryList = new ObservableCollection<PurchaseOrderSummaryModel>(
+                    results.Select(po => new PurchaseOrderSummaryModel(
+                        po,
+                        _goodsPurchaseNoteRepository.GetPOLinesAsync,
+                        ex => MessageBox.Show($"Unable to load PO line items: {ex.Message}", "Order History", MessageBoxButton.OK, MessageBoxImage.Error))));
+                (LoadDraftPOCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                (DeleteDraftPOCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
 
                 if (HistoryList.Count == 0)
                 {
@@ -464,7 +499,6 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                     IsTaxApplicable = SelectedProduct.IsTaxApplicable
                 };
 
-                newLine.PropertyChanged += GoodsPurchaseNoteLine_PropertyChanged;
                 GoodsPurchaseNoteLines.Add(newLine);
             }
             CalculateTotals();
@@ -490,10 +524,12 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         {
             try
             {
+                _draftAutoSaveTimer.Stop();
                 ValidatePurchaseOrder();
 
                 var po = new GoodPurchaseNote
                 {
+                    GoodsPurchaseNoteId = CurrentOrderId,
                     BranchId = _userSessionService.BranchId,
                     SupplierId = SelectedSupplier.SupplierId,
                     Note = this.Note,
@@ -504,11 +540,12 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                     OrderBy = OrderBy,
                     OrderDate = PurchaseDate,
                     ExpectedDeliveryDate = ExpectedDeliveryDate,
+                    Status = PurchaseOrderStatus.PENDING_APPROVAL.ToString(),
                     CreatedBy = _userSessionService.UserId,
                     Lines = GoodsPurchaseNoteLines.ToList()
                 };
 
-                await _goodsPurchaseNoteRepository.CreateAsync(po);
+                await SavePurchaseOrderAsync(po);
 
                 CreateNewPO();
 
@@ -526,40 +563,194 @@ namespace PointOfSale.UI.ViewModels.Purchasing
 
             if (reportData == null || reportData.Rows.Count == 0)
             {
-                MessageBox.Show("No data found for this Purchase Order.", "Export Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("No data found for this Purchase Order.", "Purchase Order Preview", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            string tempFile = Path.Combine(Path.GetTempPath(), $"PO_{purchaseNoteId}_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
-
-            await Task.Run(() => ExportPurchaseOrderReport(reportData, tempFile));
-
-            Process.Start(new ProcessStartInfo(tempFile) { UseShellExecute = true });
-        }
-
-        private void ExportPurchaseOrderReport(DataTable reportData, string filePath)
-        {
-            using (var report = new ReportDocument())
+            await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                string reportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports", "PurchaseOrderNote.rpt");
-                if (!File.Exists(reportPath))
+                PurchaseOrderNote reportDocument = null;
+
+                try
                 {
-                    throw new FileNotFoundException("Crystal report file not found.", reportPath);
+                    reportDocument = new PurchaseOrderNote();
+
+                    var ds = new PurchaseOrderDS();
+                    var compatibleReportData = PurchaseOrderReportDataNormalizer.Normalize(reportData, ds.PurchaseOrderReport);
+                    ds.PurchaseOrderReport.Merge(compatibleReportData);
+
+                    reportDocument.SetDataSource(ds);
+
+                    var previewWindow = new ZReportViewerWindow(reportDocument, disposeReportOnClose: true)
+                    {
+                        Title = "Purchase Order Preview"
+                    };
+
+                    var owner = Application.Current.MainWindow;
+                    if (owner != null && owner != previewWindow)
+                    {
+                        previewWindow.Owner = owner;
+                        previewWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                    }
+                    else
+                    {
+                        previewWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    }
+
+                    previewWindow.ShowDialog();
+                    reportDocument = null;
                 }
-
-                report.Load(reportPath);
-
-                var ds = new PurchaseOrderDS();
-                var compatibleReportData = PurchaseOrderReportDataNormalizer.Normalize(reportData, ds.PurchaseOrderReport);
-                ds.PurchaseOrderReport.Merge(compatibleReportData);
-
-                report.SetDataSource(ds);
-                report.ExportToDisk(ExportFormatType.PortableDocFormat, filePath);
-            }
+                finally
+                {
+                    if (reportDocument != null)
+                    {
+                        reportDocument.Close();
+                        reportDocument.Dispose();
+                    }
+                }
+            });
         }
         #endregion
 
         #region HelperMethod
+        private async Task SavePurchaseOrderAsync(GoodPurchaseNote purchaseOrder)
+        {
+            await _goodsPurchaseNoteRepository.UpsertDraftPurchaseOrderAsync(purchaseOrder, purchaseOrder.Lines);
+        }
+
+        private static GoodPurchaseNote GetPurchaseOrder(object parameter)
+        {
+            if (parameter is PurchaseOrderSummaryModel summary)
+            {
+                return summary.Source;
+            }
+
+            return parameter as GoodPurchaseNote;
+        }
+
+        private bool CanEditDraft(GoodPurchaseNote purchaseOrder)
+        {
+            return purchaseOrder != null && purchaseOrder.IsDraft;
+        }
+
+        private async Task PrintPurchaseOrderAsync(object parameter)
+        {
+            var purchaseOrder = GetPurchaseOrder(parameter);
+            if (purchaseOrder == null || purchaseOrder.GoodsPurchaseNoteId <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await OpenPurchaseOrderReportAsync(purchaseOrder.GoodsPurchaseNoteId);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open Purchase Order preview: {ex.Message}", "Purchase Order Preview", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task LoadDraftPurchaseOrderAsync(GoodPurchaseNote draft)
+        {
+            if (!CanEditDraft(draft))
+            {
+                return;
+            }
+
+            _isResettingPurchaseOrder = true;
+            _draftAutoSaveTimer.Stop();
+
+            try
+            {
+                if (Suppliers == null || Suppliers.Count == 0)
+                {
+                    await LoadSuppliers();
+                }
+
+                ResetItemControls();
+
+                CurrentOrderId = Convert.ToInt32(draft.GoodsPurchaseNoteId);
+                SelectedSupplier = Suppliers?.FirstOrDefault(s => s.SupplierId == draft.SupplierId);
+                PurchaseDate = draft.OrderDate == default(DateTime) ? DateTime.Today : draft.OrderDate;
+                ExpectedDeliveryDate = draft.ExpectedDeliveryDate;
+                OrderBy = draft.OrderBy;
+                Note = draft.Note;
+
+                foreach (var line in GoodsPurchaseNoteLines)
+                {
+                    line.PropertyChanged -= GoodsPurchaseNoteLine_PropertyChanged;
+                }
+
+                GoodsPurchaseNoteLines.Clear();
+
+                var lines = (await _goodsPurchaseNoteRepository.GetPOLinesAsync(draft.GoodsPurchaseNoteId)).ToList();
+                foreach (var line in lines)
+                {
+                    GoodsPurchaseNoteLines.Add(line);
+                }
+
+                BillDiscount = Math.Max(0m, draft.DiscountAmount - lines.Sum(line => line.LineDiscount));
+
+                CalculateTotals();
+                ClearErrors(nameof(SelectedProduct));
+                ClearErrors(nameof(Quantity));
+                ClearErrors(nameof(UnitPrice));
+                SelectedTabIndex = 0;
+                FocusBarcode();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open draft PO: {ex.Message}", "Open Draft", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isResettingPurchaseOrder = false;
+            }
+        }
+
+        private async Task DeleteDraftPurchaseOrderAsync(GoodPurchaseNote draft)
+        {
+            if (!CanEditDraft(draft))
+            {
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Delete draft purchase order {draft.PONumber}?\n\nThis only removes the draft. Approved and pending purchase orders cannot be deleted here.",
+                "Delete Draft",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                await _goodsPurchaseNoteRepository.SoftDeletePOAsync(draft.GoodsPurchaseNoteId, _userSessionService.UserId);
+
+                if (CurrentOrderId == draft.GoodsPurchaseNoteId)
+                {
+                    CreateNewPO();
+                }
+
+                var historyRow = HistoryList?.FirstOrDefault(row =>
+                    ReferenceEquals(row.Source, draft) ||
+                    row.GoodsPurchaseNoteId == draft.GoodsPurchaseNoteId);
+
+                if (historyRow != null)
+                {
+                    HistoryList.Remove(historyRow);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to delete draft PO: {ex.Message}", "Delete Draft", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void UpdateTotals()
         {
             CalculateTotals();
@@ -616,8 +807,121 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 e.PropertyName == nameof(GoodsPurchaseNoteLine.LineDiscount))
             {
                 CalculateTotals();
+                ScheduleDraftAutoSave();
             }
         }
+
+        private void GoodsPurchaseNoteLines_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (GoodsPurchaseNoteLine line in e.NewItems)
+                {
+                    line.PropertyChanged += GoodsPurchaseNoteLine_PropertyChanged;
+                }
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (GoodsPurchaseNoteLine line in e.OldItems)
+                {
+                    line.PropertyChanged -= GoodsPurchaseNoteLine_PropertyChanged;
+                }
+            }
+
+            (SavePOCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+            CalculateTotals();
+            ScheduleDraftAutoSave();
+        }
+
+        private bool IsDraftHeaderProperty(string propertyName)
+        {
+            return propertyName == nameof(SelectedSupplier) ||
+                   propertyName == nameof(PurchaseDate) ||
+                   propertyName == nameof(ExpectedDeliveryDate) ||
+                   propertyName == nameof(OrderBy) ||
+                   propertyName == nameof(Note) ||
+                   propertyName == nameof(BillDiscount);
+        }
+
+        private void ScheduleDraftAutoSave()
+        {
+            if (_isResettingPurchaseOrder)
+            {
+                return;
+            }
+
+            if (_isDraftAutoSaveInProgress)
+            {
+                _draftAutoSaveQueuedWhileSaving = true;
+                return;
+            }
+
+            _draftAutoSaveTimer.Stop();
+            _draftAutoSaveTimer.Start();
+        }
+
+        private async void DraftAutoSaveTimer_Tick(object sender, EventArgs e)
+        {
+            _draftAutoSaveTimer.Stop();
+
+            if (!CanAutoSaveDraft)
+            {
+                return;
+            }
+
+            try
+            {
+                _isDraftAutoSaveInProgress = true;
+                ErrorMessage = null;
+
+                var draft = BuildPurchaseOrderDraft();
+                CurrentOrderId = await _goodsPurchaseNoteRepository.UpsertDraftPurchaseOrderAsync(draft, draft.Lines);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Draft auto-save failed: {ex.Message}";
+                Debug.WriteLine($"Draft auto-save failed: {ex}");
+            }
+            finally
+            {
+                _isDraftAutoSaveInProgress = false;
+
+                if (_draftAutoSaveQueuedWhileSaving)
+                {
+                    _draftAutoSaveQueuedWhileSaving = false;
+                    ScheduleDraftAutoSave();
+                }
+            }
+        }
+
+        private bool CanAutoSaveDraft =>
+            SelectedSupplier != null &&
+            (GoodsPurchaseNoteLines.Count > 0 ||
+             !string.IsNullOrWhiteSpace(OrderBy) ||
+             !string.IsNullOrWhiteSpace(Note));
+
+        private GoodPurchaseNote BuildPurchaseOrderDraft()
+        {
+            return new GoodPurchaseNote
+            {
+                GoodsPurchaseNoteId = CurrentOrderId,
+                BranchId = _userSessionService.BranchId,
+                SupplierId = SelectedSupplier?.SupplierId ?? 0,
+                Note = Note,
+                SubTotal = SubTotal,
+                DiscountAmount = DiscountAmount,
+                TaxAmount = TaxAmount,
+                TotalAmount = NetAmount,
+                OrderBy = OrderBy,
+                OrderDate = PurchaseDate,
+                ExpectedDeliveryDate = ExpectedDeliveryDate,
+                Status = PurchaseOrderStatus.DRAFT.ToString(),
+                CreatedBy = _userSessionService.UserId,
+                Lines = GoodsPurchaseNoteLines.ToList()
+            };
+        }
+
         private void ResetItemControls()
         {
             SelectedProduct = null;
@@ -635,30 +939,41 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         }
         private void CreateNewPO()
         {
-            ResetItemControls();
+            _isResettingPurchaseOrder = true;
+            _draftAutoSaveTimer.Stop();
 
-            SelectedSupplier = null;
-            SelectedProduct = null;
-
-            OrderBy = string.Empty;
-            Note = string.Empty;
-            ExpectedDeliveryDate = null;
-            SubTotal = 0;
-            BillDiscount = 0;
-            DiscountAmount = 0;
-            TaxAmount = 0;
-            NetAmount = 0;
-
-            ClearErrors(nameof(SelectedProduct));
-            ClearErrors(nameof(SelectedSupplier));
-            ClearErrors(nameof(OrderBy));
-
-            foreach (var line in GoodsPurchaseNoteLines)
+            try
             {
-                line.PropertyChanged -= GoodsPurchaseNoteLine_PropertyChanged;
-            }
+                ResetItemControls();
 
-            GoodsPurchaseNoteLines.Clear();
+                CurrentOrderId = 0;
+                SelectedSupplier = null;
+                SelectedProduct = null;
+
+                OrderBy = string.Empty;
+                Note = string.Empty;
+                ExpectedDeliveryDate = null;
+                SubTotal = 0;
+                BillDiscount = 0;
+                DiscountAmount = 0;
+                TaxAmount = 0;
+                NetAmount = 0;
+
+                ClearErrors(nameof(SelectedProduct));
+                ClearErrors(nameof(SelectedSupplier));
+                ClearErrors(nameof(OrderBy));
+
+                foreach (var line in GoodsPurchaseNoteLines)
+                {
+                    line.PropertyChanged -= GoodsPurchaseNoteLine_PropertyChanged;
+                }
+
+                GoodsPurchaseNoteLines.Clear();
+            }
+            finally
+            {
+                _isResettingPurchaseOrder = false;
+            }
         }
         private void RaiseCanExecuteChanged()
         {

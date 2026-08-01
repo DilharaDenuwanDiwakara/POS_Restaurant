@@ -157,6 +157,10 @@
   <ItemGroup />
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Database\Purchasing\uspGetAllGoodsPurchaseNotes.sql" />
+    <None Include="Database\Purchasing\uspSubmitDraftPurchaseOrder.sql" />
+    <None Include="Database\Purchasing\uspSoftDeletePurchaseNote.sql" />
+    <None Include="Database\Purchasing\usp_UpsertDraftPurchaseOrder.sql" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

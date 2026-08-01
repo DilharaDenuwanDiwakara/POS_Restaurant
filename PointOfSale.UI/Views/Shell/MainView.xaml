@@ -359,7 +359,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavPO, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Purchase Order Note"/>
+                                        <TextBlock Text="Purchase Orders"/>
                                     </StackPanel>
                                 </RadioButton>
 

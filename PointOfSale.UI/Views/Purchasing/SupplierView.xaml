@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="PointOfSale.UI.Views.Purchasing.SupplierView"
+<UserControl x:Class="PointOfSale.UI.Views.Purchasing.SupplierView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -134,15 +134,13 @@
                                             <DataGridTextColumn Header="Email" Binding="{Binding EmailAddress}" Width="Auto"/>
                                             <DataGridCheckBoxColumn Header="WA" Binding="{Binding IsWhatsApp}" Width="50"/>
                                             <DataGridCheckBoxColumn Header="Primary" Binding="{Binding IsPrimary}" Width="65"/>
-                                            <DataGridTemplateColumn Width="75">
+                                            <DataGridTemplateColumn Header="Action" Width="75">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <Button Content="&#xE70F;"
-                                                                    FontFamily="Segoe MDL2 Assets"
-                                                                    Command="{Binding DataContext.EditContactCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            <Button Command="{Binding DataContext.EditContactCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                                     CommandParameter="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGridRow}}"
-                                                                    Style="{StaticResource IconOnlyButtonStyle}"
+                                                                    Style="{StaticResource EditButtonStyle}"
                                                                     ToolTip="Edit Contact"
                                                                     Width="24"
                                                                     Height="24"
@@ -276,14 +274,10 @@
                                                             Style="{StaticResource IconOnlyButtonStyle}"
                                                             Margin="4,0,0,0"/>
                                                     <Button Grid.Column="2"
-                                                            Content="&#xE74D;"
-                                                            FontFamily="Segoe MDL2 Assets"
-                                                            FontSize="13"
                                                             ToolTip="Remove document"
                                                             Command="{Binding DataContext.RemoveDocumentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}"
-                                                            Style="{StaticResource IconOnlyButtonStyle}"
-                                                            Foreground="#E74C3C"
+                                                            Style="{StaticResource DeleteButtonStyle}"
                                                             Margin="2,0,0,0"/>
                                                 </Grid>
                                             </DataTemplate>
@@ -567,7 +561,7 @@
                                 </DataGridTemplateColumn>
                                 <DataGridCheckBoxColumn Header="Credit" Binding="{Binding IsCredit}" Width="Auto"/>
                                 
-                                <DataGridTextColumn Header="Credit Limit" Binding="{Binding CreditLimit}" Width="Auto">
+                                <DataGridTextColumn Header="Credit Limit" Binding="{Binding CreditLimit, StringFormat='Rs. {0:N2}'}" Width="Auto" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Right"/>

@@ -234,7 +234,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="MinimumBillAmount" Binding="{Binding MinimumBillAmount, StringFormat=N2}" Width="150">
+                            <DataGridTextColumn Header="MinimumBillAmount" Binding="{Binding MinimumBillAmount, StringFormat='Rs. {0:N2}'}" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>

@@ -1080,7 +1080,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                     Number = sequence++,
                     ProductId = item.VariantId,
                     MenuCategoryId = productRef?.MenuCategoryId,
-                    ProductName = $"{item.ProductName} ({item.VariantName})",
+                    ProductName = item.DisplayName,
                     UnitPrice = item.UnitPrice,
                     AvailableQuantity = decimal.MaxValue,
                     Quantity = item.Quantity,

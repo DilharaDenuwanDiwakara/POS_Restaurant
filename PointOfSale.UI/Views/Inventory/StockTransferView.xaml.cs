@@ -56,7 +56,7 @@ namespace PointOfSale.UI.Views.Inventory
             };
         }
 
-        private void MoveFocusOnEnter(object sender, KeyEventArgs e)
+        private async void MoveFocusOnEnter(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
@@ -80,6 +80,26 @@ namespace PointOfSale.UI.Views.Inventory
                 {
                     e.Handled = true;
                     return;
+                }
+
+                if (sender is FrameworkElement barcodeElement && barcodeElement.Name == "BarcodeTextBox")
+                {
+                    if (DataContext is StockTransferViewModel vm)
+                    {
+                        vm.SearchAndSelectProduct(vm.Barcode);
+                        e.Handled = true;
+                        return;
+                    }
+                }
+
+                if (sender is FrameworkElement productElement && productElement.Name == "ProductCombobox")
+                {
+                    if (DataContext is StockTransferViewModel vm)
+                    {
+                        await vm.ResolveBatchForTransferAsync();
+                        e.Handled = true;
+                        return;
+                    }
                 }
 
                 // ============================================================

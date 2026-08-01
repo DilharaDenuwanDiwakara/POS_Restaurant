@@ -262,20 +262,23 @@
     </Style>
 
     <Style x:Key="OrderCardStyle" TargetType="Border">
-        <Setter Property="Width" Value="220"/>
-        <Setter Property="MinHeight" Value="106"/>
+        <Setter Property="Width" Value="244"/>
+        <Setter Property="MinWidth" Value="244"/>
+        <Setter Property="MinHeight" Value="122"/>
         <Setter Property="Background" Value="{StaticResource SalesCardBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource SalesBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="14"/>
-        <Setter Property="Padding" Value="12"/>
+        <Setter Property="Padding" Value="14"/>
         <Setter Property="Effect" Value="{StaticResource SalesSoftShadow}"/>
     </Style>
 
     <Style x:Key="OrderNumberTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource SalesTextBrush}"/>
+        <Setter Property="Foreground" Value="#1E293B"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
     </Style>
 
     <Style x:Key="OrderCustomerTextStyle" TargetType="TextBlock">
@@ -287,29 +290,33 @@
     </Style>
 
     <Style x:Key="OrderMetaTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Foreground" Value="{StaticResource SalesMutedBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <Style x:Key="OrderAmountTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Foreground" Value="{StaticResource SalesAccentBrush}"/>
         <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <Style x:Key="OrderTablePillStyle" TargetType="Border">
-        <Setter Property="Background" Value="#EFF6FF"/>
-        <Setter Property="BorderBrush" Value="{StaticResource SalesAccentBrush}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="9"/>
-        <Setter Property="Padding" Value="7,2"/>
+        <Setter Property="Background" Value="{StaticResource SalesAccentBrush}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="8,2"/>
+        <Setter Property="MinWidth" Value="46"/>
     </Style>
 
     <Style x:Key="OrderTablePillTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="10"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource SalesAccentBrush}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <Style x:Key="StatusProgressPillStyle" TargetType="Border">

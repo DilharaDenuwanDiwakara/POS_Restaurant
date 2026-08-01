@@ -147,7 +147,7 @@
 
                 <DataGridTextColumn Header="Station" Binding="{Binding TargetStation}" Width="120"/>
 
-                <DataGridTextColumn Header="Base Price" Binding="{Binding Price, StringFormat='Rs. {0:N2}'}" Width="120">
+                <DataGridTextColumn Header="Base Price" Binding="{Binding Price, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -179,51 +179,33 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Actions" Width="200">
+                <DataGridTemplateColumn Header="Action" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
 
-                                <Button Content="✏️" 
+                                <Button
                                         ToolTip="Edit Menu Item Details"
                                         Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Visibility="{Binding DataContext.CanEditMenuItem, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Background="#E3F2FD" 
-                                        Foreground="#0D47A1" 
-                                        BorderBrush="#0D47A1"
-                                        BorderThickness="1"
-                                        Height="30" 
-                                        Width="50"
+                                        Style="{StaticResource EditButtonStyle}"
                                         Margin="0,0,6,0"/>
 
-                                <Button Content="🗑️ " 
+                                <Button
                                         ToolTip="Delete Menu Item"
                                         Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding Id}"
                                         Visibility="{Binding DataContext.CanDeleteMenuItem, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Background="#FFEBEE" 
-                                        Foreground="#C62828" 
-                                        BorderBrush="#C62828"
-                                        BorderThickness="1"
-                                        Height="30" 
-                                        Width="50"
+                                        Style="{StaticResource DeleteButtonStyle}"
                                         Margin="0,0,6,0"/>
 
-                                <Button Content="💰" 
+                                <Button
                                         ToolTip="Quick Price Update"
                                         Command="{Binding DataContext.QuickUpdatePriceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Visibility="{Binding DataContext.CanSetPrice, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Background="#FFF3E0" 
-                                        Foreground="#E65100" 
-                                        BorderBrush="#E65100"
-                                        BorderThickness="1"
-                                        Height="30" 
-                                        Width="50"/>
+                                        Style="{StaticResource PriceButtonStyle}"/>
 
                             </StackPanel>
                         </DataTemplate>

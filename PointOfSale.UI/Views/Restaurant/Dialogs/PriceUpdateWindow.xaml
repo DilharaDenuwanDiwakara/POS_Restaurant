@@ -1,4 +1,4 @@
-﻿<Window x:Class="PointOfSale.UI.Views.Restaurant.Dialogs.PriceUpdateWindow"
+<Window x:Class="PointOfSale.UI.Views.Restaurant.Dialogs.PriceUpdateWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -44,8 +44,8 @@
                 </DataGridTextColumn>
 
                 <DataGridTextColumn Header="New Price (LKR)" 
-                                    Binding="{Binding Price, StringFormat=N2, UpdateSourceTrigger=LostFocus}"
-                                    Width="150">
+                                    Binding="{Binding Price, StringFormat='Rs. {0:N2}', UpdateSourceTrigger=LostFocus}"
+                                    Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
 
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">

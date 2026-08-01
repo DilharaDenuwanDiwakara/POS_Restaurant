@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using PointOfSale.Core.Interfaces.Repositories.Sales;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
 
@@ -13,16 +15,25 @@ namespace PointOfSale.UI.ViewModels.Sales
     {
         private readonly ISalesRepository _salesRepository;
         private readonly IUserSessionService _userSessionService;
+        private readonly ISalesInvoiceReportPreviewService _salesInvoiceReportPreviewService;
+        private readonly IDialogService _dialogService;
 
-        public SalesListViewModel(ISalesRepository salesRepository, IUserSessionService userSessionService)
+        public SalesListViewModel(
+            ISalesRepository salesRepository,
+            IUserSessionService userSessionService,
+            ISalesInvoiceReportPreviewService salesInvoiceReportPreviewService,
+            IDialogService dialogService)
         {
             _salesRepository = salesRepository;
             _userSessionService = userSessionService;
+            _salesInvoiceReportPreviewService = salesInvoiceReportPreviewService;
+            _dialogService = dialogService;
 
             SalesList = new ObservableCollection<InvoiceSummaryModel>();
             PaymentTypes = new ObservableCollection<string> { "All", "Cash", "Credit", "Card" };
 
             SearchCommand = new AsyncRelayCommand(SearchSalesAsync);
+            ReprintInvoiceCommand = new AsyncRelayCommand(ReprintInvoiceAsync);
             _ = SearchSalesAsync(null);
         }
 
@@ -55,7 +66,13 @@ namespace PointOfSale.UI.ViewModels.Sales
         public bool IsBusy
         {
             get => _isBusy;
-            set => SetProperty(ref _isBusy, value);
+            set
+            {
+                if (SetProperty(ref _isBusy, value))
+                {
+                    (ReprintInvoiceCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                }
+            }
         }
 
         private decimal _totalRevenue;
@@ -68,6 +85,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         #region Commands
         public ICommand SearchCommand { get; }
+        public ICommand ReprintInvoiceCommand { get; }
         #endregion
 
         #region Command Implementation
@@ -102,6 +120,32 @@ namespace PointOfSale.UI.ViewModels.Sales
             catch (Exception ex)
             {
                 ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private async Task ReprintInvoiceAsync(object parameter)
+        {
+            if (IsBusy || !(parameter is InvoiceSummaryModel invoice) || invoice.SalesId <= 0)
+                return;
+
+            try
+            {
+                IsBusy = true;
+                ErrorMessage = null;
+
+                await _salesInvoiceReportPreviewService.ShowPreviewAsync(invoice.SalesId);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError($"Failed to reprint sales invoice {invoice.SalesId}: {ex}");
+
+                const string message = "Unable to load the bill preview. Please try again or contact support.";
+                ErrorMessage = message;
+                _dialogService.ShowMessage(message, "Reprint Bill", DialogMessageType.Error);
             }
             finally
             {

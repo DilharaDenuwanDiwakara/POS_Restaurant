@@ -130,14 +130,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public string Barcode
         {
             get => _barcode;
-            set
-            {
-                if (SetProperty(ref _barcode, value))
-                {
-                    if (!string.IsNullOrWhiteSpace(value))
-                        SearchAndSelectProduct(value);
-                }
-            }
+            set => SetProperty(ref _barcode, value);
         }
 
         private ObservableCollection<Product> _products;
@@ -155,7 +148,17 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _selectedProduct, value))
                 {
-                    _ = ResolveBatchForTransferAsync();
+                    SelectedBatch = null;
+
+                    if (_selectedProduct != null)
+                    {
+                        SelectedUnitMeasureName = _selectedProduct.UnitMeasureCode;
+                    }
+                    else
+                    {
+                        SelectedUnitMeasureName = null;
+                    }
+
                     OnPropertyChanged(nameof(IsProductSelected));
                     RefreshAddCommand();
                 }
@@ -163,6 +166,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
         }
 
         public bool IsProductSelected => SelectedProduct != null;
+
+        private string _selectedUnitMeasureName;
+        public string SelectedUnitMeasureName
+        {
+            get => _selectedUnitMeasureName;
+            private set => SetProperty(ref _selectedUnitMeasureName, value);
+        }
 
         private ObservableCollection<ProductBatch> _availableBatches;
         public ObservableCollection<ProductBatch> AvailableBatches
@@ -263,7 +273,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             var allProducts = await _productRepository.GetAllAsync();
             Products = new ObservableCollection<Product>(allProducts);
         }
-        private void SearchAndSelectProduct(string code)
+        public void SearchAndSelectProduct(string code)
         {
             if (string.IsNullOrWhiteSpace(code))
             {
@@ -273,17 +283,20 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             if (Products == null) return;
 
+            var trimmedCode = code.Trim();
+
             // Search by Barcode OR ProductCode
             var foundProduct = Products.FirstOrDefault(p =>
-                string.Equals(p.Barcode, Barcode.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(p.ProductCode, Barcode.Trim(), StringComparison.OrdinalIgnoreCase));
+                string.Equals(p.Barcode, trimmedCode, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(p.ProductCode, trimmedCode, StringComparison.OrdinalIgnoreCase));
 
             if (foundProduct != null)
             {
                 SelectedProduct = foundProduct;
+                _ = ResolveBatchForTransferAsync();
             }
         }
-        private async Task ResolveBatchForTransferAsync()
+        public async Task ResolveBatchForTransferAsync()
         {
             // Clear previous selections
             SelectedBatch = null;
@@ -383,6 +396,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     ProductId = SelectedProduct.ProductId,
                     ProductName = SelectedProduct.ProductName,
+                    UnitMeasureCode = SelectedProduct.UnitMeasureCode,
                     BatchId = SelectedBatch.BatchId,
                     ExpiryDate = SelectedBatch.ExpiryDate,
                     UnitCost = SelectedBatch.UnitCost,

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="PointOfSale.UI.Views.Accounts.ExpensesView"
+<UserControl x:Class="PointOfSale.UI.Views.Accounts.ExpensesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -171,7 +171,7 @@
                             <DataGridTextColumn Header="Expenses Type" Binding="{Binding ExpensesCategoryName, Mode=TwoWay}" Width="220" />
                             <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" />
                             
-                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="150" >
+                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='Rs. {0:N2}'}" Width="150"  HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>

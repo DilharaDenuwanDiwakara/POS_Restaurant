@@ -73,6 +73,24 @@ namespace PointOfSale.UI.Services
             // 4. Show
             return window.ShowDialog();
         }
+
+        public void ShowMessage(string message, string title, DialogMessageType messageType = DialogMessageType.Information)
+        {
+            MessageBox.Show(message, title, MessageBoxButton.OK, ToMessageBoxImage(messageType));
+        }
+
+        private static MessageBoxImage ToMessageBoxImage(DialogMessageType messageType)
+        {
+            switch (messageType)
+            {
+                case DialogMessageType.Warning:
+                    return MessageBoxImage.Warning;
+                case DialogMessageType.Error:
+                    return MessageBoxImage.Error;
+                default:
+                    return MessageBoxImage.Information;
+            }
+        }
     }
 
 }

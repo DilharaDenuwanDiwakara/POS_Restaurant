@@ -129,6 +129,20 @@
         <Setter Property="Content" Value=" "/>
     </Style>
 
+    <Style x:Key="EditButtonStyle" TargetType="Button" BasedOn="{StaticResource IconOnlyButtonStyle}">
+        <Setter Property="Background" Value="{StaticResource SecondaryBrush}"/>
+        <Setter Property="ToolTip" Value="Edit"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Path Data="{StaticResource Icon.Action.Edit}"
+                          Style="{StaticResource Style.Icon.Base}"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Content" Value=" "/>
+    </Style>
+
     <Style x:Key="DeleteButtonStyle" TargetType="Button" BasedOn="{StaticResource IconOnlyButtonStyle}">
         <Setter Property="Background" Value="{StaticResource DangerBrush}"/>
         <Setter Property="ToolTip" Value="Delete"/>
@@ -137,6 +151,20 @@
                 <DataTemplate>
                     <Path Data="{StaticResource Icon.Action.Delete}" 
                       Style="{StaticResource Style.Icon.Base}"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Content" Value=" "/>
+    </Style>
+
+    <Style x:Key="PriceButtonStyle" TargetType="Button" BasedOn="{StaticResource IconOnlyButtonStyle}">
+        <Setter Property="Background" Value="{StaticResource WarningBrush}"/>
+        <Setter Property="ToolTip" Value="Update price"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Path Data="{StaticResource Icon.Action.Price}"
+                          Style="{StaticResource Style.Icon.Base}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>

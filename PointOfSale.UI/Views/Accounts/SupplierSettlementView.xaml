@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="PointOfSale.UI.Views.Accounts.SupplierSettlementView"
+<UserControl x:Class="PointOfSale.UI.Views.Accounts.SupplierSettlementView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -123,12 +123,12 @@
                                         IsReadOnly="True"/>
 
                             <DataGridTextColumn Header="Amount Due" 
-                                        Binding="{Binding AmountDue, StringFormat='{}{0:N2}'}" 
+                                        Binding="{Binding AmountDue, StringFormat='Rs. {0:N2}'}" 
                                         Width="100" 
                                         ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                        IsReadOnly="True"/>
+                                        IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
 
-                            <DataGridTemplateColumn Header="Payment" Width="100">
+                            <DataGridTemplateColumn Header="Payment" Width="100" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBox Text="{Binding PaymentAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
@@ -219,12 +219,12 @@
                                         IsReadOnly="True"/>
 
                             <DataGridTextColumn Header="Available" 
-                                        Binding="{Binding RemainingAmount, StringFormat='{}{0:N2}'}" 
+                                        Binding="{Binding RemainingAmount, StringFormat='Rs. {0:N2}'}" 
                                         Width="100" 
                                         ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                        IsReadOnly="True"/>
+                                        IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
 
-                            <DataGridTemplateColumn Header="Apply" Width="100" >
+                            <DataGridTemplateColumn Header="Apply" Width="100" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBox Text="{Binding ApplyAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
@@ -316,11 +316,12 @@
                                        Margin="0,0,0,8"/>
                             
                             <TextBlock Grid.Row="1" Grid.Column="1" 
-                                       Text="{Binding TotalSelectedPayableAmount, StringFormat='{}{0:N2}'}"
+                                       Text="{Binding TotalSelectedPayableAmount, StringFormat='Rs. {0:N2}'}"
+                                       TextAlignment="Right"
+                                       HorizontalAlignment="Right"
                                        FontWeight="SemiBold"
                                        FontSize="14"
                                        Foreground="{StaticResource DangerBrush}"
-                                       HorizontalAlignment="Right"
                                        Margin="0,0,0,8"/>
 
                             <!-- Credits Summary -->
@@ -330,11 +331,12 @@
                                        Foreground="{StaticResource SuccessBrush}"
                                        Margin="0,0,0,8"/>
                             <TextBlock Grid.Row="2" Grid.Column="1" 
-                                       Text="{Binding TotalSelectedCreditAmount, StringFormat='(-{0:N2})'}"
+                                       Text="{Binding TotalSelectedCreditAmount, StringFormat='-Rs. {0:N2}'}"
+                                       TextAlignment="Right"
+                                       HorizontalAlignment="Right"
                                        FontWeight="SemiBold"
                                        FontSize="14"
                                        Foreground="{StaticResource SuccessBrush}"
-                                       HorizontalAlignment="Right"
                                        Margin="0,0,0,8"/>
                         </Grid>
                     </Border>
