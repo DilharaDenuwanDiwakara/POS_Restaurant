@@ -1,5 +1,8 @@
 ﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using System.Globalization;
+using System.Threading;
+using System.Windows.Markup;
 using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Accounts;
@@ -48,6 +51,8 @@ namespace PointOfSale.UI
 
         public App()
         {
+            ConfigureApplicationCulture();
+
             var services = new ServiceCollection();
             ConfigureServices(services);
 
@@ -225,6 +230,23 @@ namespace PointOfSale.UI
             };
 
             loginView.ShowDialog();
+        }
+
+        private static void ConfigureApplicationCulture()
+        {
+            var culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+            culture.DateTimeFormat.ShortDatePattern = "dd/MM/yyyy";
+            culture.DateTimeFormat.LongDatePattern = "dd/MM/yyyy";
+
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+
+            // WPF bindings and DatePicker text use FrameworkElement.Language for culture.
+            FrameworkElement.LanguageProperty.OverrideMetadata(
+                typeof(FrameworkElement),
+                new FrameworkPropertyMetadata(XmlLanguage.GetLanguage("en-GB")));
         }
     }
 }

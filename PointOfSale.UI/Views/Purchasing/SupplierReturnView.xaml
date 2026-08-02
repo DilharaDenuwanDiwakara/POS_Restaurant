@@ -413,7 +413,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Return ID" Binding="{Binding SupplierReturnId}" Width="100" Visibility="Collapsed"/>
                             <DataGridTextColumn Header="Return #" Binding="{Binding ReturnNumber}" Width="120"/>
-                            <DataGridTextColumn Header="Date" Binding="{Binding ReturnDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding ReturnDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
                             <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="*"/>
                             <DataGridTextColumn Header="Returned By" Binding="{Binding ReturnedBy}" Width="100"/>
                             <DataGridTemplateColumn Header="Net Amount" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">

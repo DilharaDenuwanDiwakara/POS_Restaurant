@@ -353,7 +353,7 @@
 
                             <TextBlock Text="Date" Style="{StaticResource DetailsLabelStyle}"/>
                             <TextBlock Grid.Column="1"
-                                       Text="{Binding CurrentDateTime, StringFormat='{}{0:dddd, dd MMMM yyyy}'}"
+                                       Text="{Binding CurrentDateTime, StringFormat='{}{0:dddd, dd/MM/yyyy}'}"
                                        Style="{StaticResource DetailsValueStyle}"/>
                         </Grid>
 

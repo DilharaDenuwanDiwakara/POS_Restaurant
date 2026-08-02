@@ -79,7 +79,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Return Note #" Binding="{Binding ReturnNumber}" Width="120"/>
                             <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="Auto"/>
-                            <DataGridTextColumn Header="Date" Binding="{Binding ReturnDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding ReturnDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
                             <DataGridTextColumn Header="Amount" Binding="{Binding NetAmount, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -129,7 +129,7 @@
 
                         <StackPanel Grid.Column="2" Margin="0,0,10,0">
                             <TextBlock Text="Date" Style="{StaticResource LabelStyle}"/>
-                            <TextBox Text="{Binding SelectedReturn.ReturnDate, StringFormat=dd-MMM-yyyy}"
+                            <TextBox Text="{Binding SelectedReturn.ReturnDate, StringFormat='{}{0:dd/MM/yyyy}'}"
                                      IsReadOnly="True"
                                      Style="{StaticResource TextBoxStyle}"/>
                         </StackPanel>

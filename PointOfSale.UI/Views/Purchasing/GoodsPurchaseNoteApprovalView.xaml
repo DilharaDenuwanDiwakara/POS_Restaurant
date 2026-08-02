@@ -77,7 +77,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="PO #" Binding="{Binding PONumber}" Width="100"/>
                             <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="Auto"/>
-                            <DataGridTextColumn Header="Date" Binding="{Binding OrderDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding OrderDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
 
                             <DataGridTextColumn Header="Amount" Binding="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>

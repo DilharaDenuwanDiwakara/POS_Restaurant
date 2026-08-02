@@ -279,7 +279,7 @@
                             <DataGridTextColumn Header="Transfer #"   Binding="{Binding TransferNumber}"                          Width="130"/>
                             <DataGridTextColumn Header="From"         Binding="{Binding FromLocationName}"                        Width="160"/>
                             <DataGridTextColumn Header="To"           Binding="{Binding ToLocationName}"                          Width="160"/>
-                            <DataGridTextColumn Header="Transfer Date" Binding="{Binding TransferDate, StringFormat=dd-MMM-yyyy}" Width="130">
+                            <DataGridTextColumn Header="Transfer Date" Binding="{Binding TransferDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="130">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Center"/>

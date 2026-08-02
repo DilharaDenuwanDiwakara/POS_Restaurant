@@ -88,7 +88,7 @@
                         </DataGridTextColumn>
 
                         <DataGridTextColumn Header="Received Date"
-                                        Binding="{Binding ReceivedDate, StringFormat=\{0:dd-MMM-yyyy\}}"
+                                        Binding="{Binding ReceivedDate, StringFormat=\{0:dd/MM/yyyy\}}"
                                         Width="Auto">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">

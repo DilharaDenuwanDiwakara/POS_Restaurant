@@ -166,7 +166,7 @@
 
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID" Binding="{Binding ExpensesId}" Width="60" Visibility="Hidden"/>
-                            <DataGridTextColumn Header="Expenses Date" Binding="{Binding ExpensesDate, StringFormat=dd-MMM-yyyy}" Width="150" />
+                            <DataGridTextColumn Header="Expenses Date" Binding="{Binding ExpensesDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="150" />
                             <DataGridTextColumn Header="Expenses CategoryId" Binding="{Binding ExpensesCategoryId}" Width="*" Visibility="Hidden" />
                             <DataGridTextColumn Header="Expenses Type" Binding="{Binding ExpensesCategoryName, Mode=TwoWay}" Width="220" />
                             <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" />

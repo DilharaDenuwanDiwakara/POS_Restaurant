@@ -152,7 +152,7 @@
                                                     <TextBlock Margin="4,0" VerticalAlignment="Center">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
-                                                                <Setter Property="Text" Value="{Binding ExpiryDate, StringFormat=dd-MMM-yyyy, TargetNullValue='—'}"/>
+                                                                <Setter Property="Text" Value="{Binding ExpiryDate, StringFormat='{}{0:dd/MM/yyyy}', TargetNullValue='—'}"/>
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding TrackExpiry}" Value="False">
                                                                         <Setter Property="Text"      Value="N/A"/>
@@ -431,7 +431,7 @@
                             <DataGridTextColumn Header="Note" Binding="{Binding Notes}" Width="Auto"/>
 
                             <DataGridTextColumn Header="Received By" Binding="{Binding ReceivedBy}" Width="120"/>
-                            <DataGridTextColumn Header="Received Date" Binding="{Binding GoodsReceiveNoteDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
+                            <DataGridTextColumn Header="Received Date" Binding="{Binding GoodsReceiveNoteDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
                             <DataGridTemplateColumn Header="Status" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

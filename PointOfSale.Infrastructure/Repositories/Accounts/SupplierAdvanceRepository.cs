@@ -116,7 +116,7 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
                 AdvanceId = Convert.ToInt64(record["AdvanceId"]),
                 SupplierName = record["SupplierName"] == DBNull.Value ? string.Empty : record["SupplierName"].ToString(),
                 TransactionNumber = record["TransactionNumber"].ToString(),
-                PaymentDate = Convert.ToDateTime(record["PaymentDate"]),
+                PaymentDate = record.GetDateTime(record.GetOrdinal("PaymentDate")),
                 PaidAmount = Convert.ToDecimal(record["PaidAmount"]),
                 UnappliedAmount = Convert.ToDecimal(record["UnappliedAmount"])
             };

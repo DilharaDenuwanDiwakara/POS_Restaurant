@@ -55,7 +55,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Cashier" Binding="{Binding CashierName}" Width="*"/>
                             <DataGridTextColumn Header="Till" Binding="{Binding TillName}" Width="160"/>
-                            <DataGridTextColumn Header="Closed At" Binding="{Binding EndTime, StringFormat='dd-MMM-yyyy HH:mm'}" Width="150"/>
+                            <DataGridTextColumn Header="Closed At" Binding="{Binding EndTime, StringFormat='dd/MM/yyyy HH:mm'}" Width="150"/>
                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
                         </DataGrid.Columns>
                     </DataGrid>
@@ -86,10 +86,10 @@
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedShift.TillName}" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
 
                             <TextBlock Grid.Row="2" Text="Shift Start Time" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedShift.StartTime, StringFormat='{}{0:dd-MMM-yyyy HH:mm:ss}'}" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedShift.StartTime, StringFormat='{}{0:dd/MM/yyyy HH:mm:ss}'}" Style="{StaticResource LabelStyle}" Margin="0,0,0,6"/>
 
                             <TextBlock Grid.Row="3" Text="Shift Closed Time" Style="{StaticResource LabelStyle}"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedShift.EndTime, StringFormat='{}{0:dd-MMM-yyyy HH:mm:ss}'}" Style="{StaticResource LabelStyle}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedShift.EndTime, StringFormat='{}{0:dd/MM/yyyy HH:mm:ss}'}" Style="{StaticResource LabelStyle}"/>
                         </Grid>
 
                         <Grid Margin="0,0,0,12">

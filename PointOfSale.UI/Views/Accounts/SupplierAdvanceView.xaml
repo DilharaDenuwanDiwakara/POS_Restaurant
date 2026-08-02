@@ -140,7 +140,7 @@
                         <DataGridTextColumn Header="ID" Binding="{Binding AdvanceId}" Width="60" Visibility="Hidden"/>
                         <DataGridTextColumn Header="Supplier Name" Binding="{Binding SupplierName}" Width="*" MinWidth="120" />
                         <DataGridTextColumn Header="Transaction Number" Binding="{Binding TransactionNumber}" Width="200"/>
-                        <DataGridTextColumn Header="Payment Date" Binding="{Binding PaymentDate}" Width="150" />
+                        <DataGridTextColumn Header="Payment Date" Binding="{Binding PaymentDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="150" />
                         <DataGridTextColumn Header="Paid Amount" Binding="{Binding PaidAmount, StringFormat='Rs. {0:N2}'}" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" ElementStyle="{StaticResource RightAlignedTextStyle}"/>
                         <DataGridTextColumn Header="Unapplied Amount" Binding="{Binding UnappliedAmount, StringFormat='Rs. {0:N2}'}" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" ElementStyle="{StaticResource RightAlignedTextStyle}"/>
                     </DataGrid.Columns>

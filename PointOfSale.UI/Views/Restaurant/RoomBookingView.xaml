@@ -251,8 +251,8 @@
                                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto" Visibility="Collapsed"/>
                                 <DataGridTextColumn Header="Room" Binding="{Binding RoomName}" Width="150"/>
                                 <DataGridTextColumn Header="Meal Period" Binding="{Binding MealPeriodName}" Width="150"/>
-                                <DataGridTextColumn Header="From" Binding="{Binding From, StringFormat=dd-MMM-yyyy HH:mm}" Width="150"/>
-                                <DataGridTextColumn Header="To" Binding="{Binding To, StringFormat=dd-MMM-yyyy HH:mm}" Width="150"/>
+                                <DataGridTextColumn Header="From" Binding="{Binding From, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="150"/>
+                                <DataGridTextColumn Header="To" Binding="{Binding To, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="150"/>
                                 <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="*"/>
                                 <DataGridTextColumn Header="Phone" Binding="{Binding CustomerPhoneNumber}" Width="120"/>
                                 <DataGridTextColumn Header="Pax" Binding="{Binding NumberOfPax}" Width="80">

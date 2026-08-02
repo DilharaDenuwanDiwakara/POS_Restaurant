@@ -511,8 +511,8 @@
 
                             <DataGridTextColumn Header="Note" Binding="{Binding Notes}" Width="Auto"/>
                             <DataGridTextColumn Header="Order By" Binding="{Binding OrderBy}" Width="120"/>
-                            <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat=dd-MMM-yyyy}" Width="120"/>
-                            <DataGridTextColumn Header="Expected Delivery Date" Binding="{Binding ExpectedDeliveryDate, StringFormat=dd-MMM-yyyy}" Width="180"/>
+                            <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
+                            <DataGridTextColumn Header="Expected Delivery Date" Binding="{Binding ExpectedDeliveryDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="180"/>
                             <DataGridTemplateColumn Header="Status" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
