@@ -38,6 +38,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         private bool _isResettingPurchaseOrder;
         private bool _isDraftAutoSaveInProgress;
         private bool _draftAutoSaveQueuedWhileSaving;
+        private bool _isCloneFromRejectedPurchaseOrder;
         private decimal _inputTaxRate;
 
         private decimal _lastGrnCostPrice;
@@ -615,6 +616,14 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         #region HelperMethod
         private async Task SavePurchaseOrderAsync(GoodPurchaseNote purchaseOrder)
         {
+            if (_isCloneFromRejectedPurchaseOrder)
+            {
+                purchaseOrder.GoodsPurchaseNoteId = 0;
+                purchaseOrder.PONumber = null;
+                await _goodsPurchaseNoteRepository.CreateAsync(purchaseOrder);
+                return;
+            }
+
             await _goodsPurchaseNoteRepository.UpsertDraftPurchaseOrderAsync(purchaseOrder, purchaseOrder.Lines);
         }
 
@@ -628,9 +637,9 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             return parameter as GoodPurchaseNote;
         }
 
-        private bool CanEditDraft(GoodPurchaseNote purchaseOrder)
+        private bool CanEditPurchaseOrder(GoodPurchaseNote purchaseOrder)
         {
-            return purchaseOrder != null && purchaseOrder.IsDraft;
+            return purchaseOrder != null && (purchaseOrder.IsDraft || purchaseOrder.IsRejected);
         }
 
         private async Task PrintPurchaseOrderAsync(object parameter)
@@ -653,7 +662,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
 
         private async Task LoadDraftPurchaseOrderAsync(GoodPurchaseNote draft)
         {
-            if (!CanEditDraft(draft))
+            if (!CanEditPurchaseOrder(draft))
             {
                 return;
             }
@@ -670,7 +679,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
 
                 ResetItemControls();
 
-                CurrentOrderId = Convert.ToInt32(draft.GoodsPurchaseNoteId);
+                _isCloneFromRejectedPurchaseOrder = draft.IsRejected;
+                CurrentOrderId = _isCloneFromRejectedPurchaseOrder ? 0 : Convert.ToInt32(draft.GoodsPurchaseNoteId);
                 SelectedSupplier = Suppliers?.FirstOrDefault(s => s.SupplierId == draft.SupplierId);
                 PurchaseDate = draft.OrderDate == default(DateTime) ? DateTime.Today : draft.OrderDate;
                 ExpectedDeliveryDate = draft.ExpectedDeliveryDate;
@@ -701,7 +711,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Unable to open draft PO: {ex.Message}", "Open Draft", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Unable to open purchase order: {ex.Message}", "Open Purchase Order", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -711,7 +721,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
 
         private async Task DeleteDraftPurchaseOrderAsync(GoodPurchaseNote draft)
         {
-            if (!CanEditDraft(draft))
+            if (draft == null || !draft.IsDraft)
             {
                 return;
             }
@@ -851,6 +861,11 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 return;
             }
 
+            if (_isCloneFromRejectedPurchaseOrder)
+            {
+                return;
+            }
+
             if (_isDraftAutoSaveInProgress)
             {
                 _draftAutoSaveQueuedWhileSaving = true;
@@ -896,6 +911,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         }
 
         private bool CanAutoSaveDraft =>
+            !_isCloneFromRejectedPurchaseOrder &&
             SelectedSupplier != null &&
             (GoodsPurchaseNoteLines.Count > 0 ||
              !string.IsNullOrWhiteSpace(OrderBy) ||
@@ -946,6 +962,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             {
                 ResetItemControls();
 
+                _isCloneFromRejectedPurchaseOrder = false;
                 CurrentOrderId = 0;
                 SelectedSupplier = null;
                 SelectedProduct = null;

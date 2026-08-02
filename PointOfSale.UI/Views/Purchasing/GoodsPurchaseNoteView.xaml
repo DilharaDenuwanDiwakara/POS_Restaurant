@@ -53,7 +53,7 @@
                                               PreviewKeyDown="MoveFocusOnEnter"/>
 
                                 <!-- Received By -->
-                                <TextBlock Text="Order By:" Style="{StaticResource LabelStyle}"/>
+                                <TextBlock Text="Request By:" Style="{StaticResource LabelStyle}"/>
                                 <TextBox x:Name="ReceivedByTextBox"
                                              Text="{Binding OrderBy, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                                              MaxLength="100"
@@ -536,6 +536,9 @@
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Source.IsDraft}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Source.IsRejected}" Value="True">
                                                                 <Setter Property="Visibility" Value="Visible"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
