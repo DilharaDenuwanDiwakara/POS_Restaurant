@@ -1,0 +1,12 @@
+IF COL_LENGTH('Inventory.ProductUnitConversion', 'IsMultiply') IS NULL
+BEGIN
+    ALTER TABLE [Inventory].[ProductUnitConversion]
+    ADD [IsMultiply] BIT NOT NULL
+        CONSTRAINT [DF_ProductUnitConversion_IsMultiply] DEFAULT (1);
+END;
+GO
+
+UPDATE [Inventory].[ProductUnitConversion]
+SET [IsMultiply] = 1
+WHERE [IsMultiply] IS NULL;
+GO

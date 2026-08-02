@@ -162,21 +162,9 @@
                                                                 <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
 
-                                                            <StackPanel Orientation="Horizontal"
-                                                                        VerticalAlignment="Center">
-                                                                <TextBlock Text="1 "
-                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
-                                                                <TextBlock Text="{Binding DataContext.BaseUnitMeasureName, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
-                                                                <TextBlock Text=" = "
-                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
-                                                                <TextBlock Text="{Binding ConversionRate, StringFormat=N4}"
-                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
-                                                                <TextBlock Text=" "
-                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
-                                                                <TextBlock Text="{Binding TargetUnitMeasureName}"
-                                                                           Style="{StaticResource UnitConversionTextStyle}"/>
-                                                            </StackPanel>
+                                                            <TextBlock Text="{Binding UnitConversionDisplayText}"
+                                                                       Style="{StaticResource UnitConversionTextStyle}"
+                                                                       VerticalAlignment="Center"/>
 
                                                             <Button Grid.Column="1"
                                                                     Command="{Binding DataContext.RemoveUnitConversionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
@@ -198,13 +186,19 @@
                                                 Padding="10"
                                                 Background="#F3F7FC">
                                             <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
                                                 <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="96"/>
                                                     <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="92"/>
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
 
-                                                <StackPanel Margin="0,0,8,0">
+                                                <StackPanel Grid.Row="0"
+                                                            Grid.ColumnSpan="3"
+                                                            Margin="0,0,0,8">
                                                     <TextBlock Text="TO UOM" Style="{StaticResource LabelStyle}"/>
                                                     <ComboBox ItemsSource="{Binding UnitMeasures}"
                                                               SelectedItem="{Binding SelectedTargetUnitMeasure, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
@@ -214,14 +208,29 @@
                                                               Margin="0"/>
                                                 </StackPanel>
 
-                                                <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                                <StackPanel Grid.Row="1"
+                                                            Grid.Column="0"
+                                                            Margin="0,0,8,0">
                                                     <TextBlock Text="FACTOR" Style="{StaticResource LabelStyle}"/>
                                                     <TextBox Text="{Binding ConversionRate, UpdateSourceTrigger=PropertyChanged}"
                                                              Style="{StaticResource TextBoxStyle}"
                                                              Margin="0"/>
                                                 </StackPanel>
 
-                                                <Button Grid.Column="2"
+                                                <StackPanel Grid.Row="1"
+                                                            Grid.Column="1"
+                                                            Margin="0,0,8,0">
+                                                    <TextBlock Text="TYPE" Style="{StaticResource LabelStyle}"/>
+                                                    <ComboBox ItemsSource="{Binding ConversionTypes}"
+                                                              SelectedItem="{Binding SelectedConversionType, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                              DisplayMemberPath="Name"
+                                                              Style="{StaticResource ComboBoxStyle}"
+                                                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                                              Margin="0"/>
+                                                </StackPanel>
+
+                                                <Button Grid.Row="1"
+                                                        Grid.Column="2"
                                                         Content="Add"
                                                         Command="{Binding AddUnitConversionCommand}"
                                                         Style="{StaticResource PrimaryButtonStyle}"

@@ -10,6 +10,7 @@ namespace PointOfSale.Core.Models.Inventory
         public string TargetUnitMeasureCode { get; set; }
         public string TargetUnitMeasureName { get; set; }
         public decimal ConversionRate { get; set; }
+        public bool IsMultiply { get; set; } = true;
         public bool IsActive { get; set; } = true;
         public int? CreatedBy { get; set; }
         public DateTime? CreatedAt { get; set; }

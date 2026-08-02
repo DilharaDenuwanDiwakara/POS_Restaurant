@@ -37,6 +37,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             _userSessionService = userSessionService;
 
             PopulateItemTypes();
+            SelectedConversionType = ConversionTypes.FirstOrDefault();
 
             AddUnitMeasureCommand = new RelayCommand(ExecuteOpenAddUnitMeasure);
             SaveProductCommand = new AsyncRelayCommand(async _ => await SaveProductAsync(), _ => CanSaveProduct);
@@ -45,7 +46,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             EditProductCommand = new RelayCommand(_ => SetEditMode(true), _ => SelectedProduct != null);
             DeleteProductCommand = new AsyncRelayCommand(async _ => await DeleteProductAsync(), _ => CanDeleteProduct && SelectedProduct != null);
             AddUnitConversionCommand = new RelayCommand(_ => AddUnitConversion(), _ => CanAddUnitConversion);
-            RemoveUnitConversionCommand = new RelayCommand(RemoveUnitConversion, parameter => parameter is ProductUnitConversion || SelectedUnitConversion != null);
+            RemoveUnitConversionCommand = new RelayCommand(RemoveUnitConversion, parameter => parameter is ProductUnitConversionViewModel || SelectedUnitConversion != null);
 
             _ = LoadDependanciesAsync();
         }
@@ -58,8 +59,14 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public ObservableCollection<Product> ProductList { get; } = new ObservableCollection<Product>();
         public ObservableCollection<KeyValuePair<ItemType, string>> ItemTypes { get; } =
             new ObservableCollection<KeyValuePair<ItemType, string>>();
-        public ObservableCollection<ProductUnitConversion> UnitConversions { get; } =
-            new ObservableCollection<ProductUnitConversion>();
+        public ObservableCollection<ProductUnitConversionViewModel> UnitConversions { get; } =
+            new ObservableCollection<ProductUnitConversionViewModel>();
+        public ObservableCollection<ConversionTypeOption> ConversionTypes { get; } =
+            new ObservableCollection<ConversionTypeOption>
+            {
+                new ConversionTypeOption(true, "Multiply"),
+                new ConversionTypeOption(false, "Divide")
+            };
 
         private ObservableCollection<Category> _categories;
         public ObservableCollection<Category> Categories
@@ -136,8 +143,8 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
-        private ProductUnitConversion _selectedUnitConversion;
-        public ProductUnitConversion SelectedUnitConversion
+        private ProductUnitConversionViewModel _selectedUnitConversion;
+        public ProductUnitConversionViewModel SelectedUnitConversion
         {
             get => _selectedUnitConversion;
             set
@@ -238,6 +245,10 @@ namespace PointOfSale.UI.ViewModels.Inventory
         }
 
         public string BaseUnitMeasureName => SelectedUnitMeasure?.UnitMeasureName ?? "BASE";
+        public string BaseUnitMeasureDisplayName =>
+            !string.IsNullOrWhiteSpace(SelectedUnitMeasure?.Code)
+                ? SelectedUnitMeasure.Code
+                : BaseUnitMeasureName;
 
         private ItemType _itemTypeId = ItemType.RAW_MATERIAL;
         public ItemType ItemTypeId
@@ -398,7 +409,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     SelectedProduct.IsActive = IsActive;
                     SelectedProduct.IsTaxApplicable = IsTaxApplicable;
                     SelectedProduct.TrackExpiry = TrackExpiry;
-                    SelectedProduct.UnitConversions = UnitConversions.ToList();
+                    SelectedProduct.UnitConversions = UnitConversions.Select(x => x.ToModel()).ToList();
 
                     SelectedProduct.UpdatedBy = _userSessionService?.UserId;
 
@@ -423,7 +434,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                         IsTaxApplicable = IsTaxApplicable,
                         TrackExpiry = TrackExpiry,
                         CreatedBy = _userSessionService?.UserId,
-                        UnitConversions = UnitConversions.ToList()
+                        UnitConversions = UnitConversions.Select(x => x.ToModel()).ToList()
                     };
                     await _productRepository.CreateAsync(newProduct);
                     MessageBox.Show("Product created successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -488,6 +499,19 @@ namespace PointOfSale.UI.ViewModels.Inventory
             catch (Exception ex)
             {
                 MessageBox.Show($"Error deleting product: {ex.Message}", "Delete Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private ConversionTypeOption _selectedConversionType;
+        public ConversionTypeOption SelectedConversionType
+        {
+            get => _selectedConversionType;
+            set
+            {
+                if (SetProperty(ref _selectedConversionType, value))
+                {
+                    (AddUnitConversionCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                }
             }
         }
         #endregion
@@ -573,6 +597,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             SelectedUnitMeasure = lastUnitMeasure;
             UnitMeasureId = lastUnitMeasureId;
             SelectedTargetUnitMeasure = null;
+            SelectedConversionType = ConversionTypes.FirstOrDefault();
             ConversionRate = 0;
             SelectedUnitConversion = null;
             UnitConversions.Clear();
@@ -618,6 +643,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         private bool CanAddUnitConversion =>
             SelectedTargetUnitMeasure != null &&
+            SelectedConversionType != null &&
             ConversionRate > 0 &&
             UnitMeasureId > 0;
 
@@ -647,24 +673,28 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 return;
             }
 
-            UnitConversions.Add(new ProductUnitConversion
-            {
-                ProductId = ProductId,
-                TargetUnitMeasureId = SelectedTargetUnitMeasure.UnitMeasureId,
-                TargetUnitMeasureCode = SelectedTargetUnitMeasure.Code,
-                TargetUnitMeasureName = SelectedTargetUnitMeasure.UnitMeasureName,
-                ConversionRate = ConversionRate,
-                IsActive = true
-            });
+            UnitConversions.Add(new ProductUnitConversionViewModel(
+                new ProductUnitConversion
+                {
+                    ProductId = ProductId,
+                    TargetUnitMeasureId = SelectedTargetUnitMeasure.UnitMeasureId,
+                    TargetUnitMeasureCode = SelectedTargetUnitMeasure.Code,
+                    TargetUnitMeasureName = SelectedTargetUnitMeasure.UnitMeasureName,
+                    ConversionRate = ConversionRate,
+                    IsMultiply = SelectedConversionType.IsMultiply,
+                    IsActive = true
+                },
+                () => BaseUnitMeasureDisplayName));
 
             SelectedTargetUnitMeasure = null;
+            SelectedConversionType = ConversionTypes.FirstOrDefault();
             ConversionRate = 0;
             (RemoveUnitConversionCommand as RelayCommand)?.RaiseCanExecuteChanged();
         }
 
         private void RemoveUnitConversion(object parameter)
         {
-            var conversion = parameter as ProductUnitConversion ?? SelectedUnitConversion;
+            var conversion = parameter as ProductUnitConversionViewModel ?? SelectedUnitConversion;
             if (conversion == null)
             {
                 return;
@@ -686,7 +716,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             foreach (var conversion in product.UnitConversions)
             {
-                UnitConversions.Add(conversion);
+                UnitConversions.Add(new ProductUnitConversionViewModel(conversion, () => BaseUnitMeasureDisplayName));
             }
         }
 
@@ -700,6 +730,16 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
 
             OnPropertyChanged(nameof(BaseUnitMeasureName));
+            OnPropertyChanged(nameof(BaseUnitMeasureDisplayName));
+            RefreshUnitConversionDisplayText();
+        }
+
+        private void RefreshUnitConversionDisplayText()
+        {
+            foreach (var conversion in UnitConversions)
+            {
+                conversion.RefreshDisplayText();
+            }
         }
 
         private void RaiseCanExecuteChanged()
@@ -771,5 +811,55 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 AddError(nameof(ReorderPoint), "Min stock quantity cannot be negative.");
         }
         #endregion
+    }
+
+    public class ProductUnitConversionViewModel : BaseViewModel
+    {
+        private readonly ProductUnitConversion _conversion;
+        private readonly Func<string> _getBaseUnitMeasureName;
+
+        public ProductUnitConversionViewModel(ProductUnitConversion conversion, Func<string> getBaseUnitMeasureName)
+        {
+            _conversion = conversion ?? throw new ArgumentNullException(nameof(conversion));
+            _getBaseUnitMeasureName = getBaseUnitMeasureName ?? throw new ArgumentNullException(nameof(getBaseUnitMeasureName));
+        }
+
+        public int TargetUnitMeasureId => _conversion.TargetUnitMeasureId;
+        public string TargetUnitMeasureCode => _conversion.TargetUnitMeasureCode;
+        public string TargetUnitMeasureName => _conversion.TargetUnitMeasureName;
+        public decimal ConversionRate => _conversion.ConversionRate;
+        public bool IsMultiply => _conversion.IsMultiply;
+
+        private string TargetUnitMeasureDisplayName =>
+            !string.IsNullOrWhiteSpace(TargetUnitMeasureCode)
+                ? TargetUnitMeasureCode
+                : TargetUnitMeasureName;
+
+        public string UnitConversionDisplayText =>
+            IsMultiply
+                ? $"1 {TargetUnitMeasureDisplayName} = {ConversionRate:0.####} {_getBaseUnitMeasureName()}"
+                : $"1 {_getBaseUnitMeasureName()} = {ConversionRate:0.####} {TargetUnitMeasureDisplayName}";
+
+        public ProductUnitConversion ToModel()
+        {
+            return _conversion;
+        }
+
+        public void RefreshDisplayText()
+        {
+            OnPropertyChanged(nameof(UnitConversionDisplayText));
+        }
+    }
+
+    public class ConversionTypeOption
+    {
+        public ConversionTypeOption(bool isMultiply, string name)
+        {
+            IsMultiply = isMultiply;
+            Name = name;
+        }
+
+        public bool IsMultiply { get; }
+        public string Name { get; }
     }
 }

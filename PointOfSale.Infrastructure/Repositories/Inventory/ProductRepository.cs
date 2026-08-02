@@ -304,6 +304,7 @@ SELECT
     um.Code AS TargetUnitMeasureCode,
     um.Name AS TargetUnitMeasureName,
     puc.ConversionRate,
+    puc.IsMultiply,
     puc.IsActive,
     puc.CreatedBy,
     puc.CreatedAt,
@@ -428,6 +429,7 @@ INSERT INTO [Inventory].[ProductUnitConversion]
     ProductId,
     TargetUnitMeasureId,
     ConversionRate,
+    IsMultiply,
     IsActive,
     CreatedBy,
     CreatedAt
@@ -437,6 +439,7 @@ VALUES
     @ProductId,
     @TargetUnitMeasureId,
     @ConversionRate,
+    @IsMultiply,
     1,
     @CreatedBy,
     GETDATE()
@@ -444,6 +447,7 @@ VALUES
                     insertCommand.Parameters.Add("@ProductId", SqlDbType.Int).Value = productId;
                     insertCommand.Parameters.Add("@TargetUnitMeasureId", SqlDbType.Int).Value = conversion.TargetUnitMeasureId;
                     AddDecimalParameter(insertCommand, "@ConversionRate", conversion.ConversionRate);
+                    insertCommand.Parameters.Add("@IsMultiply", SqlDbType.Bit).Value = conversion.IsMultiply;
                     insertCommand.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = userId.HasValue ? (object)userId.Value : DBNull.Value;
                     await insertCommand.ExecuteNonQueryAsync();
                 }
@@ -491,6 +495,7 @@ VALUES
                 TargetUnitMeasureCode = GetValue<string>(record, "TargetUnitMeasureCode"),
                 TargetUnitMeasureName = GetValue<string>(record, "TargetUnitMeasureName"),
                 ConversionRate = GetValue<decimal>(record, "ConversionRate"),
+                IsMultiply = GetValue<bool>(record, "IsMultiply"),
                 IsActive = GetValue<bool>(record, "IsActive"),
                 CreatedBy = GetValue<int?>(record, "CreatedBy"),
                 CreatedAt = GetValue<DateTime?>(record, "CreatedAt"),

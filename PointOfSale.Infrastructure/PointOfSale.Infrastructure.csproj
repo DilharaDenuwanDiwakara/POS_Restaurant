@@ -157,6 +157,7 @@
   <ItemGroup />
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Database\Inventory\ProductUnitConversion_IsMultiply.sql" />
     <None Include="Database\Purchasing\uspGetAllGoodsPurchaseNotes.sql" />
     <None Include="Database\Purchasing\uspSubmitDraftPurchaseOrder.sql" />
     <None Include="Database\Purchasing\uspSoftDeletePurchaseNote.sql" />

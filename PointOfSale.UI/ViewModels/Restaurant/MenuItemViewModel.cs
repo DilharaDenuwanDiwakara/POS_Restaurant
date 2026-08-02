@@ -747,7 +747,9 @@ namespace PointOfSale.UI.ViewModels.Restaurant
 
             var actualQtyInBaseUnit = selectedUnit.IsBaseUnit || selectedUnit.ConversionRate <= 0m
                 ? qtyNeeded
-                : qtyNeeded / selectedUnit.ConversionRate;
+                : selectedUnit.IsMultiply
+                    ? qtyNeeded * selectedUnit.ConversionRate
+                    : qtyNeeded / selectedUnit.ConversionRate;
 
             return actualQtyInBaseUnit * ingredient.StandardCost;
         }
@@ -767,12 +769,13 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             var baseUnit = new RecipeUnitDto
             {
                 UnitId = ingredient.UnitMeasureId,
-                UnitCode = !string.IsNullOrWhiteSpace(ingredient.UnitMeasureCode)
-                    ? ingredient.UnitMeasureCode
-                    : ingredient.UnitMeasureName,
-                ConversionRate = 1m,
-                IsBaseUnit = true
-            };
+                        UnitCode = !string.IsNullOrWhiteSpace(ingredient.UnitMeasureCode)
+                            ? ingredient.UnitMeasureCode
+                            : ingredient.UnitMeasureName,
+                        ConversionRate = 1m,
+                        IsMultiply = true,
+                        IsBaseUnit = true
+                    };
 
             AvailableUnits.Add(baseUnit);
             AddGlobalRecipeUnitConversions(ingredient.UnitMeasureCode, ingredient.UnitMeasureName);
@@ -789,6 +792,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                             ? conversion.TargetUnitMeasureCode
                             : conversion.TargetUnitMeasureName,
                         ConversionRate = conversion.ConversionRate,
+                        IsMultiply = conversion.IsMultiply,
                         IsBaseUnit = false
                     });
                 }
@@ -809,6 +813,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                             ? conversion.TargetUnitMeasureCode
                             : conversion.TargetUnitMeasureName,
                         ConversionRate = conversion.ConversionRate,
+                        IsMultiply = conversion.IsMultiply,
                         IsBaseUnit = false
                     });
                 }
@@ -831,6 +836,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                         UnitId = gramUnit.UnitMeasureId,
                         UnitCode = GetUnitDisplayName(gramUnit),
                         ConversionRate = 1000m,
+                        IsMultiply = false,
                         IsBaseUnit = false
                     });
                 }
@@ -845,6 +851,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                         UnitId = milliliterUnit.UnitMeasureId,
                         UnitCode = GetUnitDisplayName(milliliterUnit),
                         ConversionRate = 1000m,
+                        IsMultiply = false,
                         IsBaseUnit = false
                     });
                 }
@@ -1126,6 +1133,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
         public int UnitId { get; set; }
         public string UnitCode { get; set; }
         public decimal ConversionRate { get; set; }
+        public bool IsMultiply { get; set; } = true;
         public bool IsBaseUnit { get; set; }
     }
 }

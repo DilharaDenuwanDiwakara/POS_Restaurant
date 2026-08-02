@@ -228,6 +228,7 @@
     <Compile Include="Services\PasswordHasher.cs" />
     <Compile Include="Services\UserSessionService.cs" />
     <Compile Include="Services\TaxCalculator.cs" />
+    <Compile Include="Services\UOMConversionService.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

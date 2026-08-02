@@ -267,14 +267,14 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                 }
             }
 
-            var conversionRateByProductAndUnit = new Dictionary<string, decimal>();
+            var conversionByProductAndUnit = new Dictionary<string, UnitConversionDefinition>();
             if (selectedUnitIds.Any())
             {
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandType = CommandType.Text;
                     command.CommandText =
-                        "SELECT ProductId, TargetUnitMeasureId, ConversionRate " +
+                        "SELECT ProductId, TargetUnitMeasureId, ConversionRate, IsMultiply " +
                         "FROM Inventory.ProductUnitConversion " +
                         "WHERE IsActive = 1 " +
                         "AND ProductId IN (" + string.Join(",", productIds.Select((_, i) => "@cp" + i)) + ") " +
@@ -296,8 +296,10 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                         {
                             var productId = GetValue<int>(reader, "ProductId");
                             var unitId = GetValue<int>(reader, "TargetUnitMeasureId");
-                            conversionRateByProductAndUnit[BuildConversionKey(productId, unitId)] =
-                                GetValue<decimal>(reader, "ConversionRate");
+                            conversionByProductAndUnit[BuildConversionKey(productId, unitId)] =
+                                new UnitConversionDefinition(
+                                    GetValue<decimal>(reader, "ConversionRate"),
+                                    GetValue<bool>(reader, "IsMultiply"));
                         }
                     }
                 }
@@ -326,17 +328,17 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                         : selectedUnitName;
                 }
 
-                var conversionRate = ResolveRecipeUnitConversionRate(
+                var targetToBaseFactor = ResolveRecipeTargetToBaseFactor(
                     line,
                     baseUnitIdByProductId,
                     baseUnitCodeByProductId,
                     baseUnitNameByProductId,
                     selectedUnitCodeById,
                     selectedUnitNameById,
-                    conversionRateByProductAndUnit);
+                    conversionByProductAndUnit);
 
-                line.CostPerUnit = conversionRate > 0m
-                    ? baseCost / conversionRate
+                line.CostPerUnit = targetToBaseFactor > 0m
+                    ? baseCost * targetToBaseFactor
                     : baseCost;
             }
         }
@@ -405,14 +407,14 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
             return productId + ":" + unitMeasureId;
         }
 
-        private static decimal ResolveRecipeUnitConversionRate(
+        private static decimal ResolveRecipeTargetToBaseFactor(
             MenuRecipe line,
             IDictionary<int, int> baseUnitIdByProductId,
             IDictionary<int, string> baseUnitCodeByProductId,
             IDictionary<int, string> baseUnitNameByProductId,
             IDictionary<int, string> selectedUnitCodeById,
             IDictionary<int, string> selectedUnitNameById,
-            IDictionary<string, decimal> conversionRateByProductAndUnit)
+            IDictionary<string, UnitConversionDefinition> conversionByProductAndUnit)
         {
             if (!baseUnitIdByProductId.TryGetValue(line.ProductId, out var baseUnitId) ||
                 line.UnitMeasureId <= 0 ||
@@ -421,10 +423,12 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                 return 1m;
             }
 
-            if (conversionRateByProductAndUnit.TryGetValue(BuildConversionKey(line.ProductId, line.UnitMeasureId), out var configuredRate) &&
-                configuredRate > 0m)
+            if (conversionByProductAndUnit.TryGetValue(BuildConversionKey(line.ProductId, line.UnitMeasureId), out var conversion) &&
+                conversion.ConversionRate > 0m)
             {
-                return configuredRate;
+                return conversion.IsMultiply
+                    ? conversion.ConversionRate
+                    : 1m / conversion.ConversionRate;
             }
 
             baseUnitCodeByProductId.TryGetValue(line.ProductId, out var baseUnitCode);
@@ -435,16 +439,28 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
             if (MatchesAnyUnit(new[] { baseUnitCode, baseUnitName }, "Kg", "KILOGRAM") &&
                 MatchesAnyUnit(new[] { selectedUnitCode, selectedUnitName }, "g", "gram"))
             {
-                return 1000m;
+                return 0.001m;
             }
 
             if (MatchesAnyUnit(new[] { baseUnitCode, baseUnitName }, "L", "LITER") &&
                 MatchesAnyUnit(new[] { selectedUnitCode, selectedUnitName }, "ml", "milliliter", "millilitre"))
             {
-                return 1000m;
+                return 0.001m;
             }
 
             return 1m;
+        }
+
+        private sealed class UnitConversionDefinition
+        {
+            public UnitConversionDefinition(decimal conversionRate, bool isMultiply)
+            {
+                ConversionRate = conversionRate;
+                IsMultiply = isMultiply;
+            }
+
+            public decimal ConversionRate { get; }
+            public bool IsMultiply { get; }
         }
 
         private static bool MatchesAnyUnit(IEnumerable<string> unitValues, params string[] matches)
