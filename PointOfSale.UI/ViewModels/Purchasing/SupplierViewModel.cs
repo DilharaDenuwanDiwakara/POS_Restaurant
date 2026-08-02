@@ -202,7 +202,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             }
         }
 
-        private SupplierPaymentMethod _defaultPaymentMethod;
+        private SupplierPaymentMethod _defaultPaymentMethod = SupplierPaymentMethod.BANK_TRANSFER;
         public SupplierPaymentMethod DefaultPaymentMethod
         {
             get => _defaultPaymentMethod;
@@ -827,7 +827,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             Address = string.Empty;
             ContactsList.Clear();
             ResetContactEditor();
-            DefaultPaymentMethod = SupplierPaymentMethod.CASH;
+            DefaultPaymentMethod = SupplierPaymentMethod.BANK_TRANSFER;
             IsCredit = false;
             CreditPeriodDays = null;
             CreditLimit = null;
