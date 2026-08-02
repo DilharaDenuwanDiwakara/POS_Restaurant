@@ -297,14 +297,14 @@ namespace PointOfSale.UI.ViewModels.Inventory
             set => SetProperty(ref _isActive, value);
         }
 
-        private bool _isTaxApplicable;
+        private bool _isTaxApplicable = true;
         public bool IsTaxApplicable
         {
             get => _isTaxApplicable;
             set => SetProperty(ref _isTaxApplicable, value);
         }
 
-        private bool _trackExpiry;
+        private bool _trackExpiry = true;
         public bool TrackExpiry
         {
             get => _trackExpiry;
@@ -566,8 +566,8 @@ namespace PointOfSale.UI.ViewModels.Inventory
             WastagePercentage = 0;
             IsPurchasable = true;
             IsActive = true;
-            IsTaxApplicable = false;
-            TrackExpiry = false;
+            IsTaxApplicable = true;
+            TrackExpiry = true;
             SearchText = string.Empty;
             SelectedCategory = lastCategory;
             SelectedUnitMeasure = lastUnitMeasure;
