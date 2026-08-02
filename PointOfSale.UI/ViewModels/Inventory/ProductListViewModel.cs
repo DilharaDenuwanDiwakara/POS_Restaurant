@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
@@ -19,18 +20,22 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private readonly IProductRepository _productRepository;
         private readonly IInventoryRepository _inventoryRepository;
         private readonly IUserSessionService _userSessionService;
+        private readonly IExcelService _excelService;
         public ProductListViewModel(
             ICategoryRepository categoryRepository,
             IProductRepository productRepository,
             IInventoryRepository inventoryRepository,
-            IUserSessionService userSessionService)
+            IUserSessionService userSessionService,
+            IExcelService excelService)
         {
             _categoryRepository = categoryRepository ?? throw new ArgumentNullException(nameof(categoryRepository));
             _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
             _inventoryRepository = inventoryRepository ?? throw new ArgumentNullException(nameof(inventoryRepository));
             _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
+            _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
 
             SearchProductCommand = new RelayCommand(async _ => await SearchProductsAsync());
+            ExportToExcelCommand = new RelayCommand(_ => ExportToExcel(), _ => ProductList?.Any() == true);
 
             Categories = new ObservableCollection<CategoryLookupItem>();
             ItemTypes = new ObservableCollection<ItemTypeModel>();
@@ -100,6 +105,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 if (SetProperty(ref _productList, value))
                 {
                     UpdateProductCounts();
+                    ExportToExcelCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -149,6 +155,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         #region Commands
         public RelayCommand SearchProductCommand { get; }
+        public RelayCommand ExportToExcelCommand { get; }
         #endregion
 
         #region Command Methods
@@ -178,6 +185,33 @@ namespace PointOfSale.UI.ViewModels.Inventory
             finally
             {
                 // IsBusy = false;
+            }
+        }
+
+        private void ExportToExcel()
+        {
+            try
+            {
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "Excel Files (*.xlsx)|*.xlsx",
+                    Title = "Export Products to Excel",
+                    FileName = $"Products_List_{DateTime.Now:yyyyMMdd}.xlsx"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    _excelService.ExportProducts(ProductList, saveFileDialog.FileName);
+                    MessageBox.Show("Export completed successfully!", "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "File Locked", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred while exporting: {ex.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         #endregion

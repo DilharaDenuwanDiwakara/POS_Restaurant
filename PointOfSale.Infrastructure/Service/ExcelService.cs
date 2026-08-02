@@ -10,6 +10,7 @@ using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Exception;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Interfaces.Services;
+using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Models.Purchasing;
 
 namespace PointOfSale.Infrastructure.Service
@@ -167,6 +168,63 @@ namespace PointOfSale.Infrastructure.Service
                 worksheet.Columns().AdjustToContents();
 
                 // 4. Save the file
+                workbook.SaveAs(filePath);
+            }
+        }
+
+        public void ExportProducts(IEnumerable<Product> products, string filePath)
+        {
+            products = products ?? Enumerable.Empty<Product>();
+
+            if (File.Exists(filePath))
+            {
+                EnsureFileIsNotLocked(filePath);
+            }
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Products");
+
+                string[] headers =
+                {
+                    "Product Code", "Barcode", "Product Name", "Category", "Item Type", "Unit Measure",
+                    "Standard Cost", "Available Quantity", "Reorder Point", "Additional Stock Quantity",
+                    "Wastage %", "Purchasable", "Track Expiry", "Taxable", "Active"
+                };
+
+                for (var i = 0; i < headers.Length; i++)
+                {
+                    worksheet.Cell(1, i + 1).Value = headers[i];
+                    worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+                    worksheet.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.LightGray;
+                }
+
+                var row = 2;
+                foreach (var product in products)
+                {
+                    worksheet.Cell(row, 1).Value = product.ProductCode ?? string.Empty;
+                    worksheet.Cell(row, 2).Value = product.Barcode ?? string.Empty;
+                    worksheet.Cell(row, 3).Value = product.ProductName ?? string.Empty;
+                    worksheet.Cell(row, 4).Value = product.CategoryName ?? string.Empty;
+                    worksheet.Cell(row, 5).Value = product.ItemTypeName ?? string.Empty;
+                    worksheet.Cell(row, 6).Value = product.UnitMeasureName ?? string.Empty;
+                    worksheet.Cell(row, 7).Value = product.StandardCost;
+                    worksheet.Cell(row, 8).Value = product.AvailableQuantity;
+                    worksheet.Cell(row, 9).Value = product.ReorderPoint;
+                    worksheet.Cell(row, 10).Value = product.AdditionalStockQuantity;
+                    worksheet.Cell(row, 11).Value = product.WastagePercentage;
+                    worksheet.Cell(row, 12).Value = product.IsPurchasable ? "Yes" : "No";
+                    worksheet.Cell(row, 13).Value = product.TrackExpiry ? "Yes" : "No";
+                    worksheet.Cell(row, 14).Value = product.IsTaxApplicable ? "Yes" : "No";
+                    worksheet.Cell(row, 15).Value = product.IsActive ? "Yes" : "No";
+
+                    row++;
+                }
+
+                worksheet.Range(1, 1, Math.Max(row - 1, 1), headers.Length).SetAutoFilter();
+                worksheet.SheetView.FreezeRows(1);
+                worksheet.Columns().AdjustToContents();
+
                 workbook.SaveAs(filePath);
             }
         }

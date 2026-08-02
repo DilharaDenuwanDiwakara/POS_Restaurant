@@ -20,6 +20,7 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -110,8 +111,17 @@
                     </Grid>
                 </Border>
 
+                <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}" Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Export Excel"
+                                Command="{Binding ExportToExcelCommand}"
+                                Style="{StaticResource ExportExcelButtonStyle}"
+                                ToolTip="Export Products to Excel (.xlsx)"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Data Grid -->
-                <DataGrid Grid.Row="1" 
+                <DataGrid Grid.Row="2" 
                           ItemsSource="{Binding ProductList}" 
                           Style="{StaticResource DataGridStyle}"
                           Margin="0 4"
@@ -187,7 +197,7 @@
                 </DataGrid>
 
                 <!-- Summary Section -->
-                <Border Grid.Row="2" Style="{StaticResource PanelCardStyle}" Margin="0">
+                <Border Grid.Row="3" Style="{StaticResource PanelCardStyle}" Margin="0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>

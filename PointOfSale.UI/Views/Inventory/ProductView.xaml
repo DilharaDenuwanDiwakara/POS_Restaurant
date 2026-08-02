@@ -437,8 +437,7 @@
                                 <Button Grid.Column="5"
                                         Command="{Binding DeleteProductCommand}" 
                                         Style="{StaticResource DeleteButtonStyle}" 
-                                        ToolTip="Delete Product"
-                                        IsEnabled="False">
+                                        ToolTip="Delete Product">
 
                                 </Button>
                             </Grid>

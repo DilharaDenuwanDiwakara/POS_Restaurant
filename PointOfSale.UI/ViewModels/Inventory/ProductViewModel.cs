@@ -43,7 +43,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             NewProductCommand = new RelayCommand(_ => CreateNewProduct());
             SearchProductCommand = new AsyncRelayCommand(async _ => await SearchProduct(), _ => CanSearchProduct);
             EditProductCommand = new RelayCommand(_ => SetEditMode(true), _ => SelectedProduct != null);
-            DeleteProductCommand = new AsyncRelayCommand(async _ => await DeleteProductAsync(), _ => SelectedProduct != null);
+            DeleteProductCommand = new AsyncRelayCommand(async _ => await DeleteProductAsync(), _ => CanDeleteProduct && SelectedProduct != null);
             AddUnitConversionCommand = new RelayCommand(_ => AddUnitConversion(), _ => CanAddUnitConversion);
             RemoveUnitConversionCommand = new RelayCommand(RemoveUnitConversion, parameter => parameter is ProductUnitConversion || SelectedUnitConversion != null);
 
@@ -51,6 +51,10 @@ namespace PointOfSale.UI.ViewModels.Inventory
         }
 
         #region Properties
+        public bool CanDeleteProduct =>
+            _userSessionService.HasPermission("INVENTORY_PRODUCT_DELETE") ||
+            _userSessionService.HasPermission("PRODUCT_DELETE");
+
         public ObservableCollection<Product> ProductList { get; } = new ObservableCollection<Product>();
         public ObservableCollection<KeyValuePair<ItemType, string>> ItemTypes { get; } =
             new ObservableCollection<KeyValuePair<ItemType, string>>();
@@ -459,6 +463,11 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private async Task DeleteProductAsync()
         {
             if (SelectedProduct == null) return;
+            if (!CanDeleteProduct)
+            {
+                MessageBox.Show("You do not have permission to delete products.", "Permission Denied", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             try
             {
@@ -472,12 +481,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     await _productRepository.DeleteAsync(SelectedProduct.ProductId);
                     MessageBox.Show("Product deleted successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ProductList.Remove(SelectedProduct);
                     CreateNewProduct();
                 }
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Error deleting product: {ex.Message}";
+                MessageBox.Show($"Error deleting product: {ex.Message}", "Delete Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         #endregion
