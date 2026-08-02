@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
+using PointOfSale.Core.Common;
 
 namespace PointOfSale.UI.Services
 {
@@ -64,6 +65,8 @@ namespace PointOfSale.UI.Services
                 throw new FileNotFoundException("The selected file could not be found.", localFilePath);
             }
 
+            EnsureFileSizeIsAllowed(localFilePath);
+
             var safeFileName = SanitizeFileName(string.IsNullOrWhiteSpace(fileName)
                 ? Path.GetFileName(localFilePath)
                 : fileName);
@@ -101,6 +104,8 @@ namespace PointOfSale.UI.Services
             {
                 throw new FileNotFoundException("The selected file could not be found.", localFilePath);
             }
+
+            EnsureFileSizeIsAllowed(localFilePath);
 
             var safeFileName = SanitizeFileName(string.IsNullOrWhiteSpace(fileName)
                 ? Path.GetFileName(localFilePath)
@@ -221,6 +226,15 @@ namespace PointOfSale.UI.Services
 
             var safeFileName = new string(safeCharacters).Trim();
             return string.IsNullOrWhiteSpace(safeFileName) ? "file" : safeFileName;
+        }
+
+        private static void EnsureFileSizeIsAllowed(string localFilePath)
+        {
+            var fileInfo = new FileInfo(localFilePath);
+            if (fileInfo.Length > FileUploadConstraints.MaxFileSizeBytes)
+            {
+                throw new InvalidOperationException(FileUploadConstraints.BuildFileTooLargeMessage(fileInfo.Name));
+            }
         }
 
         private static string GetContentType(string fileName)

@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
+using PointOfSale.Core.Common;
 using PointOfSale.Core.Interfaces.Repositories.System;
 using PointOfSale.Core.Models.System;
 
@@ -174,6 +175,11 @@ namespace PointOfSale.Infrastructure.Repositories.System
 
         private static void AddCompanyParameters(SqlCommand command, Company company)
         {
+            if (company.CompanyLogo != null && company.CompanyLogo.LongLength > FileUploadConstraints.MaxFileSizeBytes)
+            {
+                throw new InvalidOperationException(FileUploadConstraints.BuildFileTooLargeMessage("Company logo"));
+            }
+
             command.Parameters.Add("@TradingName", SqlDbType.NVarChar, 150).Value = (object)company.TradingName ?? DBNull.Value;
             command.Parameters.Add("@LegalName", SqlDbType.NVarChar, 150).Value = (object)company.LegalName ?? DBNull.Value;
             command.Parameters.Add("@BusinessRegistrationNumber", SqlDbType.NVarChar, 50).Value = (object)company.BusinessRegistrationNumber ?? DBNull.Value;

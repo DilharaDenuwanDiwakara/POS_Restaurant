@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
+using PointOfSale.Core.Common;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Interfaces.Repositories.Restaurant;
 using PointOfSale.Core.Interfaces.Repositories.System;
@@ -632,6 +633,13 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             var dlg = new OpenFileDialog { Filter = "Images|*.jpg;*.png;*.jpeg" };
             if (dlg.ShowDialog() == true)
             {
+                var fileInfo = new FileInfo(dlg.FileName);
+                if (fileInfo.Length > FileUploadConstraints.MaxFileSizeBytes)
+                {
+                    MessageBox.Show(FileUploadConstraints.BuildFileTooLargeMessage(fileInfo.Name), "File Too Large", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 // 1. Store the local path so we can upload it later
                 _localImageToUploadPath = dlg.FileName;
 

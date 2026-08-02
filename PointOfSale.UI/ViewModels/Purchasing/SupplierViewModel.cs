@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
+using PointOfSale.Core.Common;
 using PointOfSale.Core.Enums;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.System;
@@ -702,6 +703,13 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                         !string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase))
                     {
                         MessageBox.Show($"Skipped '{Path.GetFileName(filePath)}': only JPG and PDF files are supported.", "Invalid File", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        continue;
+                    }
+
+                    var fileInfo = new FileInfo(filePath);
+                    if (fileInfo.Length > FileUploadConstraints.MaxFileSizeBytes)
+                    {
+                        MessageBox.Show(FileUploadConstraints.BuildFileTooLargeMessage(fileInfo.Name), "File Too Large", MessageBoxButton.OK, MessageBoxImage.Warning);
                         continue;
                     }
 

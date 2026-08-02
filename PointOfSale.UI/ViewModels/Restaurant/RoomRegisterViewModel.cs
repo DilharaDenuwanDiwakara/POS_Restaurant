@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
+using PointOfSale.Core.Common;
 using PointOfSale.Core.Enums;
 using PointOfSale.Core.Interfaces.Repositories.Restaurant;
 using PointOfSale.Core.Models.Restaurant;
@@ -283,6 +284,13 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             var dlg = new OpenFileDialog { Filter = "Images|*.jpg;*.png;*.jpeg" };
             if (dlg.ShowDialog() == true)
             {
+                var fileInfo = new FileInfo(dlg.FileName);
+                if (fileInfo.Length > FileUploadConstraints.MaxFileSizeBytes)
+                {
+                    MessageBox.Show(FileUploadConstraints.BuildFileTooLargeMessage(fileInfo.Name), "File Too Large", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 _localImageToUploadPath = dlg.FileName;
                 _roomImageObjectKey = null;
                 RoomImageUrl = dlg.FileName;

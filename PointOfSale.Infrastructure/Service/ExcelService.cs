@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
+using PointOfSale.Core.Common;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Exception;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
@@ -27,6 +28,7 @@ namespace PointOfSale.Infrastructure.Service
         #region Public
         public async Task<string> ImportOpeningStockAsync(string filePath, int userId)
         {
+            EnsureFileSizeIsAllowed(filePath);
             EnsureFileIsNotLocked(filePath);
 
             var stockItems = new List<OpenStockItemDto>();
@@ -211,6 +213,15 @@ namespace PointOfSale.Infrastructure.Service
             {
                 throw new InvalidOperationException(
                     "The Excel file is currently open or locked. Please close it and try again.");
+            }
+        }
+
+        private static void EnsureFileSizeIsAllowed(string filePath)
+        {
+            var fileInfo = new FileInfo(filePath);
+            if (fileInfo.Length > FileUploadConstraints.MaxFileSizeBytes)
+            {
+                throw new InvalidOperationException(FileUploadConstraints.BuildFileTooLargeMessage(fileInfo.Name));
             }
         }
         private DataTable CreateProductDataTable()

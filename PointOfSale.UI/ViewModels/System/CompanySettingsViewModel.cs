@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
+using PointOfSale.Core.Common;
 using PointOfSale.Core.Interfaces.Repositories.System;
 using PointOfSale.Core.Models.System;
 using PointOfSale.Core.Services;
@@ -332,6 +333,17 @@ namespace PointOfSale.UI.ViewModels.Settings
 
             try
             {
+                var fileInfo = new FileInfo(dialog.FileName);
+                if (fileInfo.Length > FileUploadConstraints.MaxFileSizeBytes)
+                {
+                    MessageBox.Show(
+                        FileUploadConstraints.BuildFileTooLargeMessage(fileInfo.Name),
+                        "File Too Large",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
                 CompanyLogo = File.ReadAllBytes(dialog.FileName);
                 LogoUrl = dialog.FileName;
             }
