@@ -26,6 +26,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         private readonly Task _taxRateLoadTask;
         private readonly Task _suppliersLoadTask;
         private decimal _inputTaxRate;
+        private long _editingRejectedGrnId;
+        private bool _isLoadingRejectedGrn;
 
         public GoodsReceiveNoteViewModel(ISupplierRepository supplierRepository,
                                          IGoodsReceiveNoteRepository goodsReceiveNoteRepository,
@@ -41,10 +43,12 @@ namespace PointOfSale.UI.ViewModels.Purchasing
 
             GoodsReceiveNoteLines = new ObservableCollection<GoodsReceiveNoteLine>();
 
-            SaveGRNCommand = new AsyncRelayCommand(async _ => await CreateGoodsReceiveNoteAsync(), _ => CanSaveGRN);
+            SaveGRNCommand = new AsyncRelayCommand(async _ => await SaveGoodsReceiveNoteAsync(), _ => CanSaveGRN);
             NewGRNCommand = new RelayCommand(_ => CreateNewGRN());
             SearchCommand = new AsyncRelayCommand(async _ => await SearchGRNsAsync());
             RemoveLineCommand = new RelayCommand<GoodsReceiveNoteLine>(RemoveLineItem);
+            LoadRejectedGRNCommand = new AsyncRelayCommand(
+                async grn => await LoadRejectedGRNForEditAsync(grn as GoodsReceiveNote));
 
             this.PropertyChanged += (s, e) =>
             {
@@ -99,11 +103,23 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             {
                 if (SetProperty(ref _selectedPO, value) && value != null)
                 {
-                    _ = LoadPODetailsAsync();
+                    if (!_isLoadingRejectedGrn)
+                    {
+                        _ = LoadPODetailsAsync();
+                    }
                     RaiseCanExecuteChanged();
                 }
             }
         }
+
+        private int _selectedTabIndex;
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set => SetProperty(ref _selectedTabIndex, value);
+        }
+
+        public bool IsEditingRejectedGRN => _editingRejectedGrnId > 0;
 
         private int? _selectedSupplierId;
         public int? SelectedSupplierId
@@ -111,9 +127,16 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             get => _selectedSupplierId;
             set
             {
-                SetProperty(ref _selectedSupplierId, value);
-                CalculateTotals();
-                RaiseCanExecuteChanged();
+                if (SetProperty(ref _selectedSupplierId, value))
+                {
+                    if (!_isLoadingRejectedGrn)
+                    {
+                        ApplySupplierCreditPeriod();
+                    }
+
+                    CalculateTotals();
+                    RaiseCanExecuteChanged();
+                }
             }
         }
 
@@ -179,7 +202,34 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public DateTime ReceivedDate
         {
             get => _receivedDate;
-            set => SetProperty(ref _receivedDate, value);
+            set
+            {
+                if (SetProperty(ref _receivedDate, value))
+                {
+                    UpdateDueDate();
+                }
+            }
+        }
+
+        private int _creditDays;
+        public int CreditDays
+        {
+            get => _creditDays;
+            set
+            {
+                var normalizedValue = Math.Max(0, value);
+                if (SetProperty(ref _creditDays, normalizedValue))
+                {
+                    UpdateDueDate();
+                }
+            }
+        }
+
+        private DateTime _dueDate = DateTime.Today;
+        public DateTime DueDate
+        {
+            get => _dueDate;
+            private set => SetProperty(ref _dueDate, value);
         }
 
         private string _invoiceNumber;
@@ -263,12 +313,24 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public ICommand NewGRNCommand { get; }
         public ICommand SearchCommand { get; set; }
         public ICommand RemoveLineCommand { get; }
+        public ICommand LoadRejectedGRNCommand { get; }
         #endregion
 
         #region HelperMethod
         public void UpdateTotals()
         {
             CalculateTotals();
+        }
+
+        private void ApplySupplierCreditPeriod()
+        {
+            var supplier = Suppliers?.FirstOrDefault(s => s.SupplierId == SelectedSupplierId);
+            CreditDays = supplier?.CreditPeriodDays ?? 0;
+        }
+
+        private void UpdateDueDate()
+        {
+            DueDate = ReceivedDate.Date.AddDays(CreditDays);
         }
 
         private void CalculateTotals()
@@ -316,9 +378,14 @@ namespace PointOfSale.UI.ViewModels.Purchasing
 
         private void CreateNewGRN()
         {
+            _editingRejectedGrnId = 0;
+            OnPropertyChanged(nameof(IsEditingRejectedGRN));
             SelectedPO = null;
             SelectedSupplierId = -1;
             IsSupplierLocked = false;
+            ReceivedDate = DateTime.Today;
+            CreditDays = 0;
+            UpdateDueDate();
             ReceivedBy = string.Empty;
             InvoiceNumber = string.Empty;
             Note = string.Empty;
@@ -334,6 +401,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             }
             GoodsReceiveNoteLines.Clear();
             _ = LoadPendingPOsAsync();
+            SelectedTabIndex = 0;
 
         }
 
@@ -463,6 +531,95 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             }
         }
 
+        private bool CanLoadRejectedGRN(GoodsReceiveNote grn)
+        {
+            return grn != null && grn.IsRejected;
+        }
+
+        private async Task LoadRejectedGRNForEditAsync(GoodsReceiveNote grn)
+        {
+            if (!CanLoadRejectedGRN(grn))
+                return;
+
+            try
+            {
+                await _taxRateLoadTask;
+                await _suppliersLoadTask;
+
+                _editingRejectedGrnId = grn.GoodsReceiveNoteId;
+                OnPropertyChanged(nameof(IsEditingRejectedGRN));
+
+                _isLoadingRejectedGrn = true;
+                try
+                {
+                    SelectedPO = OpenPurchaseOrders?.FirstOrDefault(po => po.GoodsPurchaseNoteId == grn.PurchaseOrderId)
+                                 ?? new GoodPurchaseNote
+                                 {
+                                     GoodsPurchaseNoteId = grn.PurchaseOrderId,
+                                     PONumber = grn.PONumber,
+                                     SupplierId = grn.SupplierId
+                                 };
+                    SelectedSupplierId = grn.SupplierId;
+                    IsSupplierLocked = true;
+                    ReceivedDate = grn.GoodsReceiveNoteDate;
+                    CreditDays = grn.CreditDays;
+                    DueDate = grn.DueDate == default(DateTime)
+                        ? grn.GoodsReceiveNoteDate.Date.AddDays(grn.CreditDays)
+                        : grn.DueDate;
+                }
+                finally
+                {
+                    _isLoadingRejectedGrn = false;
+                }
+
+                InvoiceNumber = grn.InvoiceNumber;
+                ReceivedBy = grn.ReceivedBy;
+                Note = grn.Notes;
+
+                foreach (var line in GoodsReceiveNoteLines)
+                {
+                    line.PropertyChanged -= GoodsReceiveNoteLine_PropertyChanged;
+                }
+                GoodsReceiveNoteLines.Clear();
+
+                var lines = (await _goodsReceiveNoteRepository.GetLinesByGRNIdAsync(grn.GoodsReceiveNoteId)).ToList();
+                var poLines = grn.PurchaseOrderId > 0
+                    ? (await _poRepository.GetPOLinesAsync(grn.PurchaseOrderId)).ToList()
+                    : new List<GoodsPurchaseNoteLine>();
+
+                foreach (var line in lines)
+                {
+                    var poLine = poLines.FirstOrDefault(source =>
+                        source.GoodsPurchaseNoteLineId == line.GoodsPurchaseNoteLineId);
+
+                    if (poLine != null)
+                    {
+                        line.QuantityOrdered = poLine.QuantityOrdered;
+                        line.UnitMeasure = poLine.UnitMeasure;
+                        line.OrderedPrice = poLine.UnitPrice;
+                        line.TrackExpiry = poLine.TrackExpiry;
+                        line.IsTaxApplicable = poLine.IsTaxApplicable;
+                    }
+                    else if (line.QuantityOrdered < line.QuantityReceived)
+                    {
+                        line.QuantityOrdered = line.QuantityReceived;
+                    }
+
+                    line.PropertyChanged += GoodsReceiveNoteLine_PropertyChanged;
+                    GoodsReceiveNoteLines.Add(line);
+                }
+
+                BillDiscount = Math.Max(0m, grn.DiscountAmount - GoodsReceiveNoteLines.Sum(line => line.LineDiscount));
+                CalculateTotals();
+                SelectedTabIndex = 0;
+                RaiseCanExecuteChanged();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load rejected GRN for edit: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void RemoveLineItem(GoodsReceiveNoteLine lineToRemove)
         {
             if (lineToRemove == null)
@@ -484,11 +641,11 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         }
 
         private bool CanSaveGRN =>
-                SelectedPO != null &&
+                (SelectedPO != null || IsEditingRejectedGRN) &&
                 !string.IsNullOrWhiteSpace(InvoiceNumber) &&
                  GoodsReceiveNoteLines.Count > 0 &&
                 !HasErrors;
-        private async Task CreateGoodsReceiveNoteAsync()
+        private async Task SaveGoodsReceiveNoteAsync()
         {
             ValidateGRN();
             if (HasErrors) return;
@@ -508,12 +665,25 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                     TotalAmount = NetAmount,
                     ReceivedBy = ReceivedBy,
                     GoodsReceiveNoteDate = ReceivedDate,
+                    CreditDays = CreditDays,
+                    DueDate = DueDate,
                     CreatedBy = _userSessionService.UserId,
                     Lines = GoodsReceiveNoteLines.ToList()
                 };
 
-                var newId = await _goodsReceiveNoteRepository.CreateAsync(grn);
-                MessageBox.Show($"GRN {newId} Created Successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (IsEditingRejectedGRN)
+                {
+                    grn.GoodsReceiveNoteId = _editingRejectedGrnId;
+                    await _goodsReceiveNoteRepository.ResubmitRejectedAsync(grn);
+                    MessageBox.Show("Rejected GRN updated and sent for approval.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await SearchGRNsAsync();
+                }
+                else
+                {
+                    var newId = await _goodsReceiveNoteRepository.CreateAsync(grn);
+                    MessageBox.Show($"GRN {newId} Created Successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+
                 CreateNewGRN();
             }
             catch (Exception ex)
@@ -534,8 +704,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             ClearErrors(nameof(InvoiceNumber));
             if (string.IsNullOrWhiteSpace(InvoiceNumber))
                 AddError(nameof(InvoiceNumber), "Invoice number is required");
-            else if (!Regex.IsMatch(InvoiceNumber, @"^[a-zA-Z0-9\s]+$"))
-                AddError(nameof(InvoiceNumber), "Cannot contain special character");
+            else if (!Regex.IsMatch(InvoiceNumber.Trim(), @"^[a-zA-Z0-9_/-]+$"))
+                AddError(nameof(InvoiceNumber), "Invoice number can contain only letters, numbers, underscores, slashes, and hyphens.");
         }
         private void ValidateReceivedBy()
         {

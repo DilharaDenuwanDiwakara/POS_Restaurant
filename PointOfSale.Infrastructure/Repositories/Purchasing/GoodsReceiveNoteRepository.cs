@@ -202,6 +202,41 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 throw new InvalidOperationException($"A database error occured while processing the GRN approval. {ex.Message}", ex);
             }
         }
+
+        public async Task ResubmitRejectedAsync(GoodsReceiveNote goodsReceiveNote)
+        {
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Purchasing].[uspResubmitRejectedGoodsReceiveNote]"))
+                {
+                    command.Parameters.AddWithValue("@GoodsReceiveNoteId", goodsReceiveNote.GoodsReceiveNoteId);
+                    command.Parameters.AddWithValue("@BranchId", goodsReceiveNote.BranchId);
+                    command.Parameters.AddWithValue("@SupplierId", goodsReceiveNote.SupplierId);
+                    command.Parameters.AddWithValue("@PurchaseOrderId",
+                        goodsReceiveNote.PurchaseOrderId > 0 ? (object)goodsReceiveNote.PurchaseOrderId : DBNull.Value);
+                    command.Parameters.AddWithValue("@InvoiceNumber", goodsReceiveNote.InvoiceNumber);
+                    command.Parameters.AddWithValue("@DiscountAmount", goodsReceiveNote.DiscountAmount);
+                    command.Parameters.AddWithValue("@TaxAmount", goodsReceiveNote.TaxAmount);
+                    command.Parameters.AddWithValue("@SubTotal", goodsReceiveNote.SubTotal);
+                    command.Parameters.AddWithValue("@TotalAmount", goodsReceiveNote.TotalAmount);
+                    command.Parameters.AddWithValue("@ReceivedBy", goodsReceiveNote.ReceivedBy);
+                    command.Parameters.AddWithValue("@Notes", string.IsNullOrWhiteSpace(goodsReceiveNote.Notes) ? (object)DBNull.Value : goodsReceiveNote.Notes);
+                    command.Parameters.AddWithValue("@ReceivedDate", goodsReceiveNote.GoodsReceiveNoteDate);
+                    command.Parameters.AddWithValue("@CreditDays", goodsReceiveNote.CreditDays);
+                    command.Parameters.AddWithValue("@DueDate", goodsReceiveNote.DueDate);
+                    command.Parameters.AddWithValue("@UpdatedBy", goodsReceiveNote.CreatedBy);
+                    AddLineItemsParameter(command, goodsReceiveNote.Lines);
+
+                    await connection.OpenAsync();
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException($"A database error occured while resubmitting the rejected GRN. {ex.Message}", ex);
+            }
+        }
         #endregion
 
         #region Private Method
@@ -217,6 +252,8 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
             command.Parameters.AddWithValue("@ReceivedBy", note.ReceivedBy);
             command.Parameters.AddWithValue("@Notes", string.IsNullOrWhiteSpace(note.Notes) ? (object)DBNull.Value : note.Notes);
             command.Parameters.AddWithValue("@ReceivedDate", note.GoodsReceiveNoteDate);
+            command.Parameters.AddWithValue("@CreditDays", note.CreditDays);
+            command.Parameters.AddWithValue("@DueDate", note.DueDate);
             command.Parameters.AddWithValue("@CreatedBy", note.CreatedBy);
         }
         private void AddLineItemsParameter(SqlCommand command, IEnumerable<GoodsReceiveNoteLine> lines)
@@ -261,6 +298,8 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
             return new GoodsReceiveNote
             {
                 GoodsReceiveNoteId = GetValue<long>(record, "Id"),
+                BranchId = GetOptionalValue<int>(record, "BranchId"),
+                PurchaseOrderId = GetFirstOptionalInt64(record, "PurchaseOrderId", "GoodsPurchaseNoteId"),
                 SupplierId = GetValue<int>(record, "SupplierId"),
                 SupplierName = GetValue<string>(record, "SupplierName"),
                 GoodsReceiveNoteNumber = GetValue<string>(record, "GoodsReceiveNoteNumber"),
@@ -272,6 +311,8 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 Notes = GetValue<string>(record, "Note"),
                 ReceivedBy = GetValue<string>(record, "ReceivedBy"),
                 GoodsReceiveNoteDate = GetValue<DateTime>(record, "ReceivedDate"),
+                CreditDays = GetOptionalValue<int>(record, "CreditDays"),
+                DueDate = GetOptionalValue<DateTime>(record, "DueDate"),
                 Status = GetValue<string>(record, "Status"),
                 CreatedBy = GetValue<int>(record, "CreatedBy"),
                 CreatedDate = GetValue<DateTime>(record, "CreatedAt"),
@@ -285,6 +326,7 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
             var taxAmount = HasColumn(record, "TaxAmount")
                 ? GetValue<decimal>(record, "TaxAmount")
                 : GetOptionalValue<decimal>(record, "LineTaxAmount");
+            var unitPrice = GetValue<decimal>(record, "UnitPrice");
 
             var line = new GoodsReceiveNoteLine
             {
@@ -294,12 +336,17 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 QuantityOrdered = HasColumn(record, "QuantityOrdered")
                     ? GetValue<decimal>(record, "QuantityOrdered")
                     : 0m,
-                UnitPrice = GetValue<decimal>(record, "UnitPrice"),
+                UnitMeasure = GetFirstOptionalString(record, "UnitMeasure", "UnitMeasureCode", "UOM"),
+                OrderedPrice = HasColumn(record, "OrderedPrice")
+                    ? GetValue<decimal>(record, "OrderedPrice")
+                    : unitPrice,
+                UnitPrice = unitPrice,
                 LineDiscount = HasColumn(record, "LineDiscount")
                     ? GetValue<decimal>(record, "LineDiscount")
                     : 0m,
                 TaxAmount = taxAmount,
                 IsTaxApplicable = HasColumn(record, "IsTaxApplicable") && GetValue<bool>(record, "IsTaxApplicable"),
+                TrackExpiry = HasColumn(record, "TrackExpiry") && GetValue<bool>(record, "TrackExpiry"),
                 ExpiryDate = HasColumn(record, "ExpiryDate")
                     ? GetValue<DateTime?>(record, "ExpiryDate")
                     : null
@@ -329,6 +376,19 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
             }
 
             return null;
+        }
+
+        private long GetFirstOptionalInt64(IDataRecord record, params string[] columnNames)
+        {
+            foreach (var columnName in columnNames)
+            {
+                if (HasColumn(record, columnName))
+                {
+                    return GetOptionalValue<long>(record, columnName);
+                }
+            }
+
+            return 0L;
         }
 
         private bool HasColumn(IDataRecord record, string columnName)

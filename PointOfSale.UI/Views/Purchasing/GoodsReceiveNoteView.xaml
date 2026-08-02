@@ -7,7 +7,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="1000">
     <Grid>
-        <TabControl Style="{StaticResource TabControlStyle}">
+        <TabControl Style="{StaticResource TabControlStyle}"
+                    SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
 
             <TabItem Header=" New GRN " Style="{StaticResource TabItemStyle}">
                 <Grid>
@@ -52,6 +53,20 @@
                                                 Style="{StaticResource DatePickerStyle}"
                                                 PreviewKeyDown="MoveFocusOnEnter"/>
 
+                                    <TextBlock Text="Credit Period (Days):" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox Text="{Binding CreditDays, UpdateSourceTrigger=PropertyChanged}"
+                                             MaxLength="4"
+                                             Style="{StaticResource TextBoxStyle}"
+                                             PreviewTextInput="DigitsOnly_PreviewTextInput"
+                                             DataObject.Pasting="DigitsOnly_Pasting"
+                                             PreviewKeyDown="MoveFocusOnEnter"/>
+
+                                    <TextBlock Text="Payment Due Date:" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox Text="{Binding DueDate, StringFormat=\{0:dd/MM/yyyy\}, Mode=OneWay}"
+                                             IsReadOnly="True"
+                                             Style="{StaticResource TextBoxStyle}"
+                                             PreviewKeyDown="MoveFocusOnEnter"/>
+
                                     <TextBlock Text="Supplier Invoice #:" Style="{StaticResource LabelStyle}"/>
                                     <TextBox x:Name="InvoiceNumberTextBox"
                                              Text="{Binding InvoiceNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
@@ -59,6 +74,8 @@
                                              CharacterCasing="Upper"
                                              Style="{StaticResource TextBoxStyle}" 
                                              Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                             PreviewTextInput="InvoiceNumber_PreviewTextInput"
+                                             DataObject.Pasting="InvoiceNumber_Pasting"
                                              PreviewKeyDown="MoveFocusOnEnter"/>   
 
                                     <TextBlock Text="Received By:" Style="{StaticResource LabelStyle}"/>
@@ -434,6 +451,32 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Created By" Binding="{Binding Username}" Width="120"/>
+                            <DataGridTemplateColumn Header="Action" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.LoadRejectedGRNCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Edit rejected GRN">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource EditButtonStyle}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsRejected}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="REJECTED">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="Rejected">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
 
                     </DataGrid>

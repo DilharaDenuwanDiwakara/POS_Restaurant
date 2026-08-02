@@ -180,7 +180,10 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}" Width="110" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                            <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}" 
+                                                Width="110" 
+                                                HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"
+                                                Visibility="Collapsed">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>

@@ -15,6 +15,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
         Task<IEnumerable<GoodsReceiveNoteLine>> GetLinesByGRNIdAsync(long goodsReceiveNoteId);
         Task<DataTable> GetGoodsReceiveNoteReportDataAsync(long goodsReceiveNoteId);
         Task ApproveRejectAsync(long goodsReceiveNoteId, bool isApproved, int actionBy, string remarks);
+        Task ResubmitRejectedAsync(GoodsReceiveNote goodsReceiveNote);
         Task<decimal> GetLastGrnCostPriceByProductIdAsync(int productId);
     }
 }

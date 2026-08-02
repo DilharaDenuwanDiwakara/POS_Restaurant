@@ -17,6 +17,8 @@ namespace PointOfSale.Core.Models.Purchasing
         public decimal TotalAmount { get; set; }
         public string ReceivedBy { get; set; }
         public DateTime GoodsReceiveNoteDate { get; set; } = DateTime.Now;
+        public int CreditDays { get; set; }
+        public DateTime DueDate { get; set; } = DateTime.Today;
         public string Status { get; set; }
         public int CreatedBy { get; set; }
         public string Username { get; set; }
@@ -25,6 +27,9 @@ namespace PointOfSale.Core.Models.Purchasing
         public string SupplierName { get; set; }
         public string PONumber { get; set; }
         public string CreatedByName { get; set; }
+        public bool IsRejected =>
+            !string.IsNullOrWhiteSpace(Status) &&
+            Status.Trim().IndexOf("REJECT", StringComparison.OrdinalIgnoreCase) >= 0;
 
         public string PONumberDisplay =>
             string.IsNullOrWhiteSpace(PONumber) ? "N/A (Direct)" : PONumber;
