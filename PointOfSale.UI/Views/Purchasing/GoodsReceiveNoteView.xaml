@@ -175,14 +175,14 @@
                                             </DataGridTemplateColumn.CellEditingTemplate>
                                         </DataGridTemplateColumn>
 
-                                        <DataGridTextColumn Header="Ordered Price" Binding="{Binding OrderedPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" IsReadOnly="True" Width="120"  HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                        <DataGridTextColumn Header="Ordered Price" Binding="{Binding OrderedPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" IsReadOnly="True" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="HorizontalAlignment" Value="Right"/>
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        
+
                                         <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="120"  HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
@@ -236,15 +236,6 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, Mode=OneWay, StringFormat='Rs. {0:N2}'}" Width="110" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="HorizontalAlignment" Value="Right"/>
-                                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
-
                                         <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="120" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
@@ -254,7 +245,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTemplateColumn Header="Action" Width="50">
+                                        <DataGridTemplateColumn Header="Action" Width="80">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"

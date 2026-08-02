@@ -277,13 +277,21 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             var supplierVatRegistered = supplier != null &&
                                         !string.IsNullOrWhiteSpace(supplier.TaxRegistrationNumber);
 
+            var lineNetAmounts = GoodsReceiveNoteLines.ToDictionary(
+                line => line,
+                line => Math.Max(0m, (line.QuantityReceived * line.UnitPrice) - line.LineDiscount));
+            var discountableAmount = lineNetAmounts.Values.Sum();
+
             foreach (var line in GoodsReceiveNoteLines)
             {
-                var lineGross = line.QuantityReceived * line.UnitPrice;
-                var lineNetBeforeTax = Math.Max(0m, lineGross - line.LineDiscount);
+                var lineNetBeforeTax = lineNetAmounts[line];
+                var billDiscountShare = discountableAmount > 0m
+                    ? BillDiscount * (lineNetBeforeTax / discountableAmount)
+                    : 0m;
+                var taxableAmount = Math.Max(0m, lineNetBeforeTax - billDiscountShare);
 
                 line.TaxAmount = supplierVatRegistered && line.IsTaxApplicable
-                    ? Math.Round(lineNetBeforeTax * (_inputTaxRate / 100m), 2)
+                    ? TaxCalculator.CalculateExclusiveTax(taxableAmount, _inputTaxRate)
                     : 0m;
             }
 

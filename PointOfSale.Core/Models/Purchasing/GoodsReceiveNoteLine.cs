@@ -106,8 +106,8 @@ namespace PointOfSale.Core.Models.Purchasing
             set { SetProperty(ref _taxAmount, value); OnPropertyChanged(nameof(LineTotal)); }
         }
 
-        // Computed read-only property
-        public decimal LineTotal => Math.Round((QuantityReceived * UnitPrice) - LineDiscount + TaxAmount, 2);
+        // Line total is shown before tax; tax is summarized at GRN header level.
+        public decimal LineTotal => Math.Round((QuantityReceived * UnitPrice) - LineDiscount, 2);
         public bool HasQuantityDiscrepancy => QuantityOrdered > 0m && QuantityOrdered != QuantityReceived;
 
     }
