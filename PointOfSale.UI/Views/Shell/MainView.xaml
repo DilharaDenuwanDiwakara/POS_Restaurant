@@ -179,7 +179,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavMenuItemList, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Menu Item List"/>
+                                        <TextBlock Text="Menu Items"/>
                                     </StackPanel>
                                 </RadioButton>
                                 
@@ -187,7 +187,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavMenuItem, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Menu Item"/>
+                                        <TextBlock Text="Menu Item Setup"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -195,7 +195,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavMenuCategory, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Menu Category"/>
+                                        <TextBlock Text="Menu Categories"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -203,7 +203,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavTable, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Table"/>
+                                        <TextBlock Text="Tables"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -211,7 +211,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavRoomRegister, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Room Register"/>
+                                        <TextBlock Text="Rooms"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -219,7 +219,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavRoomBooking, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Room Booking"/>
+                                        <TextBlock Text="Room Bookings"/>
                                     </StackPanel>
                                 </RadioButton>
                                 
@@ -272,7 +272,7 @@
                                               Style="{StaticResource Style.Nav.RadioButton}"
                                               Visibility="{Binding CanNavCustomer, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Customer"/>
+                                        <TextBlock Text="Customers"/>
                                     </StackPanel>
                                 </RadioButton>
                                 
@@ -292,7 +292,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavProductList, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Product List"/>
+                                        <TextBlock Text="Products"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -300,7 +300,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavStockTransfer, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Stock Transfer"/>
+                                        <TextBlock Text="Stock Transfers"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -316,7 +316,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavAdjustment, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Stock Adjustment"/>
+                                        <TextBlock Text="Stock Adjustments"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -324,7 +324,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="Collapsed"> <!--{Binding CanNavBarcodePrint, Converter={StaticResource BoolToVisibility}}-->
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Barcode Print"/>
+                                        <TextBlock Text="Barcode Printing"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -332,7 +332,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavProduct, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Product"/>
+                                        <TextBlock Text="Product Setup"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -340,7 +340,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavCategory, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Category"/>
+                                        <TextBlock Text="Categories"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -367,7 +367,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavPOApproval, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="PO Approval"/>
+                                        <TextBlock Text="Purchase Order Approval"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -375,7 +375,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavGRN, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Goods Receive Note"/>
+                                        <TextBlock Text="Goods Receipt Notes"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -383,7 +383,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavGRNApproval, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="GRN Approval"/>
+                                        <TextBlock Text="Goods Receipt Note Approval"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -391,7 +391,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavSupplierReturn, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Supplier Return"/>
+                                        <TextBlock Text="Return To Supplier"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -399,7 +399,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavSupplierReturnApproval, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Return Approval"/>
+                                        <TextBlock Text="Return To Supplier Approval"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -407,7 +407,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavSupplier, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Supplier"/>
+                                        <TextBlock Text="Suppliers"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -458,7 +458,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavOpeningBalance, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Opening Balance"/>
+                                        <TextBlock Text="Opening Balances"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -478,7 +478,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavInvReport, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Inventory Report"/>
+                                        <TextBlock Text="Inventory Reports"/>
                                     </StackPanel>
                                 </RadioButton>
 
@@ -486,7 +486,7 @@
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavSalesReport, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Sales Report"/>
+                                        <TextBlock Text="Sales Reports"/>
                                     </StackPanel>
                                 </RadioButton>
                                 

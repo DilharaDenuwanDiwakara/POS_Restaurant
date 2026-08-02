@@ -235,42 +235,41 @@ namespace PointOfSale.UI.ViewModels.Shell
                 NavigateTo<TableViewModel>("Restaurant  →  Tables"));
 
             NavigateToRoomRegisterCommand = new RelayCommand(_ =>
-                NavigateTo<RoomRegisterViewModel>("Restaurant  →  Room Register"));
+                NavigateTo<RoomRegisterViewModel>("Restaurant  →  Rooms"));
 
             NavigateToRoomBookingCommand = new RelayCommand(_ =>
-                NavigateTo<RoomBookingViewModel>("Restaurant  →  Room Booking"));
+                NavigateTo<RoomBookingViewModel>("Restaurant  →  Room Bookings"));
 
             NavigateToMenuItemCommand = new RelayCommand(_ =>
-                NavigateTo<MenuItemViewModel>("Restaurant  →  Menu Items"));
+                NavigateTo<MenuItemViewModel>("Restaurant  →  Menu Item Setup"));
 
             NavigateToMenuItemListCommand = new RelayCommand(_ =>
-                NavigateTo<MenuItemListViewModel>("Restaurant  →  Menu Item List"));
+                NavigateTo<MenuItemListViewModel>("Restaurant  →  Menu Items"));
 
             NavigateToMenuCategoryCommand = new RelayCommand(_ =>
                 NavigateTo<MenuCategoryViewModel>("Restaurant  →  Menu Categories"));
 
             // --- Inventory Module ---
             NavigateToProductListCommand = new RelayCommand(_ =>
-                NavigateTo<ProductListViewModel>("Inventory  →  Product List"));
+                NavigateTo<ProductListViewModel>("Inventory  →  Products"));
 
             NavigateToStockTransferCommand = new RelayCommand(_ =>
-                NavigateTo<StockTransferViewModel>("Inventory  →  Stock Transfer"));
+                NavigateTo<StockTransferViewModel>("Inventory  →  Stock Transfers"));
 
             NavigateToStockAdjustmentCommand = new RelayCommand(_ =>
-                NavigateTo<StockAdjustmentViewModel>("Inventory  →  Stock Adjustment"));
+                NavigateTo<StockAdjustmentViewModel>("Inventory  →  Stock Adjustments"));
 
             NavigateToWastageCommand = new RelayCommand(_ =>
                 NavigateTo<WastageViewModel>("Inventory  →  Wastage"));
 
             NavigateToProductCommand = new RelayCommand(_ =>
-                NavigateTo<ProductViewModel>("Inventory  →  Product Definition"));
+                NavigateTo<ProductViewModel>("Inventory  →  Product Setup"));
 
-            // *** THIS IS THE ONE YOU ASKED FOR ***
             NavigateToCategoryCommand = new RelayCommand(_ =>
-                NavigateTo<CategoryViewModel>("Inventory  →  Category"));
+                NavigateTo<CategoryViewModel>("Inventory  →  Categories"));
 
             NavigateToUnitMeasureCommand = new RelayCommand(_ =>
-                NavigateTo<UnitMeasureViewModel>("Inventory  →  Unit of Measures"));
+                NavigateTo<UnitMeasureViewModel>("Inventory  →  Units of Measure"));
 
             NavigateToBarcodePrintCommand = new RelayCommand(_ =>
                 NavigateTo<BarcodePrintViewModel>("Inventory  →  Barcode Printing"));
@@ -280,19 +279,19 @@ namespace PointOfSale.UI.ViewModels.Shell
                 NavigateTo<GoodsPurchaseNoteViewModel>("Purchasing  →  Purchase Orders"));
 
             NavigateToGRNCommand = new RelayCommand(_ =>
-                NavigateTo<GoodsReceiveNoteViewModel>("Purchasing  →  Goods Receive Note"));
+                NavigateTo<GoodsReceiveNoteViewModel>("Purchasing  →  Goods Receipt Notes"));
 
             NavigateToGRNApprovalCommand = new RelayCommand(_ =>
-                NavigateTo<GoodsReceiveNoteApprovalViewModel>("Purchasing  →  GRN Approval"));
+                NavigateTo<GoodsReceiveNoteApprovalViewModel>("Purchasing  →  Goods Receipt Note Approval"));
 
             NavigateToPOApprovalCommand = new RelayCommand(_ =>
-                NavigateTo<GoodsPurchaseNoteApprovalViewModel>("Purchasing  →  PO Approval"));
+                NavigateTo<GoodsPurchaseNoteApprovalViewModel>("Purchasing  →  Purchase Order Approval"));
 
             NavigateToSupplierReturnCommand = new RelayCommand(_ =>
-                NavigateTo<SupplierReturnViewModel>("Purchasing  →  Supplier Return"));
+                NavigateTo<SupplierReturnViewModel>("Purchasing  →  Return To Supplier"));
 
             NavigateToSupplierReturnApprovalCommand = new RelayCommand(_ =>
-                NavigateTo<SupplierReturnApprovalViewModel>("Purchasing  →  SRN Approval"));
+                NavigateTo<SupplierReturnApprovalViewModel>("Purchasing  →  Return To Supplier Approval"));
 
             NavigateToSupplierCommand = new RelayCommand(_ =>
                 NavigateTo<SupplierViewModel>("Purchasing  →  Suppliers"));
@@ -321,13 +320,13 @@ namespace PointOfSale.UI.ViewModels.Shell
                 NavigateTo<CustomerPaymentTabViewModel>("Accounts  →  Accounts Receivable"));
 
             NavigateToAccountManagementCommand = new RelayCommand(_ =>
-                NavigateTo<AccountRegisterViewModel>("Accounts  →  Account Register"));
+                NavigateTo<AccountRegisterViewModel>("Accounts  →  Chart of Accounts"));
 
             NavigateToExpensesCommand = new RelayCommand(_ =>
                 NavigateTo<ExpensesViewModel>("Accounts  →  Expenses"));
 
             NavigateToOpeningBalanceCommand = new RelayCommand(_ =>
-                NavigateTo<OpeningBalanceViewModel>("Accounts  →  Opening Balance"));
+                NavigateTo<OpeningBalanceViewModel>("Accounts  →  Opening Balances"));
 
             // --- Reports Module ---
             NavigateToInventoryReportCommand = new RelayCommand(_ =>

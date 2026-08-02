@@ -10,7 +10,7 @@
 
         <TabControl Style="{StaticResource TabControlStyle}">
 
-            <TabItem Header=" ? New Return " Style="{StaticResource TabItemStyle}">
+            <TabItem Header=" New Return " Style="{StaticResource TabItemStyle}">
                 <Grid Margin="0,4,0,0">
                     
                     <Grid.ColumnDefinitions>
