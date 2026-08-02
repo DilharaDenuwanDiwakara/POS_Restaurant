@@ -283,14 +283,13 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTemplateColumn Header="Action" Width="50">
+                                    <DataGridTemplateColumn Header="Action" Width="80">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource DeleteButtonStyle}"
-                                                        ToolTip="Remove Item"
-                                                        Width="24" Height="24"/>
+                                                        ToolTip="Remove Item"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -524,7 +523,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Created By" Binding="{Binding Username}" Width="120"/>
-                            <DataGridTemplateColumn Header="Action" Width="84">
+                            <DataGridTemplateColumn Header="Action" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -547,7 +546,9 @@
                                             </Button>
 
                                             <Button Command="{Binding DataContext.DeleteDraftPOCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding Source}">
+                                                    CommandParameter="{Binding Source}"
+                                                    Margin="0,0,6,0"
+                                                    Visibility="Collapsed">
                                                 <Button.Style>
                                                     <Style TargetType="Button" BasedOn="{StaticResource DeleteButtonStyle}">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -559,64 +560,12 @@
                                                     </Style>
                                                 </Button.Style>
                                             </Button>
+
+                                            <Button Command="{Binding DataContext.PrintPurchaseOrderCommand, ElementName=PurchaseOrdersDataGrid}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource DataGridPrintButtonStyle}"
+                                                    ToolTip="Print purchase order"/>
                                         </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <DataGridTemplateColumn Header="" Width="56">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Command="{Binding DataContext.PrintPurchaseOrderCommand, ElementName=PurchaseOrdersDataGrid}"
-                                                CommandParameter="{Binding}"
-                                                Width="32"
-                                                Height="32"
-                                                Padding="0"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                ToolTip="Print purchase order">
-                                            <Button.Style>
-                                                <Style TargetType="Button">
-                                                    <Setter Property="Foreground" Value="#334155"/>
-                                                    <Setter Property="Background" Value="Transparent"/>
-                                                    <Setter Property="BorderBrush" Value="Transparent"/>
-                                                    <Setter Property="BorderThickness" Value="0"/>
-                                                    <Setter Property="Cursor" Value="Hand"/>
-                                                    <Setter Property="Focusable" Value="False"/>
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="Button">
-                                                                <Border Background="{TemplateBinding Background}"
-                                                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                                        CornerRadius="4">
-                                                                    <ContentPresenter HorizontalAlignment="Center"
-                                                                                      VerticalAlignment="Center"/>
-                                                                </Border>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                    <Style.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#E5E7EB"/>
-                                                            <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsPressed" Value="True">
-                                                            <Setter Property="Background" Value="#CBD5E1"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsEnabled" Value="False">
-                                                            <Setter Property="Opacity" Value="0.45"/>
-                                                            <Setter Property="Cursor" Value="Arrow"/>
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-
-                                            <Path Data="{StaticResource Icon.Action.Print}"
-                                                  Style="{StaticResource Style.Icon.Base}"
-                                                  Width="18"
-                                                  Height="18"/>
-                                        </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

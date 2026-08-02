@@ -101,6 +101,64 @@
         <Setter Property="Background" Value="{StaticResource BrandBrush}"/>
     </Style>
 
+    <Style x:Key="DataGridActionIconStyle" TargetType="Path" BasedOn="{StaticResource Style.Icon.Base}">
+        <Setter Property="Width" Value="18"/>
+        <Setter Property="Height" Value="18"/>
+        <Setter Property="MinWidth" Value="18"/>
+        <Setter Property="MinHeight" Value="18"/>
+        <Setter Property="MaxWidth" Value="18"/>
+        <Setter Property="MaxHeight" Value="18"/>
+    </Style>
+
+    <Style x:Key="DataGridFlatActionButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="MinWidth" Value="32"/>
+        <Setter Property="MinHeight" Value="32"/>
+        <Setter Property="MaxWidth" Value="32"/>
+        <Setter Property="MaxHeight" Value="32"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="#334155"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#E5E7EB"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="#CBD5E1"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DataGridActionButtonStyle" TargetType="Button" BasedOn="{StaticResource DataGridFlatActionButtonStyle}"/>
+
     <Style x:Key="RefreshButtonStyle" TargetType="Button" BasedOn="{StaticResource IconOnlyButtonStyle}">
         <Setter Property="Background" Value="{StaticResource BrandBrush}"/>
         <Setter Property="ToolTip" Value="Refresh"/>
@@ -129,42 +187,55 @@
         <Setter Property="Content" Value=" "/>
     </Style>
 
-    <Style x:Key="EditButtonStyle" TargetType="Button" BasedOn="{StaticResource IconOnlyButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource SecondaryBrush}"/>
+    <Style x:Key="EditButtonStyle" TargetType="Button" BasedOn="{StaticResource DataGridFlatActionButtonStyle}">
+        <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
         <Setter Property="ToolTip" Value="Edit"/>
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
                     <Path Data="{StaticResource Icon.Action.Edit}"
-                          Style="{StaticResource Style.Icon.Base}"/>
+                          Style="{StaticResource DataGridActionIconStyle}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
         <Setter Property="Content" Value=" "/>
     </Style>
 
-    <Style x:Key="DeleteButtonStyle" TargetType="Button" BasedOn="{StaticResource IconOnlyButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource DangerBrush}"/>
+    <Style x:Key="DeleteButtonStyle" TargetType="Button" BasedOn="{StaticResource DataGridFlatActionButtonStyle}">
+        <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
         <Setter Property="ToolTip" Value="Delete"/>
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
                     <Path Data="{StaticResource Icon.Action.Delete}" 
-                      Style="{StaticResource Style.Icon.Base}"/>
+                      Style="{StaticResource DataGridActionIconStyle}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
         <Setter Property="Content" Value=" "/>
     </Style>
 
-    <Style x:Key="PriceButtonStyle" TargetType="Button" BasedOn="{StaticResource IconOnlyButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource WarningBrush}"/>
+    <Style x:Key="DataGridPrintButtonStyle" TargetType="Button" BasedOn="{StaticResource DataGridFlatActionButtonStyle}">
+        <Setter Property="ToolTip" Value="Print"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Path Data="{StaticResource Icon.Action.Print}"
+                          Style="{StaticResource DataGridActionIconStyle}"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Content" Value=" "/>
+    </Style>
+
+    <Style x:Key="PriceButtonStyle" TargetType="Button" BasedOn="{StaticResource DataGridFlatActionButtonStyle}">
+        <Setter Property="Foreground" Value="{StaticResource WarningBrush}"/>
         <Setter Property="ToolTip" Value="Update price"/>
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
                     <Path Data="{StaticResource Icon.Action.Price}"
-                          Style="{StaticResource Style.Icon.Base}"/>
+                          Style="{StaticResource DataGridActionIconStyle}"/>
                 </DataTemplate>
             </Setter.Value>
         </Setter>

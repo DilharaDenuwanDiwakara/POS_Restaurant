@@ -78,6 +78,7 @@
                             <DataGridTextColumn Header="PO #" Binding="{Binding PONumber}" Width="100"/>
                             <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="Auto"/>
                             <DataGridTextColumn Header="Date" Binding="{Binding OrderDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
+                            <DataGridTextColumn Header="Delivery Date" Binding="{Binding ExpectedDeliveryDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="130"/>
 
                             <DataGridTextColumn Header="Amount" Binding="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
@@ -149,7 +150,11 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}" Width="110" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                            <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}" 
+                                                Width="110" 
+                                                IsReadOnly="True" 
+                                                HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"
+                                                Visibility="Collapsed">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
