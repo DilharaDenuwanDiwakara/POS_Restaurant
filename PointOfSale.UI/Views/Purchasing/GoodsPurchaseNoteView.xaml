@@ -173,11 +173,14 @@
                                         <StackPanel Grid.Column="4" Margin="0 0 8 0">
                                             <TextBlock Text="Unit Price:" Style="{StaticResource LabelStyle}"/>
                                             <TextBox x:Name="UnitPriceTextBox"
-                                                     Text="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, StringFormat=N2}"
+                                                     Text="{Binding UnitPrice, UpdateSourceTrigger=LostFocus, ValidatesOnNotifyDataErrors=True}"
                                                      TextAlignment="Right"
                                                      Style="{StaticResource TextBoxStyle}"
                                                      Margin="0"
                                                      GotFocus="SelectAllText_GotFocus"
+                                                     LostFocus="AmountTextBox_LostFocus"
+                                                     PreviewTextInput="AmountTextBox_PreviewTextInput"
+                                                     DataObject.Pasting="AmountTextBox_Pasting"
                                                      PreviewKeyDown="MoveFocusOnEnter"/>
                                             <TextBlock Text="{Binding LastGrnCostPrice, StringFormat='Last GRN: {0:N2}'}"
                                                        FontSize="10" Foreground="#5B8DB8" Margin="0,2,0,0">

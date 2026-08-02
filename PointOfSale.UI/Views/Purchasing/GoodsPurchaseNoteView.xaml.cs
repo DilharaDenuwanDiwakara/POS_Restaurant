@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -133,6 +135,86 @@ namespace PointOfSale.UI.Views.Purchasing
             {
                 Dispatcher.BeginInvoke(new Action(() => txt.SelectAll()));
             }
+        }
+
+        private void AmountTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !IsValidAmountInput(sender as TextBox, e.Text);
+        }
+
+        private void AmountTextBox_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (!e.DataObject.GetDataPresent(DataFormats.Text))
+            {
+                e.CancelCommand();
+                return;
+            }
+
+            var text = e.DataObject.GetData(DataFormats.Text) as string;
+            if (!IsValidAmountInput(sender as TextBox, text))
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private void AmountTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox textBox &&
+                decimal.TryParse(NormalizeAmountText(textBox.Text), NumberStyles.Number, CultureInfo.CurrentCulture, out var amount))
+            {
+                textBox.Text = amount.ToString("N2", CultureInfo.CurrentCulture);
+                textBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            }
+        }
+
+        private static bool IsValidAmountInput(TextBox textBox, string input)
+        {
+            if (textBox == null || string.IsNullOrEmpty(input))
+            {
+                return false;
+            }
+
+            var currentText = textBox.Text ?? string.Empty;
+            var proposedText = currentText.Remove(textBox.SelectionStart, textBox.SelectionLength)
+                                          .Insert(textBox.SelectionStart, input);
+
+            if (string.IsNullOrWhiteSpace(proposedText))
+            {
+                return true;
+            }
+
+            var separatorCount = proposedText.Count(c => c == '.' || c == ',');
+            if (separatorCount > 1)
+            {
+                return false;
+            }
+
+            var separatorIndex = proposedText.IndexOfAny(new[] { '.', ',' });
+            if (separatorIndex >= 0)
+            {
+                var decimalPlaces = proposedText.Length - separatorIndex - 1;
+                if (decimalPlaces > 2)
+                {
+                    return false;
+                }
+            }
+
+            return proposedText.All(c => char.IsDigit(c) || c == '.' || c == ',');
+        }
+
+        private static string NormalizeAmountText(string text)
+        {
+            var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            var normalizedText = (text ?? string.Empty).Trim()
+                .Replace(".", decimalSeparator)
+                .Replace(",", decimalSeparator);
+
+            if (normalizedText == decimalSeparator)
+            {
+                normalizedText = "0" + decimalSeparator;
+            }
+
+            return normalizedText;
         }
     }
 }

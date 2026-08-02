@@ -117,7 +117,7 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
         #region Private Methods
         private void AddUnitMeasureParameters(SqlCommand command, UnitMeasure unitMeasure)
         {
-            command.Parameters.Add("@UnitMeasureCode", SqlDbType.NChar, 5).Value = unitMeasure.Code;
+            command.Parameters.Add("@UnitMeasureCode", SqlDbType.NVarChar, 10).Value = unitMeasure.Code;
             command.Parameters.Add("@Name", SqlDbType.NVarChar).Value = unitMeasure.UnitMeasureName;
         }
         private UnitMeasure MapUnitMeasure(IDataRecord record)

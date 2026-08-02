@@ -66,7 +66,7 @@
                         <TextBlock Text="Code:" Style="{StaticResource LabelStyle}"/>
                         <TextBox x:Name="UnitMeasureCodeTextBox"
                                  Text="{Binding UnitMeasureCode, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                 MaxLength="3"
+                                 MaxLength="10"
                                  CharacterCasing="Normal"
                                  Style="{StaticResource TextBoxStyle}" 
                                  Validation.ErrorTemplate="{StaticResource ErrorTemplate}"

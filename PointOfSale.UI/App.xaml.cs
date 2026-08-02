@@ -1,8 +1,8 @@
-﻿using System.Windows;
-using Microsoft.Extensions.DependencyInjection;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Threading;
+using System.Windows;
 using System.Windows.Markup;
+using Microsoft.Extensions.DependencyInjection;
 using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Accounts;

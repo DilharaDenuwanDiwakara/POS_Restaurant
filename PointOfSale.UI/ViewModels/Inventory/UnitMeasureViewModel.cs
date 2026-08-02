@@ -214,7 +214,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             ClearErrors(nameof(UnitMeasureCode));
             if (string.IsNullOrWhiteSpace(UnitMeasureCode))
                 AddError(nameof(UnitMeasureCode), "Code is required.");
-            else if (!Regex.IsMatch(UnitMeasureCode, @"^[a-zA-Z\s]+$"))
+            else if (!Regex.IsMatch(UnitMeasureCode, @"^[a-zA-Z0-9\s-]+$"))
                 AddError(nameof(UnitMeasureCode), "Cannot contain numbers or special characters.");
         }
         private void ValidateUnitMeasureName()
