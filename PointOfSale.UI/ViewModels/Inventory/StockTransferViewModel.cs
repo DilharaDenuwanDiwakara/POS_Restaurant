@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
-using Microsoft.Win32;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.Reports;
 using PointOfSale.UI.Views.Inventory;
+using PointOfSale.UI.Views.Sales;
 
 namespace PointOfSale.UI.ViewModels.Inventory
 {
@@ -437,6 +437,8 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 return;
             }
 
+            long newTransferId;
+
             try
             {
                 var transfer = new StockTransfer
@@ -450,73 +452,79 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     Lines = TransferLines.ToList()
                 };
 
-                long newTransferId = await _inventoryRepository.CreateStockTransferAsync(transfer);
-                MessageBox.Show("Transfer Saved Successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                string tempTrnNumber = $"TRN-{newTransferId}";
-
-                //ExportTransferReport(newTransferId, tempTrnNumber);
-
-                ClearAll();
+                newTransferId = await _inventoryRepository.CreateStockTransferAsync(transfer);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Save Failed: {ex.Message}");
+                return;
             }
-        }
 
-        private void ExportTransferReport(long transferId, string transferNumber)
-        {
+            MessageBox.Show("Transfer Saved Successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            ClearAll();
+
             try
             {
-                // 1. Configure the Save Dialog
-                SaveFileDialog saveFileDialog = new SaveFileDialog
-                {
-                    Filter = "PDF Files (*.pdf)|*.pdf",
-                    DefaultExt = "pdf",
-                    FileName = $"{transferNumber}_StockTransfer.pdf", // Auto-suggest a filename
-                    Title = "Save Stock Transfer Note"
-                };
-
-                // 2. Show Dialog and check if User clicked 'Save'
-                if (saveFileDialog.ShowDialog() == true)
-                {
-                    // 3. Load Crystal Report
-                    ReportDocument report = new ReportDocument();
-                    string reportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports", "StockTransferNote.rpt");
-
-                    if (!File.Exists(reportPath))
-                    {
-                        MessageBox.Show("Report file not found at: " + reportPath);
-                        return;
-                    }
-
-                    report.Load(reportPath);
-
-                    // 4. Set Database Login (If your report isn't using Integrated Security)
-                    // report.SetDatabaseLogon("db_user", "db_password");
-
-                    ApplyLogonCredentials(report);
-
-                    // 5. Pass Parameters (Matches your SP @TransferId)
-                    report.SetParameterValue("@TransferId", transferId);
-
-                    // 6. Export directly to the selected path
-                    report.ExportToDisk(ExportFormatType.PortableDocFormat, saveFileDialog.FileName);
-
-                    // 7. Clean up
-                    report.Close();
-                    report.Dispose();
-
-                    MessageBox.Show("Report saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    // Optional: Open the file automatically after saving
-                    // System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(saveFileDialog.FileName) { UseShellExecute = true });
-                }
+                await OpenStockTransferReportAsync(newTransferId);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error generating report: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Transfer saved, but the report could not be opened: {ex.Message}", "Report Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async Task OpenStockTransferReportAsync(long transferId)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                StockTransferNote reportDocument = null;
+
+                try
+                {
+                    reportDocument = new StockTransferNote();
+
+                    ApplyLogonCredentials(reportDocument);
+                    SetTransferIdParameter(reportDocument, transferId);
+
+                    var previewWindow = new ZReportViewerWindow(reportDocument, disposeReportOnClose: true)
+                    {
+                        Title = "Stock Transfer Note"
+                    };
+
+                    var owner = Application.Current.MainWindow;
+                    if (owner != null && owner != previewWindow)
+                    {
+                        previewWindow.Owner = owner;
+                        previewWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                    }
+                    else
+                    {
+                        previewWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    }
+
+                    previewWindow.ShowDialog();
+                    reportDocument = null;
+                }
+                finally
+                {
+                    if (reportDocument != null)
+                    {
+                        reportDocument.Close();
+                        reportDocument.Dispose();
+                    }
+                }
+            });
+        }
+
+        private static void SetTransferIdParameter(ReportDocument report, long transferId)
+        {
+            try
+            {
+                report.SetParameterValue("@TransferId", transferId);
+            }
+            catch (ParameterFieldException)
+            {
+                report.SetParameterValue("TransferId", transferId);
             }
         }
 

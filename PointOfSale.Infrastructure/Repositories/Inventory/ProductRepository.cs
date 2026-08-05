@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Models.Inventory;
@@ -243,12 +244,36 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             {
                 using (var connection = GetConnection())
                 {
-                    using (var command = CreateCommand(connection, "[Inventory].[uspDeleteProduct]"))
+                    await connection.OpenAsync();
+                    using (var transaction = connection.BeginTransaction())
                     {
-                        command.Parameters.Add("@ProductId", SqlDbType.Int).Value = id;
+                        try
+                        {
+                            using (var deleteConversionsCommand = connection.CreateCommand())
+                            {
+                                deleteConversionsCommand.Transaction = transaction;
+                                deleteConversionsCommand.CommandType = CommandType.Text;
+                                deleteConversionsCommand.CommandText =
+                                    "DELETE FROM [Inventory].[ProductUnitConversion] WHERE [ProductId] = @ProductId";
+                                deleteConversionsCommand.Parameters.Add("@ProductId", SqlDbType.Int).Value = id;
 
-                        await connection.OpenAsync();
-                        await command.ExecuteNonQueryAsync();
+                                await deleteConversionsCommand.ExecuteNonQueryAsync();
+                            }
+
+                            using (var command = CreateCommand(connection, "[Inventory].[uspDeleteProduct]", transaction))
+                            {
+                                command.Parameters.Add("@ProductId", SqlDbType.Int).Value = id;
+
+                                await command.ExecuteNonQueryAsync();
+                            }
+
+                            transaction.Commit();
+                        }
+                        catch
+                        {
+                            transaction.Rollback();
+                            throw;
+                        }
                     }
                 }
             }
@@ -396,59 +421,41 @@ ORDER BY um.Name;";
             IEnumerable<ProductUnitConversion> conversions,
             int? userId)
         {
+            // 1. Soft Delete Existing Conversions via Stored Procedure
             using (var deleteCommand = connection.CreateCommand())
             {
                 deleteCommand.Transaction = transaction;
-                deleteCommand.CommandType = CommandType.Text;
-                deleteCommand.CommandText = @"
-UPDATE [Inventory].[ProductUnitConversion]
-SET IsActive = 0,
-    UpdatedBy = @UpdatedBy,
-    UpdatedAt = GETDATE()
-WHERE ProductId = @ProductId
-  AND IsActive = 1;";
+                deleteCommand.CommandType = CommandType.StoredProcedure; // Changed to StoredProcedure
+                deleteCommand.CommandText = "[Inventory].[uspSoftDeleteProductUnitConversions]"; // SP Name
+
                 deleteCommand.Parameters.Add("@ProductId", SqlDbType.Int).Value = productId;
                 deleteCommand.Parameters.Add("@UpdatedBy", SqlDbType.Int).Value = userId.HasValue ? (object)userId.Value : DBNull.Value;
+
                 await deleteCommand.ExecuteNonQueryAsync();
             }
 
-            if (conversions == null)
+            if (conversions == null || !conversions.Any())
             {
                 return;
             }
 
+            // 2. Insert New Conversions via Stored Procedure
             foreach (var conversion in conversions)
             {
                 using (var insertCommand = connection.CreateCommand())
                 {
                     insertCommand.Transaction = transaction;
-                    insertCommand.CommandType = CommandType.Text;
-                    insertCommand.CommandText = @"
-INSERT INTO [Inventory].[ProductUnitConversion]
-(
-    ProductId,
-    TargetUnitMeasureId,
-    ConversionRate,
-    IsMultiply,
-    IsActive,
-    CreatedBy,
-    CreatedAt
-)
-VALUES
-(
-    @ProductId,
-    @TargetUnitMeasureId,
-    @ConversionRate,
-    @IsMultiply,
-    1,
-    @CreatedBy,
-    GETDATE()
-);";
+                    insertCommand.CommandType = CommandType.StoredProcedure; // Changed to StoredProcedure
+                    insertCommand.CommandText = "[Inventory].[uspInsertProductUnitConversion]"; // SP Name
+
                     insertCommand.Parameters.Add("@ProductId", SqlDbType.Int).Value = productId;
                     insertCommand.Parameters.Add("@TargetUnitMeasureId", SqlDbType.Int).Value = conversion.TargetUnitMeasureId;
                     AddDecimalParameter(insertCommand, "@ConversionRate", conversion.ConversionRate);
+
                     insertCommand.Parameters.Add("@IsMultiply", SqlDbType.Bit).Value = conversion.IsMultiply;
+
                     insertCommand.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = userId.HasValue ? (object)userId.Value : DBNull.Value;
+
                     await insertCommand.ExecuteNonQueryAsync();
                 }
             }

@@ -16,6 +16,7 @@ using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.System;
 using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Purchasing;
+using PointOfSale.Core.Models.System;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
 using PointOfSale.UI.Services;
@@ -30,6 +31,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         private readonly IUserSessionService _userSessionService;
         private readonly IExcelService _excelService;
         private readonly IBankRepository _bankRepository;
+        private readonly IBankBranchRepository _bankBranchRepository;
 
         private readonly List<long> _pendingDeleteDocumentIds = new List<long>();
         private readonly List<Supplier> _allSuppliers = new List<Supplier>();
@@ -49,12 +51,14 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             IUserSessionService userSessionService,
             IExcelService excelService,
             IBankRepository bankRepository,
+            IBankBranchRepository bankBranchRepository,
             CloudStorageService storageService)
         {
             _supplierRepository = supplierRepository ?? throw new ArgumentNullException(nameof(supplierRepository));
             _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
             _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
             _bankRepository = bankRepository ?? throw new ArgumentNullException(nameof(bankRepository));
+            _bankBranchRepository = bankBranchRepository ?? throw new ArgumentNullException(nameof(bankBranchRepository));
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
 
             SaveSupplierCommand = new AsyncRelayCommand(async _ => await SaveSupplierAsync(), _ => CanSaveSupplier);
@@ -80,7 +84,9 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public ObservableCollection<SupplierContact> ContactsList { get; } = new ObservableCollection<SupplierContact>();
         public ObservableCollection<SupplierDocument> Documents { get; } = new ObservableCollection<SupplierDocument>();
 
-        public ObservableCollection<string> AvailableBanks { get; } = new ObservableCollection<string>();
+        public ObservableCollection<Bank> AvailableBanks { get; } = new ObservableCollection<Bank>();
+        public ObservableCollection<BankBranch> AvailableBranches { get; } = new ObservableCollection<BankBranch>();
+        private bool _isLoadingSupplier;
 
         public List<SupplierPaymentMethod> AvailablePaymentMethods { get; } =
             Enum.GetValues(typeof(SupplierPaymentMethod))
@@ -221,28 +227,40 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             }
         }
 
-        private string _bankName;
-        public string BankName
+        private int? _bankId;
+        public int? BankId
         {
-            get => _bankName;
+            get => _bankId;
             set
             {
-                SetProperty(ref _bankName, value);
-                ValidateBank();
+                if (SetProperty(ref _bankId, value))
+                {
+                    ValidateBank();
+                    if (!_isLoadingSupplier)
+                    {
+                        BankBranchId = null;
+                        _ = LoadBranchesForSelectedBankAsync();
+                    }
+                    OnPropertyChanged(nameof(IsBranchEnabled));
+                }
             }
         }
 
-        private string _bankBranch;
-        public string BankBranch
+        private int? _branchId;
+        public int? BankBranchId
         {
-            get => _bankBranch;
+            get => _branchId;
             set
             {
-                SetProperty(ref _bankBranch, value);
-                ValidateBankBranch();
-                RaiseCanExecuteChanged();
+                if (SetProperty(ref _branchId, value))
+                {
+                    ValidateBankBranch();
+                    RaiseCanExecuteChanged();
+                }
             }
         }
+
+        public bool IsBranchEnabled => BankId.HasValue;
 
         private string _accountNumber;
         public string AccountNumber
@@ -344,11 +362,33 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 AvailableBanks.Clear();
                 var banks = await _bankRepository.GetAllAsync();
                 foreach (var bank in banks.Where(b => b.IsActive))
-                    AvailableBanks.Add(bank.BankName);
+                {
+                    AvailableBanks.Add(bank);
+                }
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Failed to load banks: {ex.Message}";
+            }
+        }
+
+        private async Task LoadBranchesForSelectedBankAsync()
+        {
+            try
+            {
+                AvailableBranches.Clear();
+                if (BankId.HasValue)
+                {
+                    var branches = await _bankBranchRepository.GetByBankIdAsync(BankId.Value);
+                    foreach (var branch in branches.Where(b => b.IsActive))
+                    {
+                        AvailableBranches.Add(branch);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load branches: {ex.Message}";
             }
         }
 
@@ -478,8 +518,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                     SelectedSupplier.IsCredit = IsCredit;
                     SelectedSupplier.CreditPeriodDays = CreditPeriodDays;
                     SelectedSupplier.CreditLimit = CreditLimit;
-                    SelectedSupplier.BankName = BankName;
-                    SelectedSupplier.BankBranch = BankBranch;
+                    SelectedSupplier.BankId = BankId;
+                    SelectedSupplier.BankBranchId = BankBranchId;
                     SelectedSupplier.AccountNumber = AccountNumber;
                     SelectedSupplier.AccountName = AccountName;
                     SelectedSupplier.IsActive = IsActive;
@@ -502,8 +542,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                         IsCredit = IsCredit,
                         CreditPeriodDays = CreditPeriodDays,
                         CreditLimit = CreditLimit,
-                        BankName = BankName,
-                        BankBranch = BankBranch,
+                        BankId = BankId,
+                        BankBranchId = BankBranchId,
                         AccountNumber = AccountNumber,
                         AccountName = AccountName,
                         IsActive = IsActive,
@@ -817,30 +857,39 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         #region Form Helpers
         private void CreateNewSupplier()
         {
-            SelectedSupplier = null;
+            _isLoadingSupplier = true;
+            try
+            {
+                SelectedSupplier = null;
 
-            SupplierId = 0;
-            SupplierCode = string.Empty;
-            SupplierName = string.Empty;
-            TaxRegistrationNumber = string.Empty;
-            BusinessRegistrationNumber = string.Empty;
-            Address = string.Empty;
-            ContactsList.Clear();
-            ResetContactEditor();
-            DefaultPaymentMethod = SupplierPaymentMethod.BANK_TRANSFER;
-            IsCredit = false;
-            CreditPeriodDays = null;
-            CreditLimit = null;
-            BankName = string.Empty;
-            BankBranch = string.Empty;
-            AccountNumber = string.Empty;
-            AccountName = string.Empty;
-            Documents.Clear();
-            _pendingDeleteDocumentIds.Clear();
-            IsActive = true;
+                SupplierId = 0;
+                SupplierCode = string.Empty;
+                SupplierName = string.Empty;
+                TaxRegistrationNumber = string.Empty;
+                BusinessRegistrationNumber = string.Empty;
+                Address = string.Empty;
+                ContactsList.Clear();
+                ResetContactEditor();
+                DefaultPaymentMethod = SupplierPaymentMethod.BANK_TRANSFER;
+                IsCredit = false;
+                CreditPeriodDays = null;
+                CreditLimit = null;
+                BankId = null;
+                BankBranchId = null;
+                AvailableBranches.Clear();
+                AccountNumber = string.Empty;
+                AccountName = string.Empty;
+                Documents.Clear();
+                _pendingDeleteDocumentIds.Clear();
+                IsActive = true;
 
-            ClearAllErrors();
-            RaiseCanExecuteChanged();
+                ClearAllErrors();
+                RaiseCanExecuteChanged();
+            }
+            finally
+            {
+                _isLoadingSupplier = false;
+            }
         }
 
         private void ExitEditMode()
@@ -856,44 +905,55 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         {
             if (SelectedSupplier == null) return;
 
-            IsEditing = true;
-            var supplier = await _supplierRepository.GetByIdAsync(SelectedSupplier.SupplierId) ?? SelectedSupplier;
-            _selectedSupplier = supplier;
-            OnPropertyChanged(nameof(SelectedSupplier));
-
-            SupplierId = supplier.SupplierId;
-            SupplierCode = supplier.SupplierCode;
-            SupplierName = supplier.SupplierName;
-            TaxRegistrationNumber = supplier.TaxRegistrationNumber;
-            BusinessRegistrationNumber = supplier.BusinessRegistrationNumber;
-            Address = supplier.Address;
-            DefaultPaymentMethod = supplier.DefaultPaymentMethod ?? SupplierPaymentMethod.CASH;
-            IsCredit = supplier.IsCredit;
-            CreditPeriodDays = supplier.CreditPeriodDays;
-            CreditLimit = supplier.CreditLimit;
-            BankName = supplier.BankName;
-            BankBranch = supplier.BankBranch;
-            AccountNumber = supplier.AccountNumber;
-            AccountName = supplier.AccountName;
-            IsActive = supplier.IsActive;
-
-            ContactsList.Clear();
-            foreach (var contact in supplier.Contacts.Where(contact => contact.IsActive))
-            {
-                ContactsList.Add(contact);
-            }
-            ResetContactEditor();
-
+            _isLoadingSupplier = true;
             try
             {
-                await LoadDocumentsAsync(supplier.SupplierId);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to load documents: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                IsEditing = true;
+                var supplier = await _supplierRepository.GetByIdAsync(SelectedSupplier.SupplierId) ?? SelectedSupplier;
+                _selectedSupplier = supplier;
+                OnPropertyChanged(nameof(SelectedSupplier));
 
-            RaiseCanExecuteChanged();
+                SupplierId = supplier.SupplierId;
+                SupplierCode = supplier.SupplierCode;
+                SupplierName = supplier.SupplierName;
+                TaxRegistrationNumber = supplier.TaxRegistrationNumber;
+                BusinessRegistrationNumber = supplier.BusinessRegistrationNumber;
+                Address = supplier.Address;
+                DefaultPaymentMethod = supplier.DefaultPaymentMethod ?? SupplierPaymentMethod.CASH;
+                IsCredit = supplier.IsCredit;
+                CreditPeriodDays = supplier.CreditPeriodDays;
+                CreditLimit = supplier.CreditLimit;
+                BankId = supplier.BankId;
+
+                await LoadBranchesForSelectedBankAsync();
+
+                BankBranchId = supplier.BankBranchId;
+                AccountNumber = supplier.AccountNumber;
+                AccountName = supplier.AccountName;
+                IsActive = supplier.IsActive;
+
+                ContactsList.Clear();
+                foreach (var contact in supplier.Contacts.Where(contact => contact.IsActive))
+                {
+                    ContactsList.Add(contact);
+                }
+                ResetContactEditor();
+
+                try
+                {
+                    await LoadDocumentsAsync(supplier.SupplierId);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to load documents: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                RaiseCanExecuteChanged();
+            }
+            finally
+            {
+                _isLoadingSupplier = false;
+            }
         }
 
         private void RaiseCanExecuteChanged()
@@ -1050,24 +1110,21 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         }
         private void ValidateBank()
         {
-            ClearErrors(nameof(BankName));
+            ClearErrors(nameof(BankId));
             if (DefaultPaymentMethod == SupplierPaymentMethod.BANK_TRANSFER)
             {
-                if (string.IsNullOrWhiteSpace(BankName))
-                    AddError(nameof(BankName), "Bank name is required.");
-                else if (!Regex.IsMatch(BankName.Trim(), AlphaNumericPattern))
-                    AddError(nameof(BankName), "Bank name cannot contain special characters.");
+                if (!BankId.HasValue)
+                    AddError(nameof(BankId), "Bank is required.");
             }
         }
 
         private void ValidateBankBranch()
         {
-            ClearErrors(nameof(BankBranch));
-
-            if (!string.IsNullOrWhiteSpace(BankBranch) &&
-                !Regex.IsMatch(BankBranch.Trim(), AlphaNumericPattern))
+            ClearErrors(nameof(BankBranchId));
+            if (DefaultPaymentMethod == SupplierPaymentMethod.BANK_TRANSFER)
             {
-                AddError(nameof(BankBranch), "Bank branch cannot contain special characters.");
+                if (!BankBranchId.HasValue)
+                    AddError(nameof(BankBranchId), "Branch is required.");
             }
         }
 

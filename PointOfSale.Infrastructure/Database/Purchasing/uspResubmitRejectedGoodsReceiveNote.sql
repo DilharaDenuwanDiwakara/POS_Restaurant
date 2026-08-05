@@ -62,9 +62,12 @@ BEGIN
             [GoodsReceiveNoteId],
             [GoodsPurchaseNoteLineId],
             [ProductId],
+            [UnitMeasureId],
             [UnitPrice],
             [ExpiryDate],
             [QuantityReceived],
+            [BaseQuantityReceived],
+            [BaseUnitCost],
             [LineDiscount],
             [TaxAmount]
         )
@@ -72,9 +75,12 @@ BEGIN
             @GoodsReceiveNoteId,
             [GoodsPurchaseNoteLineId],
             [ProductId],
+            [UnitMeasureId],
             [UnitPrice],
             [ExpiryDate],
             [QuantityReceived],
+            [BaseQuantityReceived],
+            [BaseUnitCost],
             [LineDiscount],
             [TaxAmount]
         FROM @GoodsReceiveNoteLines;

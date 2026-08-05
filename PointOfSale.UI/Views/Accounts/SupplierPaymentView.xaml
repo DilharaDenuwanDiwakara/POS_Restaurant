@@ -209,9 +209,29 @@
                                       Style="{StaticResource LabelStyle}"/>
 
                             <ComboBox ItemsSource="{Binding AvailableBanks}"
-                                     SelectedItem="{Binding BankName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                     SelectedValue="{Binding SelectedBankId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     SelectedValuePath="Id"
+                                     DisplayMemberPath="BankName"
                                      Visibility="{Binding IsBankVisible}"
-                                     IsEditable="True"
+                                     Width="150"
+                                     Margin="0,0,24,0"
+                                     IsTextSearchEnabled="True"
+                                     Style="{StaticResource ComboBoxStyle}"
+                                     ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
+
+                            <!-- Branch name -->
+                            <TextBlock Text="Branch:"
+                                      Visibility="{Binding IsBankVisible}"
+                                      VerticalAlignment="Center"
+                                      Margin="0 0 12 0"
+                                      Style="{StaticResource LabelStyle}"/>
+
+                            <ComboBox ItemsSource="{Binding AvailableBranches}"
+                                     SelectedValue="{Binding SelectedBranchId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     SelectedValuePath="Id"
+                                     DisplayMemberPath="BranchName"
+                                     Visibility="{Binding IsBankVisible}"
+                                     IsEnabled="{Binding IsBranchEnabled}"
                                      Width="150"
                                      Margin="0,0,24,0"
                                      IsTextSearchEnabled="True"

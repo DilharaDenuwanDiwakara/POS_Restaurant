@@ -6,13 +6,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using PointOfSale.Core.Enums;
 using PointOfSale.Core.Interfaces.Repositories.Purchasing;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Purchasing;
 
 namespace PointOfSale.Infrastructure.Repositories.Purchasing
 {
     public class GoodsReceiveNoteRepository : BaseRepository, IGoodsReceiveNoteRepository
     {
-        public GoodsReceiveNoteRepository(DatabaseConnection databaseConnection) : base(databaseConnection) { }
+        private readonly IUOMConversionService _uomConversionService;
+
+        public GoodsReceiveNoteRepository(
+            DatabaseConnection databaseConnection,
+            IUOMConversionService uomConversionService) : base(databaseConnection)
+        {
+            _uomConversionService = uomConversionService ?? throw new ArgumentNullException(nameof(uomConversionService));
+        }
 
 
         #region Public Method
@@ -24,6 +32,7 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 command.CommandType = CommandType.StoredProcedure;
                 command.CommandText = "[Purchasing].[uspInsertGoodsReceiveNote]";
 
+                await PrepareBaseQuantitiesAsync(goodsReceiveNote.Lines);
                 AddMainParameters(command, goodsReceiveNote);
                 AddLineItemsParameter(command, goodsReceiveNote.Lines);
                 AddOutputParameter(command);
@@ -124,6 +133,8 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                             lines.Add(MapReceiveNoteLine(reader));
                         }
                     }
+
+                    await PopulateMissingReceiveLineUomsAsync(connection, goodsReceiveNoteId, lines);
                 }
             }
             catch (SqlException ex)
@@ -226,6 +237,7 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                     command.Parameters.AddWithValue("@CreditDays", goodsReceiveNote.CreditDays);
                     command.Parameters.AddWithValue("@DueDate", goodsReceiveNote.DueDate);
                     command.Parameters.AddWithValue("@UpdatedBy", goodsReceiveNote.CreatedBy);
+                    await PrepareBaseQuantitiesAsync(goodsReceiveNote.Lines);
                     AddLineItemsParameter(command, goodsReceiveNote.Lines);
 
                     await connection.OpenAsync();
@@ -240,6 +252,42 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
         #endregion
 
         #region Private Method
+        private async Task PrepareBaseQuantitiesAsync(IEnumerable<GoodsReceiveNoteLine> lines)
+        {
+            if (lines == null)
+            {
+                return;
+            }
+
+            foreach (var line in lines)
+            {
+                if (line.ProductId <= 0)
+                {
+                    throw new InvalidOperationException("GRN line product is required for UOM conversion.");
+                }
+
+                if (line.UnitMeasureId <= 0)
+                {
+                    throw new InvalidOperationException($"UOM is required for {line.ProductName ?? "the selected product"}.");
+                }
+
+                var baseUnitMeasureId = await _uomConversionService.GetProductBaseUnitMeasureIdAsync(line.ProductId);
+                var baseQuantity = await _uomConversionService.GetConvertedQuantityAsync(
+                    line.ProductId,
+                    line.UnitMeasureId,
+                    baseUnitMeasureId,
+                    line.QuantityReceived);
+
+                if (baseQuantity <= 0m)
+                {
+                    throw new InvalidOperationException($"Converted base quantity must be greater than zero for {line.ProductName ?? "the selected product"}.");
+                }
+
+                line.BaseQuantityReceived = baseQuantity;
+                line.BaseUnitCost = (line.UnitPrice * line.QuantityReceived) / baseQuantity;
+            }
+        }
+
         private void AddMainParameters(SqlCommand command, GoodsReceiveNote note)
         {
             command.Parameters.AddWithValue("@BranchId", note.BranchId);
@@ -260,11 +308,14 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
         {
             var table = new DataTable();
 
-            table.Columns.Add("GoodsPurchaseNoteLineId", typeof(int));
+            table.Columns.Add("GoodsPurchaseNoteLineId", typeof(long));
             table.Columns.Add("ProductId", typeof(int));
+            table.Columns.Add("UnitMeasureId", typeof(int));
             table.Columns.Add("UnitPrice", typeof(decimal));
             table.Columns.Add("ExpiryDate", typeof(DateTime));
             table.Columns.Add("QuantityReceived", typeof(decimal));
+            table.Columns.Add("BaseQuantityReceived", typeof(decimal));
+            table.Columns.Add("BaseUnitCost", typeof(decimal));
             table.Columns.Add("LineDiscount", typeof(decimal));
             table.Columns.Add("TaxAmount", typeof(decimal));
 
@@ -273,9 +324,12 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 table.Rows.Add(
                     line.GoodsPurchaseNoteLineId,
                     line.ProductId,
+                    line.UnitMeasureId,
                     line.UnitPrice,
                     line.ExpiryDate.HasValue ? (object)line.ExpiryDate.Value : DBNull.Value,
                     line.QuantityReceived,
+                    line.BaseQuantityReceived,
+                    line.BaseUnitCost,
                     line.LineDiscount,
                     line.TaxAmount
                 );
@@ -333,10 +387,13 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 GoodsPurchaseNoteLineId = GetValue<long>(record, "GoodsPurchaseNoteLineId"),
                 ProductId = GetValue<int>(record, "ProductId"),
                 ProductName = GetValue<string>(record, "ProductName"),
+                UnitMeasureId = GetOptionalValue<int>(record, "UnitMeasureId"),
                 QuantityOrdered = HasColumn(record, "QuantityOrdered")
                     ? GetValue<decimal>(record, "QuantityOrdered")
                     : 0m,
                 UnitMeasure = GetFirstOptionalString(record, "UnitMeasure", "UnitMeasureCode", "UOM"),
+                BaseQuantityReceived = GetOptionalValue<decimal>(record, "BaseQuantityReceived"),
+                BaseUnitCost = GetOptionalValue<decimal>(record, "BaseUnitCost"),
                 OrderedPrice = HasColumn(record, "OrderedPrice")
                     ? GetValue<decimal>(record, "OrderedPrice")
                     : unitPrice,
@@ -354,6 +411,96 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
 
             line.SetStoredQuantityReceived(GetValue<decimal>(record, "QuantityReceived"));
             return line;
+        }
+
+        private async Task PopulateMissingReceiveLineUomsAsync(
+            SqlConnection connection,
+            long goodsReceiveNoteId,
+            IList<GoodsReceiveNoteLine> lines)
+        {
+            if (lines == null || lines.Count == 0)
+            {
+                return;
+            }
+
+            if (!lines.Any(line => line.UnitMeasureId <= 0 || string.IsNullOrWhiteSpace(line.UnitMeasure)))
+            {
+                return;
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.Text;
+                command.CommandText = @"
+SELECT
+    grnl.GoodsPurchaseNoteLineId,
+    grnl.ProductId,
+    COALESCE(grnl.UnitMeasureId, gpol.UnitMeasureId, p.UnitMeasureId) AS UnitMeasureId,
+    um.Code AS UnitMeasureCode
+FROM [Purchasing].[GoodsReceiveNoteLine] grnl
+LEFT JOIN [Purchasing].[GoodsPurchaseNoteLine] gpol ON gpol.Id = grnl.GoodsPurchaseNoteLineId
+INNER JOIN [Inventory].[Product] p ON p.Id = grnl.ProductId
+LEFT JOIN [Inventory].[UnitMeasure] um ON um.Id = COALESCE(grnl.UnitMeasureId, gpol.UnitMeasureId, p.UnitMeasureId)
+WHERE grnl.GoodsReceiveNoteId = @GoodsReceiveNoteId;";
+                command.Parameters.Add("@GoodsReceiveNoteId", SqlDbType.BigInt).Value = goodsReceiveNoteId;
+
+                var uomsByPurchaseLineId = new Dictionary<long, ReceiveLineUnitMeasureFallback>();
+                var uomsByProductId = new Dictionary<int, ReceiveLineUnitMeasureFallback>();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var fallback = new ReceiveLineUnitMeasureFallback
+                        {
+                            UnitMeasureId = GetOptionalValue<int>(reader, "UnitMeasureId"),
+                            UnitMeasureCode = GetFirstOptionalString(reader, "UnitMeasureCode")
+                        };
+
+                        var purchaseLineId = GetOptionalValue<long>(reader, "GoodsPurchaseNoteLineId");
+                        if (purchaseLineId > 0)
+                        {
+                            uomsByPurchaseLineId[purchaseLineId] = fallback;
+                        }
+
+                        var productId = GetOptionalValue<int>(reader, "ProductId");
+                        if (productId > 0)
+                        {
+                            uomsByProductId[productId] = fallback;
+                        }
+                    }
+                }
+
+                foreach (var line in lines)
+                {
+                    ReceiveLineUnitMeasureFallback fallback;
+                    if (!uomsByPurchaseLineId.TryGetValue(line.GoodsPurchaseNoteLineId, out fallback))
+                    {
+                        uomsByProductId.TryGetValue(line.ProductId, out fallback);
+                    }
+
+                    if (fallback == null)
+                    {
+                        continue;
+                    }
+
+                    if (line.UnitMeasureId <= 0)
+                    {
+                        line.UnitMeasureId = fallback.UnitMeasureId;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(line.UnitMeasure))
+                    {
+                        line.UnitMeasure = fallback.UnitMeasureCode;
+                    }
+                }
+            }
+        }
+
+        private sealed class ReceiveLineUnitMeasureFallback
+        {
+            public int UnitMeasureId { get; set; }
+            public string UnitMeasureCode { get; set; }
         }
 
         private T GetOptionalValue<T>(IDataRecord record, string columnName)

@@ -45,6 +45,7 @@ BEGIN
         (
             [GoodsPurchaseNoteId],
             [ProductId],
+            [UnitMeasureId],
             [UnitPrice],
             [QuantityOrdered],
             [LineDiscount],
@@ -53,6 +54,7 @@ BEGIN
         SELECT
             @Id,
             [ProductId],
+            [UnitMeasureId],
             [UnitPrice],
             [QuantityOrdered],
             ISNULL([LineDiscount], 0),

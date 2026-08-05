@@ -191,20 +191,22 @@
 
                                 <TextBlock Text="Bank Name:" Style="{StaticResource LabelStyle}"/>
                                 <ComboBox ItemsSource="{Binding AvailableBanks}"
-                                          SelectedItem="{Binding BankName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                          SelectedValue="{Binding BankId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="BankName"
                                           IsEditable="True"
                                           Style="{StaticResource ComboBoxStyle}"
                                           PreviewKeyDown="MoveFocusOnEnter"/>
 
                                 <TextBlock Text="Bank Branch:" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding BankBranch, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                         MaxLength="50"
-                                         Style="{StaticResource TextBoxStyle}" 
-                                         CharacterCasing="Upper"
-                                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
-                                         PreviewTextInput="AlphaNumericWithSpace_PreviewTextInput"
-                                         DataObject.Pasting="AlphaNumericWithSpace_Pasting"
-                                         PreviewKeyDown="MoveFocusOnEnter"/>
+                                <ComboBox ItemsSource="{Binding AvailableBranches}"
+                                          SelectedValue="{Binding BankBranchId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="BranchName"
+                                          IsEnabled="{Binding IsBranchEnabled}"
+                                          IsEditable="True"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
 
                                 <TextBlock Text="Account Number:" Style="{StaticResource LabelStyle}"/>
                                 <TextBox Text="{Binding AccountNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
@@ -406,8 +408,8 @@
                                 <DataGridTextColumn Header="Payment Method" Binding="{Binding DefaultPaymentMethod}" Width="Auto" />
                                 <DataGridTextColumn Header="Account Name" Binding="{Binding AccountName}" Width="Auto" />
                                 <DataGridTextColumn Header="Acc. No" Binding="{Binding AccountNumber}" Width="Auto" />
-                                <DataGridTextColumn Header="Bank" Binding="{Binding BankName}" Width="Auto" />
-                                <DataGridTextColumn Header="Branch" Binding="{Binding BankBranch}" Width="Auto" />
+                                <DataGridTextColumn Header="Bank" Binding="{Binding BankNameDisplay}" Width="Auto" />
+                                <DataGridTextColumn Header="Branch" Binding="{Binding BranchNameDisplay}" Width="Auto" />
                                 
                                 <!-- Docs flyout column -->
                                 <DataGridTemplateColumn Header="Docs" Width="75">

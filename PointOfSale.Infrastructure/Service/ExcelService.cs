@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -151,8 +151,8 @@ namespace PointOfSale.Infrastructure.Service
                     worksheet.Cell(row, 7).Value = primaryContact?.EmailAddress ?? "";
                     worksheet.Cell(row, 8).Value = supplier.Address ?? "";
                     worksheet.Cell(row, 9).Value = supplier.DefaultPaymentMethod?.ToString() ?? "";
-                    worksheet.Cell(row, 10).Value = supplier.BankName ?? "";
-                    worksheet.Cell(row, 11).Value = supplier.BankBranch ?? "";
+                    worksheet.Cell(row, 10).Value = supplier.BankNameDisplay ?? "";
+                    worksheet.Cell(row, 11).Value = supplier.BranchNameDisplay ?? "";
                     worksheet.Cell(row, 12).Value = supplier.AccountNumber ?? "";
                     worksheet.Cell(row, 13).Value = supplier.AccountName ?? "";
 

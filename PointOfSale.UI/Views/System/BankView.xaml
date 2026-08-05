@@ -12,7 +12,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ===================== Left Panel: Bank Form ===================== -->
+        <!-- ===================== Left Panel: Bank Zone ===================== -->
         <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
             <Grid>
                 <Grid.RowDefinitions>
@@ -22,6 +22,7 @@
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
+                        <!-- Bank Form Header -->
                         <TextBlock Text="Bank Form"
                                    Style="{StaticResource SubHeaderTextStyle}"
                                    Margin="0,0,0,12"/>
@@ -52,7 +53,7 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- Action Buttons -->
+                <!-- Action Buttons (Bank Zone) -->
                 <Border Grid.Row="1"
                         BorderThickness="0,1,0,0"
                         BorderBrush="#E0E0E0"
@@ -61,8 +62,13 @@
                         <Button Content="{Binding SaveButtonText}"
                                 Command="{Binding SaveBankCommand}"
                                 Style="{StaticResource PrimaryButtonStyle}"
-                                Margin="0,0,12,0"
+                                Margin="0,0,8,0"
                                 Click="SaveButton_Click"/>
+
+                        <Button Content="Clear"
+                                Command="{Binding NewBankCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Margin="0,0,8,0"/>
                         
                         <Button Content="Edit"
                                 Command="{Binding EditBankCommand}"
@@ -72,62 +78,203 @@
             </Grid>
         </Border>
 
-        <!-- ===================== Right Panel: Bank List ===================== -->
+        <!-- ===================== Right Panel: Bank & Branch Lists ===================== -->
         <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- List Header -->
-                <Border Background="#F1F2F6" Padding="12,8">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                <!-- Top: Bank List Section -->
+                <Grid Grid.Row="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                        <TextBlock Text="Bank List"
+                    <!-- Bank List Header -->
+                    <Border Background="#F1F2F6" Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Bank List"
+                                       Style="{StaticResource SubHeaderTextStyle}"
+                                       VerticalAlignment="Center"
+                                       Margin="0"/>
+
+                            <Button Grid.Column="1"
+                                    Command="{Binding LoadBankCommand}"
+                                    Style="{StaticResource RefreshButtonStyle}"
+                                    ToolTip="Refresh Bank List"
+                                    Margin="10,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Bank Data Grid -->
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Banks}"
+                              SelectedItem="{Binding SelectedBank, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource DataGridStyle}"
+                              Margin="0,4,0,0"
+                              AutoGenerateColumns="False"
+                              SelectionMode="Single"
+                              CanUserAddRows="False"
+                              IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID"
+                                                Binding="{Binding Id}"
+                                                Width="Auto"
+                                                Visibility="Hidden"/>
+                            <DataGridTextColumn Header="Bank Code"
+                                                Binding="{Binding BankCode}"
+                                                Width="120"/>
+                            <DataGridTextColumn Header="Bank Name"
+                                                Binding="{Binding BankName}"
+                                                Width="*"/>
+                            <DataGridCheckBoxColumn Header="Active"
+                                                    Binding="{Binding IsActive}"
+                                                    Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <!-- Splitter -->
+                <GridSplitter Grid.Row="1" Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#E0E0E0" Margin="0,4"/>
+
+                <!-- Bottom: Branch Section (Disabled if SelectedBank is null) -->
+                <Grid Grid.Row="2" IsEnabled="{Binding IsBranchFormEnabled}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/> <!-- Dynamic Header -->
+                        <RowDefinition Height="Auto"/> <!-- Horizontal Branch Form -->
+                        <RowDefinition Height="*"/>    <!-- Branch DataGrid -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Branch Dynamic Header -->
+                    <Border Background="#F1F2F6" Padding="12,8">
+                        <TextBlock Text="{Binding BranchHeaderTitle}"
                                    Style="{StaticResource SubHeaderTextStyle}"
                                    VerticalAlignment="Center"
                                    Margin="0"/>
+                    </Border>
 
-                        <Button Grid.Column="1"
-                                Command="{Binding LoadBankCommand}"
-                                Style="{StaticResource RefreshButtonStyle}"
-                                ToolTip="Refresh Bank List"
-                                Margin="10,0,0,0"/>
-                    </Grid>
-                </Border>
+                    <!-- Horizontal Inline Branch Form -->
+                    <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="12,8" Background="#FAFAFA">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/> <!-- Branch Code Input -->
+                                <ColumnDefinition Width="*"/>    <!-- Branch Name Input -->
+                                <ColumnDefinition Width="Auto"/> <!-- Active CheckBox -->
+                                <ColumnDefinition Width="Auto"/> <!-- Save Button -->
+                                <ColumnDefinition Width="Auto"/> <!-- Edit Button -->
+                                <ColumnDefinition Width="Auto"/> <!-- Delete Button -->
+                                <ColumnDefinition Width="Auto"/> <!-- Clear Button -->
+                            </Grid.ColumnDefinitions>
 
-                <!-- Data Grid -->
-                <DataGrid Grid.Row="1"
-                          ItemsSource="{Binding Banks}"
-                          SelectedItem="{Binding SelectedBank, UpdateSourceTrigger=PropertyChanged}"
-                          Style="{StaticResource DataGridStyle}"
-                          Margin="0,4,0,0"
-                          AutoGenerateColumns="False"
-                          SelectionMode="Single"
-                          CanUserAddRows="False"
-                          IsReadOnly="True">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="ID"
-                                            Binding="{Binding Id}"
-                                            Width="Auto"
-                                            Visibility="Hidden"/>
-                        <DataGridTextColumn Header="Bank Code"
-                                            Binding="{Binding BankCode}"
-                                            Width="120"/>
-                        <DataGridTextColumn Header="Bank Name"
-                                            Binding="{Binding BankName}"
-                                            Width="*"/>
-                        <DataGridCheckBoxColumn Header="Active"
-                                                Binding="{Binding IsActive}"
-                                                Width="80"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                            <!-- Branch Code -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBlock Text="Branch Code:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBox Text="{Binding BranchCode, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                         MaxLength="20"
+                                         CharacterCasing="Upper"
+                                         Style="{StaticResource TextBoxStyle}"
+                                         Width="90"
+                                         VerticalAlignment="Center"
+                                         PreviewKeyDown="MoveFocusOnEnter"/>
+                            </StackPanel>
+
+                            <!-- Branch Name -->
+                            <Grid Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Branch Name:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBox Grid.Column="1" Text="{Binding BranchName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                         MaxLength="100"
+                                         Style="{StaticResource TextBoxStyle}"
+                                         CharacterCasing="Upper"
+                                         VerticalAlignment="Center"
+                                         PreviewKeyDown="MoveFocusOnEnter"/>
+                            </Grid>
+
+                            <!-- Is Branch Active CheckBox -->
+                            <CheckBox Grid.Column="2" Content="Active"
+                                      IsChecked="{Binding IsBranchActive, UpdateSourceTrigger=PropertyChanged}"
+                                      Style="{StaticResource CheckBoxStyle}"
+                                      VerticalAlignment="Center"
+                                      Margin="0,0,16,0"
+                                      Focusable="False"/>
+
+                            <!-- Save / Add Branch Button -->
+                            <Button Grid.Column="3" 
+                                    Content="{Binding BranchSaveButtonText}"
+                                    Command="{Binding SaveBranchCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,6,0"
+                                    Padding="12,4"/>
+
+                            <!-- Edit Branch Button -->
+                            <Button Grid.Column="4" 
+                                    Content="Edit"
+                                    Command="{Binding EditBranchCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,6,0"
+                                    Padding="12,4"/>
+
+                            <!-- Delete Branch Button -->
+                            <Button Grid.Column="5" 
+                                    Content="Delete"
+                                    Command="{Binding DeleteBranchCommand}"
+                                    Style="{StaticResource DangerButtonStyle}"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,6,0"
+                                    Padding="12,4"/>
+
+                            <!-- Clear Branch Form Button -->
+                            <Button Grid.Column="6" 
+                                    Content="Clear"
+                                    Command="{Binding NewBranchCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    VerticalAlignment="Center"
+                                    Padding="12,4"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Branch Data Grid -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding BranchList}"
+                              SelectedItem="{Binding SelectedBranch, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource DataGridStyle}"
+                              Margin="0,4,0,0"
+                              AutoGenerateColumns="False"
+                              SelectionMode="Single"
+                              CanUserAddRows="False"
+                              IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID"
+                                                Binding="{Binding Id}"
+                                                Width="Auto"
+                                                Visibility="Hidden"/>
+                            <DataGridTextColumn Header="Branch Code"
+                                                Binding="{Binding BranchCode}"
+                                                Width="120"/>
+                            <DataGridTextColumn Header="Branch Name"
+                                                Binding="{Binding BranchName}"
+                                                Width="*"/>
+                            <DataGridCheckBoxColumn Header="Active"
+                                                    Binding="{Binding IsActive}"
+                                                    Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
             </Grid>
         </Border>
     </Grid>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 using PointOfSale.Core.Enums;
 using PointOfSale.Core.Interfaces.Repositories.Purchasing;
@@ -150,6 +151,8 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                             lines.Add(MapPurchaseNoteLine(reader));
                         }
                     }
+
+                    await PopulateMissingPurchaseLineUomIdsAsync(connection, lines);
                 }
             }
             catch (SqlException ex)
@@ -308,6 +311,7 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
         {
             var table = new DataTable();
             table.Columns.Add("ProductId", typeof(int));
+            table.Columns.Add("UnitMeasureId", typeof(int));
             table.Columns.Add("UnitPrice", typeof(decimal));
             table.Columns.Add("QuantityOrdered", typeof(decimal));
             table.Columns.Add("LineDiscount", typeof(decimal));
@@ -317,6 +321,7 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
             {
                 table.Rows.Add(
                     line.ProductId,
+                    line.UnitMeasureId,
                     line.UnitPrice,
                     line.QuantityOrdered,
                     line.LineDiscount,
@@ -378,6 +383,7 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 GoodsPurchaseNoteId = GetOptionalValue<long>(record, "GoodsPurchaseNoteId"),
                 ProductId = GetOptionalValue<int>(record, "ProductId"),
                 ProductName = GetOptionalValue<string>(record, "ProductName"),
+                UnitMeasureId = GetOptionalValue<int>(record, "UnitMeasureId"),
                 QuantityOrdered = GetOptionalValue<decimal>(record, "QuantityOrdered"),
                 QuantityReceived = quantityReceived,
                 AlreadyReceivedQuantity = alreadyReceivedQuantity,
@@ -390,6 +396,75 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                     ? GetValue<bool>(record, "IsTaxApplicable")
                     : taxAmount > 0m
             };
+        }
+
+        private async Task PopulateMissingPurchaseLineUomIdsAsync(SqlConnection connection, IList<GoodsPurchaseNoteLine> lines)
+        {
+            var productIds = lines
+                .Where(line => line.UnitMeasureId <= 0 && line.ProductId > 0)
+                .Select(line => line.ProductId)
+                .Distinct()
+                .ToList();
+
+            if (productIds.Count == 0)
+            {
+                return;
+            }
+
+            var parameterNames = productIds
+                .Select((_, index) => $"@ProductId{index}")
+                .ToList();
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.Text;
+                command.CommandText = $@"
+SELECT
+    p.Id AS ProductId,
+    p.UnitMeasureId,
+    um.Code AS UnitMeasureCode
+FROM [Inventory].[Product] p
+LEFT JOIN [Inventory].[UnitMeasure] um ON um.Id = p.UnitMeasureId
+WHERE p.Id IN ({string.Join(", ", parameterNames)});";
+
+                for (var i = 0; i < productIds.Count; i++)
+                {
+                    command.Parameters.Add(parameterNames[i], SqlDbType.Int).Value = productIds[i];
+                }
+
+                var fallbackUnits = new Dictionary<int, ProductUnitMeasureFallback>();
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        fallbackUnits[GetValue<int>(reader, "ProductId")] = new ProductUnitMeasureFallback
+                        {
+                            UnitMeasureId = GetValue<int>(reader, "UnitMeasureId"),
+                            UnitMeasureCode = GetOptionalValue<string>(reader, "UnitMeasureCode")
+                        };
+                    }
+                }
+
+                foreach (var line in lines.Where(line => line.UnitMeasureId <= 0))
+                {
+                    ProductUnitMeasureFallback fallback;
+                    if (fallbackUnits.TryGetValue(line.ProductId, out fallback))
+                    {
+                        line.UnitMeasureId = fallback.UnitMeasureId;
+
+                        if (string.IsNullOrWhiteSpace(line.UnitMeasure))
+                        {
+                            line.UnitMeasure = fallback.UnitMeasureCode;
+                        }
+                    }
+                }
+            }
+        }
+
+        private sealed class ProductUnitMeasureFallback
+        {
+            public int UnitMeasureId { get; set; }
+            public string UnitMeasureCode { get; set; }
         }
 
         private static void AddDecimalParameter(SqlCommand command, string name, decimal value)

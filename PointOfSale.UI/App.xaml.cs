@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Threading;
 using System.Windows;
 using System.Windows.Markup;
@@ -115,6 +115,7 @@ namespace PointOfSale.UI
             services.AddSingleton<ICompanyRepository, CompanyRepository>();
             services.AddSingleton<ITaxConfigurationRepository, TaxConfigurationRepository>();
             services.AddSingleton<IBankRepository, BankRepository>();
+            services.AddSingleton<IBankBranchRepository, BankBranchRepository>();
             services.AddSingleton<IPaymentTerminalRepository, PaymentTerminalRepository>();
             services.AddSingleton<IAccountMappingRepository, AccountMappingRepository>();
 
@@ -129,6 +130,7 @@ namespace PointOfSale.UI
 #else
             services.AddSingleton<ISalesInvoiceReportPreviewService, SalesInvoiceReportPreviewService>();
 #endif
+            services.AddSingleton<IUOMConversionService, PointOfSale.Infrastructure.Service.UOMConversionService>();
             services.AddSingleton<IExcelService, ExcelService>();
             services.AddSingleton<IBarcodeService, BarcodeService>();
             services.AddSingleton<CloudStorageService>();

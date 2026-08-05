@@ -16,6 +16,7 @@ using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Interfaces.Repositories.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.System;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Models.Purchasing;
 using PointOfSale.Core.Services;
@@ -34,6 +35,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         private readonly IGoodsReceiveNoteRepository _goodsReceiveNoteRepository;
         private readonly ITaxConfigurationRepository _taxConfigurationRepository;
         private readonly IUserSessionService _userSessionService;
+        private readonly IUOMConversionService _uomConversionService;
         private readonly DispatcherTimer _draftAutoSaveTimer;
         private bool _isResettingPurchaseOrder;
         private bool _isDraftAutoSaveInProgress;
@@ -53,7 +55,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                                          IGoodsPurchaseNoteRepository goodsPurchaseNoteRepository,
                                          IGoodsReceiveNoteRepository goodsReceiveNoteRepository,
                                          ITaxConfigurationRepository taxConfigurationRepository,
-                                         IUserSessionService userSessionService)
+                                         IUserSessionService userSessionService,
+                                         IUOMConversionService uomConversionService)
         {
             _supplierRepository = supplierRepository;
             _productRepository = productRepository;
@@ -61,6 +64,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             _goodsReceiveNoteRepository = goodsReceiveNoteRepository;
             _taxConfigurationRepository = taxConfigurationRepository;
             _userSessionService = userSessionService;
+            _uomConversionService = uomConversionService ?? throw new ArgumentNullException(nameof(uomConversionService));
 
             GoodsPurchaseNoteLines = new ObservableCollection<GoodsPurchaseNoteLine>();
             GoodsPurchaseNoteLines.CollectionChanged += GoodsPurchaseNoteLines_CollectionChanged;
@@ -84,6 +88,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             {
                 if (e.PropertyName == nameof(SelectedSupplier) ||
                     e.PropertyName == nameof(SelectedProduct) ||
+                    e.PropertyName == nameof(SelectedPurchaseUnitMeasure) ||
                     e.PropertyName == nameof(Quantity) ||
                     e.PropertyName == nameof(UnitPrice) ||
                     e.PropertyName == nameof(BillDiscount) ||
@@ -254,7 +259,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 if (_selectedProduct != null)
                 {
                     UnitPrice = _selectedProduct.StandardCost;
-                    SelectedUnitMeasureName = _selectedProduct.UnitMeasureCode;
+                    _ = LoadAvailablePurchaseUnitMeasuresAsync(_selectedProduct.ProductId);
                     ClearErrors(nameof(UnitPrice));
 
                     _ = LoadLastGrnCostPriceAsync(_selectedProduct.ProductId);
@@ -263,6 +268,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 {
                     LastGrnCostPrice = 0m;
                     SelectedUnitMeasureName = null;
+                    SelectedPurchaseUnitMeasure = null;
+                    AvailablePurchaseUnitMeasures.Clear();
                 }
 
                 // Only update AddLineCommand, not SaveGRN
@@ -282,6 +289,23 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         {
             get => _selectedUnitMeasureName;
             private set => SetProperty(ref _selectedUnitMeasureName, value);
+        }
+
+        public ObservableCollection<ProductUnitMeasureOption> AvailablePurchaseUnitMeasures { get; } =
+            new ObservableCollection<ProductUnitMeasureOption>();
+
+        private ProductUnitMeasureOption _selectedPurchaseUnitMeasure;
+        public ProductUnitMeasureOption SelectedPurchaseUnitMeasure
+        {
+            get => _selectedPurchaseUnitMeasure;
+            set
+            {
+                if (SetProperty(ref _selectedPurchaseUnitMeasure, value))
+                {
+                    SelectedUnitMeasureName = value?.DisplayName;
+                    (AddLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                }
+            }
         }
 
         private string _quantity;
@@ -382,6 +406,30 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             }
         }
 
+        private async Task LoadAvailablePurchaseUnitMeasuresAsync(int productId)
+        {
+            try
+            {
+                AvailablePurchaseUnitMeasures.Clear();
+
+                var units = await _uomConversionService.GetDistinctUOMsForProductAsync(productId);
+                foreach (var unit in units)
+                {
+                    AvailablePurchaseUnitMeasures.Add(unit);
+                }
+
+                SelectedPurchaseUnitMeasure =
+                    AvailablePurchaseUnitMeasures.FirstOrDefault(unit => unit.IsBaseUnit) ??
+                    AvailablePurchaseUnitMeasures.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                SelectedPurchaseUnitMeasure = null;
+                SelectedUnitMeasureName = null;
+                MessageBox.Show($"Failed to load product UOMs: {ex.Message}", "Unit Measure", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
         private async Task LoadSuppliers()
         {
             var supplierList = await _supplierRepository.GetAllAsync();
@@ -467,6 +515,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         }
         private bool CanAddItem => !HasErrors &&
             SelectedProduct != null &&
+            SelectedPurchaseUnitMeasure != null &&
             UnitPrice > 0 &&
             !string.IsNullOrEmpty(Quantity);
         private void AddLineItem()
@@ -478,12 +527,15 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             var quantity = Convert.ToDecimal(Quantity);
             ShowStockLimitWarning(quantity);
 
-            var existingLine = GoodsPurchaseNoteLines.FirstOrDefault(line => line.ProductId == SelectedProduct.ProductId);
+            var existingLine = GoodsPurchaseNoteLines.FirstOrDefault(line =>
+                line.ProductId == SelectedProduct.ProductId &&
+                line.UnitMeasureId == SelectedPurchaseUnitMeasure.UnitMeasureId);
 
             if (existingLine != null)
             {
                 existingLine.QuantityOrdered += quantity;
                 existingLine.UnitPrice = UnitPrice;
+                existingLine.UnitMeasure = SelectedPurchaseUnitMeasure.DisplayName;
                 existingLine.LastGrnCostPrice = LastGrnCostPrice;
                 existingLine.IsTaxApplicable = SelectedProduct.IsTaxApplicable;
             }
@@ -494,7 +546,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                     ProductId = SelectedProduct.ProductId,
                     ProductName = SelectedProduct.ProductName,
                     QuantityOrdered = quantity,
-                    UnitMeasure = SelectedProduct.UnitMeasureCode,
+                    UnitMeasureId = SelectedPurchaseUnitMeasure.UnitMeasureId,
+                    UnitMeasure = SelectedPurchaseUnitMeasure.DisplayName,
                     UnitPrice = UnitPrice,
                     LastGrnCostPrice = LastGrnCostPrice,
                     IsTaxApplicable = SelectedProduct.IsTaxApplicable
@@ -946,6 +999,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             Barcode = string.Empty;
             LastGrnCostPrice = 0;
             SelectedUnitMeasureName = null;
+            SelectedPurchaseUnitMeasure = null;
+            AvailablePurchaseUnitMeasures.Clear();
 
             ClearErrors(nameof(UnitPrice));
             ClearErrors(nameof(Quantity));
@@ -1015,8 +1070,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             ClearErrors(nameof(OrderBy));
             if (string.IsNullOrWhiteSpace(OrderBy))
                 AddError(nameof(OrderBy), "Order by is required.");
-            else if (!Regex.IsMatch(OrderBy, @"^[a-zA-Z\s]+$"))
-                AddError(nameof(OrderBy), "Cannot contain special character and numbers");
+            else if (!Regex.IsMatch(OrderBy, @"^[a-zA-Z\s\.\-']+$"))
+                AddError(nameof(OrderBy), "Only letters, spaces, periods, hyphens, and apostrophes are allowed.");
         }
         private void ValidateSelectedProduct()
         {

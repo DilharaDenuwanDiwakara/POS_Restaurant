@@ -24,6 +24,7 @@ namespace PointOfSale.Core.Models.Purchasing
 
 
         public string ProductName { get; set; }
+        public int UnitMeasureId { get; set; }
         public string UnitMeasure { get; set; }
 
         public decimal UnitPrice

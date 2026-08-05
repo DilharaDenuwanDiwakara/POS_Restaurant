@@ -44,7 +44,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             NewProductCommand = new RelayCommand(_ => CreateNewProduct());
             SearchProductCommand = new AsyncRelayCommand(async _ => await SearchProduct(), _ => CanSearchProduct);
             EditProductCommand = new RelayCommand(_ => SetEditMode(true), _ => SelectedProduct != null);
-            DeleteProductCommand = new AsyncRelayCommand(async _ => await DeleteProductAsync(), _ => CanDeleteProduct && SelectedProduct != null);
+            DeleteProductCommand = new AsyncRelayCommand(async _ => await DeleteProductAsync(), _ => SelectedProduct != null);
             AddUnitConversionCommand = new RelayCommand(_ => AddUnitConversion(), _ => CanAddUnitConversion);
             RemoveUnitConversionCommand = new RelayCommand(RemoveUnitConversion, parameter => parameter is ProductUnitConversionViewModel || SelectedUnitConversion != null);
 
@@ -473,7 +473,9 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         private async Task DeleteProductAsync()
         {
-            if (SelectedProduct == null) return;
+            var productToDelete = SelectedProduct;
+            if (productToDelete == null) return;
+
             if (!CanDeleteProduct)
             {
                 MessageBox.Show("You do not have permission to delete products.", "Permission Denied", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -483,16 +485,16 @@ namespace PointOfSale.UI.ViewModels.Inventory
             try
             {
                 var result = MessageBox.Show(
-                    "Are you sure you want to delete?",
+                    $"Are you sure you want to delete '{productToDelete.ProductName}'?",
                     "Confirm Delete",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    await _productRepository.DeleteAsync(SelectedProduct.ProductId);
+                    await _productRepository.DeleteAsync(productToDelete.ProductId);
                     MessageBox.Show("Product deleted successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    ProductList.Remove(SelectedProduct);
+                    ProductList.Remove(productToDelete);
                     CreateNewProduct();
                 }
             }

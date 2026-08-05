@@ -141,12 +141,14 @@
     <Compile Include="Repositories\Security\UserRepository.cs" />
     <Compile Include="Repositories\System\AccountMappingRepository.cs" />
     <Compile Include="Repositories\System\BankRepository.cs" />
+    <Compile Include="Repositories\System\BankBranchRepository.cs" />
     <Compile Include="Repositories\System\BranchRepository.cs" />
     <Compile Include="Repositories\System\CompanyRepository.cs" />
     <Compile Include="Repositories\System\TaxConfigurationRepository.cs" />
     <Compile Include="Service\BarcodeService.cs" />
     <Compile Include="Service\ExcelService.cs" />
     <Compile Include="Service\PrintService.cs" />
+    <Compile Include="Service\UOMConversionService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PointOfSale.Core\PointOfSale.Core.csproj">

@@ -5,8 +5,3 @@ BEGIN
         CONSTRAINT [DF_ProductUnitConversion_IsMultiply] DEFAULT (1);
 END;
 GO
-
-UPDATE [Inventory].[ProductUnitConversion]
-SET [IsMultiply] = 1
-WHERE [IsMultiply] IS NULL;
-GO

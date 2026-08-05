@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -44,8 +44,10 @@ namespace PointOfSale.Core.Models.Purchasing
         public decimal? CreditLimit { get; set; }
 
         // Bank Details
-        public string BankName { get; set; }
-        public string BankBranch { get; set; }
+        public int? BankId { get; set; }
+        public int? BankBranchId { get; set; }
+        public string BankNameDisplay { get; set; }
+        public string BranchNameDisplay { get; set; }
         public string AccountName { get; set; }
         public string AccountNumber { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -15,6 +15,7 @@ using PointOfSale.Core.Interfaces.Repositories.Accounts;
 using PointOfSale.Core.Interfaces.Repositories.System;
 using PointOfSale.Core.Models.Accounts;
 using PointOfSale.Core.Models.Purchasing;
+using PointOfSale.Core.Models.System;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
 using PointOfSale.UI.Views.Accounts;
@@ -28,18 +29,21 @@ namespace PointOfSale.UI.ViewModels.Accounts
         private readonly IUserSessionService _userSessionService;
         private readonly IServiceProvider _serviceProvider;
         private readonly IBankRepository _bankRepository;
+        private readonly IBankBranchRepository _bankBranchRepository;
 
         public SupplierPaymentViewModel(ISupplierRepository supplierRepository,
                                         ISupplierPaymentRepository supplierPaymentRepository,
                                         IUserSessionService userSessionService,
                                         IServiceProvider serviceProvider,
-                                        IBankRepository bankRepository)
+                                        IBankRepository bankRepository,
+                                        IBankBranchRepository bankBranchRepository)
         {
             _supplierRepository = supplierRepository;
             _supplierPaymentRepository = supplierPaymentRepository;
             _userSessionService = userSessionService;
             _serviceProvider = serviceProvider;
             _bankRepository = bankRepository ?? throw new ArgumentNullException(nameof(bankRepository));
+            _bankBranchRepository = bankBranchRepository ?? throw new ArgumentNullException(nameof(bankBranchRepository));
 
             Suppliers = new ObservableCollection<Supplier>();
             PayableItems = new ObservableCollection<SupplierPayableItem>();
@@ -60,9 +64,38 @@ namespace PointOfSale.UI.ViewModels.Accounts
         public ObservableCollection<SupplierPayableItem> PayableItems { get; }
         public SupplierPayment Payment { get; set; } = new SupplierPayment();
 
-        public ObservableCollection<string> AvailableBanks { get; } = new ObservableCollection<string>();
+        public ObservableCollection<Bank> AvailableBanks { get; } = new ObservableCollection<Bank>();
+        public ObservableCollection<BankBranch> AvailableBranches { get; } = new ObservableCollection<BankBranch>();
+        private bool _isLoadingSupplier;
 
         #region Properties
+
+        private int? _selectedBankId;
+        public int? SelectedBankId
+        {
+            get => _selectedBankId;
+            set
+            {
+                if (SetProperty(ref _selectedBankId, value))
+                {
+                    SelectedBranchId = null;
+                    _ = LoadBranchesForSelectedBankAsync();
+                    OnPropertyChanged(nameof(IsBranchEnabled));
+
+                    var selectedBank = AvailableBanks.FirstOrDefault(b => b.Id == value);
+                    BankName = selectedBank?.BankName;
+                }
+            }
+        }
+
+        private int? _selectedBranchId;
+        public int? SelectedBranchId
+        {
+            get => _selectedBranchId;
+            set => SetProperty(ref _selectedBranchId, value);
+        }
+
+        public bool IsBranchEnabled => SelectedBankId.HasValue;
 
         private string _bankName;
         public string BankName
@@ -105,9 +138,10 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 {
                     if (_selectedSupplier != null)
                     {
-                        BankName = _selectedSupplier.BankName;
                         AccountNumber = _selectedSupplier.AccountNumber;
                         AccountName = _selectedSupplier.AccountName;
+
+                        _ = UpdateSupplierBankSelectionAsync(_selectedSupplier);
 
                         // Auto-select payment method if the supplier has a default one
                         if (_selectedSupplier.DefaultPaymentMethod != null)
@@ -123,6 +157,8 @@ namespace PointOfSale.UI.ViewModels.Accounts
                     {
                         // Clear fields if supplier is deselected
                         BankName = string.Empty;
+                        SelectedBankId = null;
+                        SelectedBranchId = null;
                         AccountNumber = string.Empty;
                         AccountName = string.Empty;
                         SelectedPaymentMethod = null;
@@ -136,6 +172,16 @@ namespace PointOfSale.UI.ViewModels.Accounts
                         LoadPayablesCommand.Execute(null);
                     }
                 }
+            }
+        }
+
+        private async Task UpdateSupplierBankSelectionAsync(Supplier supplier)
+        {
+            SelectedBankId = supplier.BankId;
+            if (SelectedBankId.HasValue)
+            {
+                await LoadBranchesForSelectedBankAsync();
+                SelectedBranchId = supplier.BankBranchId;
             }
         }
 
@@ -193,11 +239,40 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 AvailableBanks.Clear();
                 var banks = await _bankRepository.GetAllAsync();
                 foreach (var bank in banks.Where(b => b.IsActive))
-                    AvailableBanks.Add(bank.BankName);
+                    AvailableBanks.Add(bank);
+
+                if (!string.IsNullOrWhiteSpace(BankName))
+                {
+                    var matchedBank = AvailableBanks.FirstOrDefault(b => string.Equals(b.BankName, BankName, StringComparison.OrdinalIgnoreCase));
+                    if (matchedBank != null)
+                    {
+                        SelectedBankId = matchedBank.Id;
+                    }
+                }
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Failed to load banks: {ex.Message}";
+            }
+        }
+
+        private async Task LoadBranchesForSelectedBankAsync()
+        {
+            try
+            {
+                AvailableBranches.Clear();
+                if (SelectedBankId.HasValue)
+                {
+                    var branches = await _bankBranchRepository.GetByBankIdAsync(SelectedBankId.Value);
+                    foreach (var branch in branches.Where(b => b.IsActive))
+                    {
+                        AvailableBranches.Add(branch);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load branches: {ex.Message}";
             }
         }
 

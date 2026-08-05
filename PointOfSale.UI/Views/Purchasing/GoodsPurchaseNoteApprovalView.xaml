@@ -103,9 +103,9 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Orientation="Vertical" Margin="0,0,0,8">
-                        <TextBlock Text="{Binding SelectedPO.PONumber, StringFormat='PO: {0}'}" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
-                        <TextBlock Text="{Binding SelectedPO.SupplierName, StringFormat='Supplier: {0}'}" Style="{StaticResource LabelStyle}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="Request By: " Style="{StaticResource LabelStyle}"/>
+                        <TextBlock Text="{Binding SelectedPO.RequestedBy}" Style="{StaticResource LabelStyle}"/>
                     </StackPanel>
 
                     <DataGrid Grid.Row="1"

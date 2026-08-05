@@ -67,7 +67,10 @@ namespace PointOfSale.Core.Models.Purchasing
             OnPropertyChanged(nameof(HasQuantityDiscrepancy));
         }
 
+        public int UnitMeasureId { get; set; }
         public string UnitMeasure { get; set; }
+        public decimal BaseQuantityReceived { get; set; }
+        public decimal BaseUnitCost { get; set; }
 
         private DateTime? _expiryDate;
         public DateTime? ExpiryDate

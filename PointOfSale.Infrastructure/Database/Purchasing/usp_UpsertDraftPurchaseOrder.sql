@@ -93,6 +93,7 @@ BEGIN
             (
                 [GoodsPurchaseNoteId],
                 [ProductId],
+                [UnitMeasureId],
                 [QuantityOrdered],
                 [QuantityReceived],
                 [UnitPrice],
@@ -102,6 +103,7 @@ BEGIN
             SELECT
                 @CurrentOrderId,
                 [ProductId],
+                [UnitMeasureId],
                 [QuantityOrdered],
                 0,
                 [UnitPrice],

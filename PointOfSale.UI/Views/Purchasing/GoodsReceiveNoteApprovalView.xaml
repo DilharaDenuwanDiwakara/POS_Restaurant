@@ -147,6 +147,15 @@
                               Style="{StaticResource DataGridStyle}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Item" Binding="{Binding ProductName}" Width="*"/>
+
+                            <DataGridTextColumn Header="UOM" Binding="{Binding UnitMeasure}" Width="80">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
                             <DataGridTextColumn Header="Ordered Qty" Binding="{Binding QuantityOrdered, StringFormat=N3}" Width="110">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">

@@ -769,13 +769,13 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             var baseUnit = new RecipeUnitDto
             {
                 UnitId = ingredient.UnitMeasureId,
-                        UnitCode = !string.IsNullOrWhiteSpace(ingredient.UnitMeasureCode)
+                UnitCode = !string.IsNullOrWhiteSpace(ingredient.UnitMeasureCode)
                             ? ingredient.UnitMeasureCode
                             : ingredient.UnitMeasureName,
-                        ConversionRate = 1m,
-                        IsMultiply = true,
-                        IsBaseUnit = true
-                    };
+                ConversionRate = 1m,
+                IsMultiply = true,
+                IsBaseUnit = true
+            };
 
             AvailableUnits.Add(baseUnit);
             AddGlobalRecipeUnitConversions(ingredient.UnitMeasureCode, ingredient.UnitMeasureName);

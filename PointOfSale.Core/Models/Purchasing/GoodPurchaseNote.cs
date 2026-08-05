@@ -20,6 +20,11 @@ namespace PointOfSale.Core.Models.Purchasing
             set => Note = value;
         }
         public string OrderBy { get; set; }
+        public string RequestedBy
+        {
+            get => OrderBy;
+            set => OrderBy = value;
+        }
         public DateTime OrderDate { get; set; } = DateTime.Now;
         public DateTime? ExpectedDeliveryDate { get; set; }
         public string Status { get; set; }

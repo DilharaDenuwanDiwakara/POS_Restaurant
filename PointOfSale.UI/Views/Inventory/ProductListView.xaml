@@ -35,7 +35,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        
+
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -66,7 +66,7 @@
                                   Width="220"
                                   Style="{StaticResource ComboBoxStyle}"
                                   ItemTemplate="{StaticResource HierarchicalCategoryTemplate}"
-                                  Margin="0"/> 
+                                  Margin="0"/>
 
                         <TextBlock Grid.Row="0" Grid.Column="2"
                                    Text="Item Type"
@@ -95,7 +95,6 @@
                                  Style="{StaticResource SearchTextBoxStyle}"
                                  CharacterCasing="Upper"
                                  Width="220"
-                                 VerticalAlignment="Top"
                                  PreviewTextInput="AlphaNumericWithSpace_PreviewTextInput"
                                  DataObject.Pasting="AlphaNumericWithSpace_Pasting"
                                  Margin="12,0,0,0"/>
@@ -105,19 +104,18 @@
                                 Style="{StaticResource SearchButtonStyle}" 
                                 ToolTip="Search Products"
                                 VerticalAlignment="Center"
-                                Margin="8,0,0,0">
-                            
-                        </Button>
-                    </Grid>
-                </Border>
+                                Margin="8,0,0,0"/>
 
-                <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}" Margin="0,4,0,0">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Export Excel"
-                                Command="{Binding ExportToExcelCommand}"
-                                Style="{StaticResource ExportExcelButtonStyle}"
-                                ToolTip="Export Products to Excel (.xlsx)"/>
-                    </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="1" Grid.Column="5"
+                                    Margin="8,0,0,0">
+                            <Button Content="Export"
+                                    Command="{Binding ExportToExcelCommand}"
+                                    Style="{StaticResource ExportExcelButtonStyle}"
+                                    ToolTip="Export Products to Excel (.xlsx)"
+                                    />
+                        </StackPanel>
+                        
+                    </Grid>
                 </Border>
 
                 <!-- Data Grid -->

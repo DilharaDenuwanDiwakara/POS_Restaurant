@@ -176,25 +176,29 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                     Supplier supplier = null;
                     const string sql = @"
                     SELECT
-                        Id AS SupplierId,
-                        Code AS SupplierCode,
-                        Name AS SupplierName,
-                        TaxRegistrationNumber,
-                        BusinessRegistrationNumber,
-                        Address,
-                        DefaultPaymentMethod,
-                        BankName,
-                        BankBranch,
-                        AccountNumber,
-                        AccountName,
-                        IsCredit,
-                        CreditLimit,
-                        CreditPeriodDays,
-                        IsActive,
-                        CreatedBy,
-                        UpdatedBy
-                    FROM [Purchasing].[Supplier]
-                    WHERE Id = @SupplierId;";
+                        s.Id AS SupplierId,
+                        s.Code AS SupplierCode,
+                        s.Name AS SupplierName,
+                        s.TaxRegistrationNumber,
+                        s.BusinessRegistrationNumber,
+                        s.Address,
+                        s.DefaultPaymentMethod,
+                        s.BankId,
+                        s.BankBranchId,
+                        b.BankName,
+                        bb.BranchName AS BankBranch,
+                        s.AccountNumber,
+                        s.AccountName,
+                        s.IsCredit,
+                        s.CreditLimit,
+                        s.CreditPeriodDays,
+                        s.IsActive,
+                        s.CreatedBy,
+                        s.UpdatedBy
+                    FROM [Purchasing].[Supplier] s
+                    LEFT JOIN [System].[Bank] b ON s.BankId = b.Id
+                    LEFT JOIN [System].[BankBranch] bb ON s.BankBranchId = bb.Id
+                    WHERE s.Id = @SupplierId;";
 
                     using (var command = new SqlCommand(sql, connection))
                     {
@@ -257,8 +261,8 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
             AddParameter(command, "@Address", SqlDbType.NVarChar, supplier.Address, 255);
 
             AddParameter(command, "@DefaultPaymentMethod", SqlDbType.NVarChar, supplier.DefaultPaymentMethod?.ToString(), 50);
-            AddParameter(command, "@BankName", SqlDbType.NVarChar, supplier.BankName, 100);
-            AddParameter(command, "@BankBranch", SqlDbType.NVarChar, supplier.BankBranch, 50);
+            AddParameter(command, "@BankId", SqlDbType.Int, supplier.BankId);
+            AddParameter(command, "@BankBranchId", SqlDbType.Int, supplier.BankBranchId);
             AddParameter(command, "@AccountName", SqlDbType.NVarChar, supplier.AccountName, 100);
             AddParameter(command, "@AccountNumber", SqlDbType.NVarChar, supplier.AccountNumber, 50);
 
@@ -357,8 +361,10 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                     ? (SupplierPaymentMethod?)method
                     : null,
 
-                BankName = GetValue<string>(record, "BankName"),
-                BankBranch = GetValue<string>(record, "BankBranch"),
+                BankId = GetNullableValue<int>(record, "BankId"),
+                BankBranchId = GetNullableValue<int>(record, "BankBranchId"),
+                BankNameDisplay = GetOptionalValue<string>(record, "BankName"),
+                BranchNameDisplay = GetOptionalValue<string>(record, "BankBranch"),
                 AccountName = GetValue<string>(record, "AccountName"),
                 AccountNumber = GetValue<string>(record, "AccountNumber"),
 

@@ -88,6 +88,11 @@ namespace PointOfSale.UI.Views.Purchasing
         {
             if (e.Key == Key.Enter)
             {
+                if (sender is TextBox multilineTextBox && multilineTextBox.AcceptsReturn)
+                {
+                    return;
+                }
+
                 // Push latest value into ViewModel → triggers validation
                 if (sender is ComboBox cmb)
                 {

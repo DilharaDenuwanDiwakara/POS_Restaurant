@@ -69,6 +69,7 @@
     <Compile Include="Interfaces\Repositories\Inventory\ILocationRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\IPaymentTerminalRepository.cs" />
     <Compile Include="Interfaces\Repositories\System\IBankRepository.cs" />
+    <Compile Include="Interfaces\Repositories\System\IBankBranchRepository.cs" />
     <Compile Include="Interfaces\Repositories\System\IAccountMappingRepository.cs" />
     <Compile Include="Models\Accounts\Entities\Account.cs" />
     <Compile Include="DTOs\AccountDto.cs" />
@@ -145,6 +146,7 @@
     <Compile Include="Interfaces\Services\IConfigurationService.cs" />
     <Compile Include="Interfaces\Services\IDialogService.cs" />
     <Compile Include="Interfaces\Services\IExcelService.cs" />
+    <Compile Include="Interfaces\Services\IUOMConversionService.cs" />
     <Compile Include="Interfaces\Services\ISalesInvoiceReportPreviewService.cs" />
     <Compile Include="Models\Accounts\DTOs\CustomerAdvance.cs" />
     <Compile Include="Models\Accounts\DTOs\CustomerAdvanceList.cs" />
@@ -172,6 +174,7 @@
     <Compile Include="Models\Inventory\Location.cs" />
     <Compile Include="Models\Inventory\Product.cs" />
     <Compile Include="Models\Inventory\ProductUnitConversion.cs" />
+    <Compile Include="Models\Inventory\ProductUnitMeasureOption.cs" />
     <Compile Include="Models\Inventory\ProductBatch.cs" />
     <Compile Include="Models\Inventory\StockAdjustment.cs" />
     <Compile Include="Models\Inventory\StockTransfer.cs" />
@@ -217,6 +220,7 @@
     <Compile Include="Models\Security\User.cs" />
     <Compile Include="Models\System\AccountMappingKeys.cs" />
     <Compile Include="Models\System\Bank.cs" />
+    <Compile Include="Models\System\BankBranch.cs" />
     <Compile Include="Models\System\Branch.cs" />
     <Compile Include="Models\System\Company.cs" />
     <Compile Include="Models\System\TaxConfiguration.cs" />

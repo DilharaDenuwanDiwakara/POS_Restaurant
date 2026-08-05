@@ -209,7 +209,9 @@
 
                                 <RadioButton Command="{Binding NavigateToRoomRegisterCommand}" 
                                              Style="{StaticResource Style.Nav.RadioButton}"
-                                             Visibility="{Binding CanNavRoomRegister, Converter={StaticResource BoolToVisibility}}">
+                                             Visibility="Collapsed">
+                                             <!--Visibility="{Binding CanNavRoomRegister, Converter={StaticResource BoolToVisibility}}"-->
+                                          
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Rooms"/>
                                     </StackPanel>
@@ -217,7 +219,8 @@
 
                                 <RadioButton Command="{Binding NavigateToRoomBookingCommand}" 
                                              Style="{StaticResource Style.Nav.RadioButton}"
-                                             Visibility="{Binding CanNavRoomBooking, Converter={StaticResource BoolToVisibility}}">
+                                             Visibility="Collapsed">
+                                            <!--Visibility="{Binding CanNavRoomBooking, Converter={StaticResource BoolToVisibility}}"-->
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Room Bookings"/>
                                     </StackPanel>

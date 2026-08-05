@@ -471,6 +471,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                             ProductName = line.ProductName,
                             QuantityOrdered = line.QuantityOrdered,
                             QuantityReceived = remainingQty,
+                            UnitMeasureId = line.UnitMeasureId,
                             UnitMeasure = line.UnitMeasure,
                             OrderedPrice = line.UnitPrice,
                             UnitPrice = line.UnitPrice,
@@ -595,6 +596,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                     if (poLine != null)
                     {
                         line.QuantityOrdered = poLine.QuantityOrdered;
+                        line.UnitMeasureId = poLine.UnitMeasureId;
                         line.UnitMeasure = poLine.UnitMeasure;
                         line.OrderedPrice = poLine.UnitPrice;
                         line.TrackExpiry = poLine.TrackExpiry;
