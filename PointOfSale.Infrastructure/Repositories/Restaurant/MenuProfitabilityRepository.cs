@@ -36,6 +36,7 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                             {
                                 CategoryName = GetValue<string>(reader, "CategoryName"),
                                 MenuItemName = GetValue<string>(reader, "MenuItemName"),
+                                ItemCode = GetValue<string>(reader, "ItemCode"),
                                 VariantName = GetValue<string>(reader, "VariantName"),
                                 TotalBOMCost = GetValue<decimal>(reader, "TotalBOMCost"),
                                 SellingPrice = GetValue<decimal>(reader, "SellingPrice"),

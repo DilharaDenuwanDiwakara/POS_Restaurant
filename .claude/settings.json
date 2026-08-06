@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& \"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" PointOfSale.sln /p:Configuration=Debug /v:minimal /nologo 2>&1)",
+      "Bash(sqlcmd -S 68.178.166.190,1434 -U sa -P 'Cey_2025' -d POS_Restaurant -C -Q \"SELECT OBJECT_ID\\('Sales.rptGetCashTransactionReceipt'\\) AS ExistsCheck\" -h -1 -W)",
+      "Bash(sqlcmd -S 68.178.166.190,1434 -U sa -P 'Cey_2025' -d POS_Restaurant -C -y 0 -Q \"SET NOCOUNT ON; SELECT OBJECT_DEFINITION\\(OBJECT_ID\\('Auth.uspChangePassword'\\)\\) AS def\" -o \"C:\\\\tmp\\\\sp_dump\\\\changepwd.txt\" -w 8000)",
+      "Bash(sqlcmd -S 68.178.166.190,1434 -U sa -P 'Cey_2025' -d POS_Restaurant -C -Q \"SELECT c.name FROM sys.columns c JOIN sys.tables t ON t.object_id=c.object_id JOIN sys.schemas s ON s.schema_id=t.schema_id WHERE s.name='Auth' AND t.name='User' ORDER BY c.column_id\" -h -1 -W)",
+      "Bash(sqlcmd -S 68.178.166.190,1434 -U sa -P 'Cey_2025' -d POS_Restaurant -C -Q \"EXEC [Auth].[uspChangePassword] @UserId=1, @NewPasswordHash='TEST_HASH_VALUE_XYZ'\" -h -1 -W)"
+    ]
+  }
+}

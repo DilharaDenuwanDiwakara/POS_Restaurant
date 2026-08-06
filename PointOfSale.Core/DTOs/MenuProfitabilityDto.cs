@@ -4,6 +4,7 @@ namespace PointOfSale.Core.DTOs
     {
         public string CategoryName { get; set; }
         public string MenuItemName { get; set; }
+        public string ItemCode { get; set; }
         public string VariantName { get; set; }
         public decimal TotalBOMCost { get; set; }
         public decimal SellingPrice { get; set; }

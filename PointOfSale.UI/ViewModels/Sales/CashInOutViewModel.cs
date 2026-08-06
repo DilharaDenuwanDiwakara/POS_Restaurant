@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using PointOfSale.Core.Interfaces.Repositories.Sales;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Sales;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.Reports;
 
 namespace PointOfSale.UI.ViewModels.Sales
 {
@@ -16,11 +18,13 @@ namespace PointOfSale.UI.ViewModels.Sales
     {
         private readonly ICashInOutRepository _cashInOutRepository;
         private readonly IUserSessionService _userSessionService;
+        private readonly IConfigurationService _configurationService;
 
-        public CashInOutViewModel(ICashInOutRepository cashInOutRepository, IUserSessionService userSessionService)
+        public CashInOutViewModel(ICashInOutRepository cashInOutRepository, IUserSessionService userSessionService, IConfigurationService configurationService)
         {
             _cashInOutRepository = cashInOutRepository ?? throw new ArgumentNullException(nameof(cashInOutRepository));
             _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
+            _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
 
             // Initialize Collection to prevent NullReferenceException
             Transactions = new ObservableCollection<CashInOut>();
@@ -160,8 +164,10 @@ namespace PointOfSale.UI.ViewModels.Sales
                     ShiftId = currentShiftId.Value
                 };
 
-                await _cashInOutRepository.CreateAsync(model);
+                long transactionId = await _cashInOutRepository.CreateAsync(model);
                 MessageBox.Show("Transaction saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                await Task.Run(() => PrintCashReceipt(transactionId));
 
                 await LoadAsync();
                 ResetForm();
@@ -171,6 +177,45 @@ namespace PointOfSale.UI.ViewModels.Sales
                 MessageBox.Show($"Transaction saving error.{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        // Runs on a background thread (see SaveAsync's Task.Run call) so Crystal Reports'
+        // synchronous PrintToPrinter call doesn't block the UI while it spools to the POS printer.
+        private void PrintCashReceipt(long transactionId)
+        {
+            try
+            {
+                var printerName = _configurationService.GetLocalPrinterName();
+                if (string.IsNullOrWhiteSpace(printerName))
+                {
+                    ShowMessageOnUiThread("No POS printer configured. Set 'LocalPrinterName' in App.config.", "Print Error", MessageBoxImage.Warning);
+                    return;
+                }
+
+                var receiptData = _cashInOutRepository.GetCashReceiptData(transactionId);
+                if (receiptData == null || receiptData.Rows.Count == 0)
+                {
+                    ShowMessageOnUiThread("No receipt data found for printing.", "Print Error", MessageBoxImage.Warning);
+                    return;
+                }
+
+                using (var report = new CashTransactionReceipt())
+                {
+                    report.SetDataSource(receiptData);
+                    report.PrintOptions.PrinterName = printerName;
+                    report.PrintToPrinter(1, false, 1, 0);
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowMessageOnUiThread($"Print Failed: {ex.Message}", "Print Error", MessageBoxImage.Error);
+            }
+        }
+
+        private static void ShowMessageOnUiThread(string message, string caption, MessageBoxImage icon)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+                MessageBox.Show(message, caption, MessageBoxButton.OK, icon));
+        }
+
         public void ResetForm()
         {
             // Clear properties directly (avoiding validation triggers if desired, or let them reset)

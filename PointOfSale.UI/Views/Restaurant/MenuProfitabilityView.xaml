@@ -13,29 +13,6 @@
         </i:EventTrigger>
     </i:Interaction.Triggers>
 
-    <UserControl.Resources>
-        <Style x:Key="ProfitabilityRowStyle" TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource Style.DataGrid.Row}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding BOMStatus}" Value="Healthy">
-                    <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
-                    <Setter Property="Foreground" Value="{StaticResource WarningBrush}"/>
-                    <Setter Property="FontWeight" Value="SemiBold"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">
-                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
-                    <Setter Property="FontWeight" Value="SemiBold"/>
-                </DataTrigger>
-                <!-- Food Cost % above 35 always reads as a cost risk, even if BOMStatus itself says "Healthy" -->
-                <DataTrigger Binding="{Binding IsHighFoodCost}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
-                    <Setter Property="FontWeight" Value="SemiBold"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-    </UserControl.Resources>
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -83,12 +60,13 @@
                   IsReadOnly="True"
                   HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal"
-                  RowStyle="{StaticResource ProfitabilityRowStyle}"
                   Style="{StaticResource DataGridStyle}">
 
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="150"/>
 
+                <DataGridTextColumn Header="Item Code" Binding="{Binding ItemCode}" Width="110"/>
+                
                 <DataGridTextColumn Header="Menu Item" Binding="{Binding MenuItemName}" Width="*">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
@@ -129,12 +107,6 @@
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Right"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsHighFoodCost}" Value="True">
-                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                </DataTrigger>
-                            </Style.Triggers>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
@@ -150,6 +122,9 @@
                                             <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
                                                 <Setter Property="Background" Value="{StaticResource StatusPartiallyReceivedBackgroundBrush}"/>
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Cost">
+                                                <Setter Property="Background" Value="{StaticResource StatusPartiallyReceivedBackgroundBrush}"/>
+                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">
                                                 <Setter Property="Background" Value="{StaticResource StatusRejectedBackgroundBrush}"/>
                                             </DataTrigger>
@@ -162,6 +137,9 @@
                                             <Setter Property="Foreground" Value="{StaticResource StatusCompletedForegroundBrush}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
+                                                    <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Cost">
                                                     <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">

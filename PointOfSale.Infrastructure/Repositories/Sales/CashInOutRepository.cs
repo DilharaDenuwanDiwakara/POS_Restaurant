@@ -42,6 +42,35 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 throw new InvalidOperationException("A database error occurred while recording the cash transaction.", ex);
             }
         }
+        public DataTable GetCashReceiptData(long transactionId)
+        {
+            var dataTable = new DataTable();
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Sales].[rptGetCashTransactionReceipt]"))
+                {
+                    // BigInt here (not Int) so it matches the Id column's actual type; SQL Server
+                    // implicitly narrows it to the SP's declared @TransactionId INT parameter.
+                    command.Parameters.Add("@TransactionId", SqlDbType.BigInt).Value = transactionId;
+
+                    connection.Open();
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        dataTable.Load(reader);
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occurred while retrieving the cash transaction receipt.", ex);
+            }
+
+            return dataTable;
+        }
+
         public async Task<IEnumerable<CashInOut>> GetAllAsync(int locationId)
         {
             var transactions = new List<CashInOut>();

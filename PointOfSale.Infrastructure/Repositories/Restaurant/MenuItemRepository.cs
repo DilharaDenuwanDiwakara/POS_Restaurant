@@ -667,29 +667,34 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
         {
             var resultList = new List<MenuItemDto>();
 
-            // SQL: 
+            // SQL:
             // 1. Joins MenuItem with Category to get CategoryName.
-            // 2. Uses a Subquery (SELECT TOP 1...) to get the lowest price from variants as the 'Base Price'.
+            // 2. Uses OUTER APPLY (TOP 1...) to get the lowest-priced variant's Price and ItemCode as the 'Base Price'/'Item Code'.
             string sql = @"
-                SELECT 
-                    m.Id, 
-                    m.Name, 
-                    m.Description, 
-                    m.ImageURL, 
-                    m.MenuCategoryId, 
-                    c.Name AS CategoryName, 
+                SELECT
+                    m.Id,
+                    m.Name,
+                    m.Description,
+                    m.ImageURL,
+                    m.MenuCategoryId,
+                    c.Name AS CategoryName,
                     m.TargetStationId,
                     s.Name AS TargetStation,
                     ISNULL(tax.AppliedTaxes, '') AS AppliedTaxes,
-                    m.IsActive, 
+                    m.IsActive,
                     m.IsAvailable,
-                    (SELECT TOP 1 v.Price 
-                     FROM Restaurant.Variant v 
-                     WHERE v.MenuItemId = m.Id 
-                     ORDER BY v.Price ASC) AS Price
+                    bv.ItemCode,
+                    bv.Price
                 FROM Restaurant.MenuItem m
                 LEFT JOIN Restaurant.MenuCategory c ON m.MenuCategoryId = c.Id
                 LEFT JOIN Restaurant.Station s ON s.Id = m.TargetStationId
+                OUTER APPLY
+                (
+                    SELECT TOP 1 v.ItemCode, v.Price
+                    FROM Restaurant.Variant v
+                    WHERE v.MenuItemId = m.Id
+                    ORDER BY v.Price ASC
+                ) bv
                 LEFT JOIN
                 (
                     SELECT
@@ -718,6 +723,7 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                             {
                                 Id = GetValue<int>(reader, "Id"),
                                 Name = GetValue<string>(reader, "Name"),
+                                ItemCode = GetValue<string>(reader, "ItemCode"),
                                 Description = GetValue<string>(reader, "Description"),
                                 ImageUrl = GetValue<string>(reader, "ImageURL"),
                                 CategoryId = GetValue<int>(reader, "MenuCategoryId"),
