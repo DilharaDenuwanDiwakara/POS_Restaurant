@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Text.RegularExpressions;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -50,6 +51,11 @@ namespace PointOfSale.UI.Views.Security
         private void SubmitButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             FullNameTextBox.Focus();
+        }
+
+        private void PinTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !Regex.IsMatch(e.Text, @"^[0-9]+$");
         }
 
     }

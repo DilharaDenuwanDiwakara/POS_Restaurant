@@ -82,6 +82,20 @@ namespace PointOfSale.UI.Views.Inventory
             ValidatePaste(e, "^[a-zA-Z0-9\\s]+$");
         }
 
+        private void Decimal_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            var txt = sender as TextBox;
+            var proposedText = txt.Text.Remove(txt.SelectionStart, txt.SelectionLength)
+                                        .Insert(txt.SelectionStart, e.Text);
+
+            e.Handled = !Regex.IsMatch(proposedText, "^\\d*[.,]?\\d*$");
+        }
+
+        private void Decimal_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            ValidatePaste(e, "^\\d*[.,]?\\d*$");
+        }
+
         private static void ValidatePaste(DataObjectPastingEventArgs e, string pattern)
         {
             if (!e.DataObject.GetDataPresent(DataFormats.Text))

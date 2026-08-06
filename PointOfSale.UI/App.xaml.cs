@@ -85,6 +85,7 @@ namespace PointOfSale.UI
             services.AddSingleton<IPromotionRepository, PromotionRepository>();
             services.AddSingleton<IRegisterRepository, RegisterRepository>();
             services.AddSingleton<ISalesRepository, SalesRepository>();
+            services.AddSingleton<ISalesReturnRepository, SalesReturnRepository>();
             services.AddSingleton<ISalesHoldRepository, SalesHoldRepository>();
             services.AddSingleton<ICashInOutRepository, CashInOutRepository>();
             services.AddSingleton<IShiftRepository, ShiftRepository>();
@@ -165,6 +166,8 @@ namespace PointOfSale.UI
             services.AddTransient<SalesListViewModel>();
             services.AddTransient<DiscountViewModel>();
             services.AddTransient<PromotionViewModel>();
+            services.AddTransient<SalesReturnViewModel>();
+            services.AddTransient<ManagerAuthorizationViewModel>();
             services.AddTransient<OpenShiftDialogView>();
             services.AddTransient<CloseShiftDialogView>();
 

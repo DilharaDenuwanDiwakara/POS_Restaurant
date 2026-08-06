@@ -90,6 +90,7 @@
     <Compile Include="DTOs\MenuVariantDto.cs" />
     <Compile Include="DTOs\SalesLineItemDto.cs" />
     <Compile Include="DTOs\SalesListDto.cs" />
+    <Compile Include="DTOs\SalesReturnLookupDto.cs" />
     <Compile Include="DTOs\ServedOrderDto.cs" />
     <Compile Include="DTOs\ShiftDto.cs" />
     <Compile Include="DTOs\ShiftReconciliationDto.cs" />
@@ -140,6 +141,7 @@
     <Compile Include="Interfaces\Repositories\Sales\IShiftRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\ISalesHoldRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\ISalesRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\ISalesReturnRepository.cs" />
     <Compile Include="Interfaces\Repositories\Security\IUserRepository.cs" />
     <Compile Include="Interfaces\Repositories\System\IBranchRepository.cs" />
     <Compile Include="Interfaces\Repositories\System\ICompanyRepository.cs" />
@@ -215,9 +217,12 @@
     <Compile Include="Models\Sales\Sale.cs" />
     <Compile Include="Models\Sales\SalesHold.cs" />
     <Compile Include="Models\Sales\SalesHoldLine.cs" />
+    <Compile Include="Models\Sales\ReturnReasonModel.cs" />
     <Compile Include="Models\Sales\SalesLine.cs" />
+    <Compile Include="Models\Sales\SalesReturnItemModel.cs" />
     <Compile Include="Models\Security\PermissionGroup.cs" />
     <Compile Include="Models\Security\PermissionNode.cs" />
+    <Compile Include="Models\Security\PinAuthResult.cs" />
     <Compile Include="Models\Security\Roles.cs" />
     <Compile Include="Models\Security\User.cs" />
     <Compile Include="Models\System\AccountMappingKeys.cs" />

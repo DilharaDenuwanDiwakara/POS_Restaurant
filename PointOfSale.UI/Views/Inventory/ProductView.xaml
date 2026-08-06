@@ -212,7 +212,9 @@
                                                             Grid.Column="0"
                                                             Margin="0,0,8,0">
                                                     <TextBlock Text="FACTOR" Style="{StaticResource LabelStyle}"/>
-                                                    <TextBox Text="{Binding ConversionRate, UpdateSourceTrigger=PropertyChanged}"
+                                                    <TextBox Text="{Binding ConversionRateInput, UpdateSourceTrigger=PropertyChanged}"
+                                                             PreviewTextInput="Decimal_PreviewTextInput"
+                                                             DataObject.Pasting="Decimal_Pasting"
                                                              Style="{StaticResource TextBoxStyle}"
                                                              Margin="0"/>
                                                 </StackPanel>

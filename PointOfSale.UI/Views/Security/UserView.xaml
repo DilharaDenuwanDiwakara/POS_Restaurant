@@ -51,6 +51,15 @@
                                      Style="{StaticResource TextBoxStyle}"
                                      PreviewKeyDown="MoveFocusOnEnter"/>
 
+                            <!-- PIN Code (used for quick cashier/waiter login and manager PIN authorization) -->
+                            <TextBlock Text="PIN Code:" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Name="PinTextBox"
+                                     Text="{Binding Pin, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     MaxLength="4"
+                                     Style="{StaticResource TextBoxStyle}"
+                                     PreviewTextInput="PinTextBox_PreviewTextInput"
+                                     PreviewKeyDown="MoveFocusOnEnter"/>
+
                             <!-- Role -->
                             <TextBlock Text="Role:" Style="{StaticResource LabelStyle}"/>
                             <ComboBox ItemsSource="{Binding Roles}"
@@ -146,6 +155,7 @@
                                     <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}" Width="*"/>
                                     <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="150"/>
                                     <DataGridTextColumn Header="PasswordHash" Binding="{Binding PasswordHash}" Width="*" />
+                                    <DataGridTextColumn Header="PIN" Binding="{Binding Pin, Converter={StaticResource PinMaskConverter}}" Width="70"/>
                                     <DataGridTextColumn Header="Role" Binding="{Binding RoleName}" Width="150"/>
                                     <DataGridTextColumn Header="Branch" Binding="{Binding BranchName}" Width="150"/>
                                     <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="100" />

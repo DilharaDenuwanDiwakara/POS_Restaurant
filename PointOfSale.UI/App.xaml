@@ -220,6 +220,10 @@
                 <viewsales:PromotionView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelsales:SalesReturnViewModel}">
+                <viewsales:SalesReturnView/>
+            </DataTemplate>
+
             <!-- Accounts -->
 
             <DataTemplate DataType="{x:Type viewmodelaccounts:AccountRegisterViewModel}">

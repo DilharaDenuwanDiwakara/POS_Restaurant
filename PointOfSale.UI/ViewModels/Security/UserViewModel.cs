@@ -161,6 +161,18 @@ namespace PointOfSale.UI.ViewModels.Security
             }
         }
 
+        private string _pin;
+        public string Pin
+        {
+            get => _pin;
+            set
+            {
+                SetProperty(ref _pin, value);
+                ValidatePin();
+                RaiseCanExecuteChanged();
+            }
+        }
+
         private bool _isActive = true;
         public bool IsActive
         {
@@ -304,6 +316,7 @@ namespace PointOfSale.UI.ViewModels.Security
                     userToUpdate.Role = RoleId;
                     userToUpdate.BranchId = BranchId;
                     userToUpdate.IsActive = IsActive;
+                    userToUpdate.Pin = Pin;
 
                     // Only update password if user typed something
                     if (!string.IsNullOrEmpty(Password))
@@ -322,6 +335,7 @@ namespace PointOfSale.UI.ViewModels.Security
                         FullName = FullName,
                         Username = Username,
                         PasswordHash = _passwordHasher.HashPassword(Password),
+                        Pin = Pin,
                         Role = RoleId, // int ID
                         BranchId = BranchId,
                         IsActive = IsActive
@@ -396,6 +410,7 @@ namespace PointOfSale.UI.ViewModels.Security
             FullName = string.Empty;
             Username = string.Empty;
             Password = string.Empty;
+            Pin = string.Empty;
             RoleId = 0;
             BranchId = 0;
             IsActive = true;
@@ -417,6 +432,7 @@ namespace PointOfSale.UI.ViewModels.Security
                 FullName = SelectedUser.FullName;
                 Username = SelectedUser.Username;
                 Password = string.Empty;
+                Pin = SelectedUser.Pin;
 
                 RoleId = SelectedUser.Role;
                 IsActive = SelectedUser.IsActive;
@@ -441,6 +457,7 @@ namespace PointOfSale.UI.ViewModels.Security
             ValidateFullName();
             ValidateUsername();
             ValidatePassword();
+            ValidatePin();
             ValidateLocation();
         }
 
@@ -467,6 +484,15 @@ namespace PointOfSale.UI.ViewModels.Security
             ClearErrors(nameof(Password));
             if (!IsEditing && string.IsNullOrWhiteSpace(Password))
                 AddError(nameof(Password), "Password is required.");
+        }
+
+        private void ValidatePin()
+        {
+            ClearErrors(nameof(Pin));
+            if (string.IsNullOrWhiteSpace(Pin)) return; // PIN is optional
+
+            if (!Regex.IsMatch(Pin, @"^\d{4}$"))
+                AddError(nameof(Pin), "PIN must be exactly 4 digits.");
         }
 
         private void ValidateLocation()

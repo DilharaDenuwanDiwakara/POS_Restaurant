@@ -13,6 +13,8 @@ namespace PointOfSale.Core.Interfaces.Security
 
         Task<User> GetByUsernameAsync(string username);
 
+        Task<PinAuthResult> GetUserByPinAsync(string pinCode);
+
         Task<HashSet<string>> GetPermissionsAsync(int userId);
         Task ChangePasswordAsync(int userId, string newPasswordHash);
 

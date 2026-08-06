@@ -10,6 +10,7 @@ namespace PointOfSale.Core.Models.Security
         public string FullName { get; set; }
         public string Username { get; set; }
         public string PasswordHash { get; set; }
+        public string Pin { get; set; }
         public int Role { get; set; }
         public string RoleName { get; set; }
         public bool IsActive { get; set; }

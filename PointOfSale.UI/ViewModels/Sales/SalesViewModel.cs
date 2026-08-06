@@ -722,6 +722,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             });
             AddCustomerCommand = new AsyncRelayCommand(async _ => await ExecuteAddCustomerCommand());
             OpenCashInOutCommand = new RelayCommand(ExecuteOpenCashInOut);
+            OpenSalesReturnCommand = new RelayCommand(ExecuteOpenSalesReturn);
             CloseShiftCommand = new AsyncRelayCommand(async _ => await ExecuteCloseShiftAsync(), _ => CurrentUser.CurrentShiftId.HasValue);
             ClearPaymentMethodCommand = new RelayCommand(_ =>
             {
@@ -1311,6 +1312,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         public ICommand AddProductCommand { get; private set; }
         public ICommand AddCustomerCommand { get; private set; }
         public ICommand OpenCashInOutCommand { get; private set; }
+        public ICommand OpenSalesReturnCommand { get; private set; }
         public ICommand RemoveItemCommand { get; private set; }
         public ICommand IncreaseQuantityCommand { get; private set; }
         public ICommand DecreaseQuantityCommand { get; private set; }
@@ -2496,6 +2498,32 @@ namespace PointOfSale.UI.ViewModels.Sales
             catch (Exception ex)
             {
                 MessageBox.Show($"Error opening Cash Window: {ex.Message}");
+            }
+            finally
+            {
+                IsOverlayVisible = false;
+            }
+        }
+
+        private void ExecuteOpenSalesReturn(object obj)
+        {
+            try
+            {
+                IsOverlayVisible = true;
+
+                // Returns true only if a return was actually processed inside the modal
+                // (SalesReturnViewModel.ReturnProcessed -> SalesReturnWindow sets DialogResult = true).
+                var dialogResult = _dialogService.ShowDialog<SalesReturnViewModel>(out var salesReturnViewModel);
+
+                if (dialogResult == true)
+                {
+                    // No cash-drawer/shift summary is currently displayed on this screen;
+                    // add a refresh call here if one is added later.
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening Sales Return: {ex.Message}", "Sales Return", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

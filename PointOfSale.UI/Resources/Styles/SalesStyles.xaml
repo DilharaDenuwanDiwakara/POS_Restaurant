@@ -666,6 +666,11 @@
     <Style x:Key="ReturnButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonBaseStyle}">
         <Setter Property="BorderBrush" Value="{StaticResource SalesAccentBrush}"/>
     </Style>
+    <Style x:Key="SalesReturnActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonBaseStyle}">
+        <Setter Property="Foreground" Value="#B45309"/>
+        <Setter Property="BorderBrush" Value="#FDBA74"/>
+        <Setter Property="Background" Value="#FFF7ED"/>
+    </Style>
     <Style x:Key="RePrintButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonBaseStyle}"/>
     <Style x:Key="RecallButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonBaseStyle}"/>
 

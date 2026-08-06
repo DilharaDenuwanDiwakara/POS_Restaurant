@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -130,18 +131,25 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
-        private decimal _conversionRate;
-        public decimal ConversionRate
+        private string _conversionRateInput = "0";
+        public string ConversionRateInput
         {
-            get => _conversionRate;
+            get => _conversionRateInput;
             set
             {
-                if (SetProperty(ref _conversionRate, value))
+                var normalized = value?.Replace(',', '.');
+                if (SetProperty(ref _conversionRateInput, normalized))
                 {
+                    _conversionRate = decimal.TryParse(normalized, NumberStyles.Number, CultureInfo.InvariantCulture, out var rate)
+                        ? rate
+                        : 0;
                     (AddUnitConversionCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 }
             }
         }
+
+        private decimal _conversionRate;
+        public decimal ConversionRate => _conversionRate;
 
         private ProductUnitConversionViewModel _selectedUnitConversion;
         public ProductUnitConversionViewModel SelectedUnitConversion
@@ -600,7 +608,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             UnitMeasureId = lastUnitMeasureId;
             SelectedTargetUnitMeasure = null;
             SelectedConversionType = ConversionTypes.FirstOrDefault();
-            ConversionRate = 0;
+            ConversionRateInput = "0";
             SelectedUnitConversion = null;
             UnitConversions.Clear();
 
@@ -690,7 +698,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             SelectedTargetUnitMeasure = null;
             SelectedConversionType = ConversionTypes.FirstOrDefault();
-            ConversionRate = 0;
+            ConversionRateInput = "0";
             (RemoveUnitConversionCommand as RelayCommand)?.RaiseCanExecuteChanged();
         }
 

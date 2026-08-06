@@ -286,7 +286,7 @@
                     Grid.Column="0"
                     Margin="0,0,12,0"
                     Style="{StaticResource ActionStripStyle}">
-                <UniformGrid Columns="5" Rows="1">
+                <UniformGrid Columns="6" Rows="1">
                     <Button Content="Cancel Invoice"
                             Command="{Binding CancelInvoiceCommand}"
                             Style="{StaticResource CancelInvoiceButtonStyle}" />
@@ -294,6 +294,10 @@
                     <Button Content="Cash In-Out"
                             Command="{Binding OpenCashInOutCommand}"
                             Style="{StaticResource ReturnButtonStyle}"/>
+
+                    <Button Content="Sales Return"
+                            Command="{Binding OpenSalesReturnCommand}"
+                            Style="{StaticResource SalesReturnActionButtonStyle}"/>
 
                     <Button Content="Room Booking"
                             Command="{Binding OpenRoomBookingCommand}"

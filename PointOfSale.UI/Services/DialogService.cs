@@ -50,6 +50,8 @@ namespace PointOfSale.UI.Services
             else if (typeof(TViewModel) == typeof(UserProfileViewModel)) window = new UserProfileWindow();
             else if (typeof(TViewModel) == typeof(DeviceRegistrationViewModel)) window = new DeviceRegistrationWindow();
             else if (typeof(TViewModel) == typeof(AccountTypeRegisterViewModel)) window = new AccountTypeRegisterWindow();
+            else if (typeof(TViewModel) == typeof(ManagerAuthorizationViewModel)) window = new ManagerAuthorizationWindow();
+            else if (typeof(TViewModel) == typeof(SalesReturnViewModel)) window = new SalesReturnWindow();
             if (window == null) throw new InvalidOperationException($"No Window registered for {typeof(TViewModel).Name}");
 
             // 3. Connect VM

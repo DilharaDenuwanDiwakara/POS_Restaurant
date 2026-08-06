@@ -98,6 +98,40 @@ namespace PointOfSale.Infrastructure.Repositories.Security
             }
             return null;
         }
+
+        public async Task<PinAuthResult> GetUserByPinAsync(string pinCode)
+        {
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = "SELECT TOP 1 Id, FullName FROM [Auth].[User] WHERE PinCode = @PinCode AND IsActive = 1";
+                    command.Parameters.Add("@PinCode", SqlDbType.NVarChar, 20).Value = pinCode;
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new PinAuthResult
+                            {
+                                UserId = GetValue<int>(reader, "Id"),
+                                FullName = GetValue<string>(reader, "FullName")
+                            };
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occurred while verifying the PIN.", ex);
+            }
+            return null;
+        }
+
         public async Task<HashSet<string>> GetPermissionsAsync(int userId)
         {
             var permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -359,6 +393,9 @@ namespace PointOfSale.Infrastructure.Repositories.Security
             command.Parameters.Add("@FullName", SqlDbType.NVarChar, 100).Value = user.FullName;
             command.Parameters.Add("@Username", SqlDbType.NVarChar, 50).Value = user.Username;
             command.Parameters.Add("@PasswordHash", SqlDbType.NVarChar, 255).Value = user.PasswordHash;
+            // Column is [Auth].[User].[PinCode]; left NULL when no PIN is assigned.
+            command.Parameters.Add("@PinCode", SqlDbType.NVarChar, 10).Value =
+                string.IsNullOrWhiteSpace(user.Pin) ? (object)DBNull.Value : user.Pin.Trim();
             command.Parameters.Add("@RoleId", SqlDbType.Int).Value = (int)user.Role;
             command.Parameters.Add("@IsActive", SqlDbType.Bit).Value = user.IsActive;
         }
@@ -370,6 +407,9 @@ namespace PointOfSale.Infrastructure.Repositories.Security
                 FullName = GetValue<string>(record, "FullName"),
                 Username = GetValue<string>(record, "Username"),
                 PasswordHash = GetValue<string>(record, "PasswordHash"),
+                // Guarded with HasColumn so user list/login keep working even before
+                // uspGetAllUsers/uspAuthenticateUser are updated to return PinCode.
+                Pin = HasColumn(record, "PinCode") ? GetValue<string>(record, "PinCode") : null,
                 Role = GetValue<int>(record, "RoleId"),
                 RoleName = GetValue<string>(record, "RoleName"),
                 IsActive = GetValue<bool>(record, "IsActive"),
@@ -377,6 +417,19 @@ namespace PointOfSale.Infrastructure.Repositories.Security
                 BranchName = GetValue<string>(record, "BranchName")
 
             };
+        }
+
+        private static bool HasColumn(IDataRecord record, string columnName)
+        {
+            for (var i = 0; i < record.FieldCount; i++)
+            {
+                if (string.Equals(record.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
         #endregion
         #endregion

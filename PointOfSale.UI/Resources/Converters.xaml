@@ -14,6 +14,7 @@
     <converters:BoolToStatusTextConverter x:Key="BoolToStatusTextConverter"/>
     <converters:ScaleConverter x:Key="ScaleConverter"/>
     <converters:MarginColorConverter x:Key="MarginColorConverter"/>
+    <converters:PinMaskConverter x:Key="PinMaskConverter"/>
     
     <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
 

@@ -279,7 +279,15 @@
                                     </StackPanel>
                                 </RadioButton>
 
-                                <RadioButton Command="{Binding NavigateToCustomerCommand}" 
+                                <RadioButton Command="{Binding NavigateToSalesReturnCommand}"
+                                              Style="{StaticResource Style.Nav.RadioButton}"
+                                              Visibility="{Binding CanNavSalesReturn, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Sales Return"/>
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <RadioButton Command="{Binding NavigateToCustomerCommand}"
                                               Style="{StaticResource Style.Nav.RadioButton}"
                                               Visibility="{Binding CanNavCustomer, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">

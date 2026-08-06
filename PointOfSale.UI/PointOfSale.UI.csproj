@@ -269,6 +269,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>CashTransactionReceipt.rpt</DependentUpon>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Reports\GoodsReceiveNote.cs">
       <AutoGen>True</AutoGen>
@@ -316,6 +317,7 @@
     <Compile Include="Converters\InverseBooleanConverter.cs" />
     <Compile Include="Converters\LevelToMarginConverter.cs" />
     <Compile Include="Converters\MarginColorConverter.cs" />
+    <Compile Include="Converters\PinMaskConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\ScaleConverter.cs" />
     <Compile Include="Reports\ExpiryReport.cs">
@@ -426,9 +428,11 @@
     <Compile Include="ViewModels\Sales\InvoiceLineItemModel.cs" />
     <Compile Include="ViewModels\Sales\InvoiceSummaryModel.cs" />
     <Compile Include="ViewModels\Sales\SalesListViewModel.cs" />
+    <Compile Include="ViewModels\Sales\SalesReturnViewModel.cs" />
     <Compile Include="ViewModels\Sales\SalesViewModel.cs" />
     <Compile Include="ViewModels\Security\DeviceRegistrationViewModel.cs" />
     <Compile Include="ViewModels\Security\LoginViewModel.cs" />
+    <Compile Include="ViewModels\Security\ManagerAuthorizationViewModel.cs" />
     <Compile Include="ViewModels\Security\UserProfileViewModel.cs" />
     <Compile Include="ViewModels\Security\UserViewModel.cs" />
     <Compile Include="ViewModels\System\AccountMappingViewModel.cs" />
@@ -598,6 +602,9 @@
     <Compile Include="Views\Sales\Dialogs\CashInOutWindow.xaml.cs">
       <DependentUpon>CashInOutWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Sales\Dialogs\SalesReturnWindow.xaml.cs">
+      <DependentUpon>SalesReturnWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Sales\Dialogs\PromoCodeWindow.xaml.cs">
       <DependentUpon>PromoCodeWindow.xaml</DependentUpon>
     </Compile>
@@ -607,11 +614,17 @@
     <Compile Include="Views\Sales\SalesView.xaml.cs">
       <DependentUpon>SalesView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Sales\SalesReturnView.xaml.cs">
+      <DependentUpon>SalesReturnView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Security\Dialogs\UserProfileWindow.xaml.cs">
       <DependentUpon>UserProfileWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Security\Dialogs\DeviceRegistrationWindow.xaml.cs">
       <DependentUpon>DeviceRegistrationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Security\Dialogs\ManagerAuthorizationWindow.xaml.cs">
+      <DependentUpon>ManagerAuthorizationWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Security\LoginView.xaml.cs">
       <DependentUpon>LoginView.xaml</DependentUpon>
@@ -895,6 +908,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Sales\Dialogs\SalesReturnWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Sales\Dialogs\PromoCodeWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -907,11 +924,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Sales\SalesReturnView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Security\Dialogs\UserProfileWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Security\Dialogs\DeviceRegistrationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Security\Dialogs\ManagerAuthorizationWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
