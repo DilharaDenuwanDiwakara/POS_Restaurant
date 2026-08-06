@@ -76,6 +76,7 @@
     <Compile Include="Models\Accounts\Entities\AccountType.cs" />
     <Compile Include="DTOs\AvailableQuantityDto.cs" />
     <Compile Include="DTOs\CategoryLookupItem.cs" />
+    <Compile Include="DTOs\MenuProfitabilityDto.cs" />
     <Compile Include="DTOs\CategoryTreeNode.cs" />
     <Compile Include="DTOs\CategoryValueDto.cs" />
     <Compile Include="DTOs\DashboardOverviewDto.cs" />
@@ -123,6 +124,7 @@
     <Compile Include="Interfaces\Repositories\Purchasing\ISupplierRepository.cs" />
     <Compile Include="Interfaces\Repositories\Purchasing\ISupplierReturnRepository.cs" />
     <Compile Include="Interfaces\Repositories\Restaurant\IMenuCategoryRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Restaurant\IMenuProfitabilityRepository.cs" />
     <Compile Include="Interfaces\Repositories\Restaurant\IMenuItemRepository.cs" />
     <Compile Include="Interfaces\Repositories\Restaurant\IMealPeriodRepository.cs" />
     <Compile Include="Interfaces\Repositories\Restaurant\IOrderRepository.cs" />

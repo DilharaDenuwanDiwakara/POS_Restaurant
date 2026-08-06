@@ -73,6 +73,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public bool CanNavMenuItem => _userSessionService.HasPermission("NAV_MENU_ITEM");
         public bool CanNavMenuCategory => _userSessionService.HasPermission("NAV_MENU_CATEGORY");
         public bool CanNavTable => _userSessionService.HasPermission("NAV_TABLE");
+        public bool CanNavMenuProfitability => _userSessionService.HasPermission("NAV_MENU_PROFITABILITY");
         public bool CanNavRoomRegister => _userSessionService.HasPermission("NAV_ROOM_REGISTER") || CanNavTable;
         public bool CanNavRoomBooking => _userSessionService.HasPermission("NAV_ROOM_BOOKING") || CanNavTable;
 
@@ -177,6 +178,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public ICommand NavigateToMenuItemCommand { get; private set; }
         public ICommand NavigateToMenuCategoryCommand { get; private set; }
         public ICommand NavigateToMenuItemListCommand { get; private set; }
+        public ICommand NavigateToMenuProfitabilityCommand { get; private set; }
 
         public ICommand NavigateToCategoryCommand { get; private set; }
         public ICommand NavigateToProductCommand { get; private set; }
@@ -248,6 +250,9 @@ namespace PointOfSale.UI.ViewModels.Shell
 
             NavigateToMenuCategoryCommand = new RelayCommand(_ =>
                 NavigateTo<MenuCategoryViewModel>("Restaurant  →  Menu Categories"));
+
+            NavigateToMenuProfitabilityCommand = new RelayCommand(_ =>
+                NavigateTo<MenuProfitabilityViewModel>("Restaurant  →  Menu Profitability"));
 
             // --- Inventory Module ---
             NavigateToProductListCommand = new RelayCommand(_ =>

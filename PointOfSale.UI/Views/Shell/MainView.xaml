@@ -199,11 +199,19 @@
                                     </StackPanel>
                                 </RadioButton>
 
-                                <RadioButton Command="{Binding NavigateToTableCommand}" 
+                                <RadioButton Command="{Binding NavigateToTableCommand}"
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavTable, Converter={StaticResource BoolToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Tables"/>
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <RadioButton Command="{Binding NavigateToMenuProfitabilityCommand}"
+                                             Style="{StaticResource Style.Nav.RadioButton}"
+                                             Visibility="{Binding CanNavMenuProfitability, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Menu Profitability"/>
                                     </StackPanel>
                                 </RadioButton>
 

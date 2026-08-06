@@ -401,6 +401,7 @@
     <Compile Include="ViewModels\Purchasing\SupplierViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\MenuCategoryViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\MenuItemListViewModel.cs" />
+    <Compile Include="ViewModels\Restaurant\MenuProfitabilityViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\MealPeriodViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\RoomBookingViewModel.cs" />
@@ -542,6 +543,9 @@
     </Compile>
     <Compile Include="Views\Restaurant\MenuCategoryView.xaml.cs">
       <DependentUpon>MenuCategoryView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Restaurant\MenuProfitabilityView.xaml.cs">
+      <DependentUpon>MenuProfitabilityView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Restaurant\MenuItemListView.xaml.cs">
       <DependentUpon>MenuItemListView.xaml</DependentUpon>
@@ -822,6 +826,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Restaurant\MenuItemListView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Restaurant\MenuProfitabilityView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

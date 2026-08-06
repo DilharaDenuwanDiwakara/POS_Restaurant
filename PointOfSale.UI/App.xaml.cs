@@ -96,6 +96,7 @@ namespace PointOfSale.UI
             services.AddSingleton<IRoomBookingRepository, RoomBookingRepository>();
             services.AddSingleton<IMenuItemRepository, MenuItemRepository>();
             services.AddSingleton<IMenuCategoryRepository, MenuCategoryRepository>();
+            services.AddSingleton<IMenuProfitabilityRepository, MenuProfitabilityRepository>();
             services.AddSingleton<IMealPeriodRepository, MealPeriodRepository>();
             services.AddSingleton<IStationRepository, StationRepository>();
             services.AddSingleton<IOrderRepository, OrderRepository>();
@@ -153,6 +154,7 @@ namespace PointOfSale.UI
             services.AddTransient<MealPeriodViewModel>();
             services.AddTransient<StationViewModel>();
             services.AddTransient<MenuItemListViewModel>();
+            services.AddTransient<MenuProfitabilityViewModel>();
             services.AddTransient<SalesViewModel>();
             services.AddTransient<SalesView>();
 

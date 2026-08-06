@@ -122,6 +122,7 @@
     <Compile Include="Repositories\Purchasing\SupplierRepository.cs" />
     <Compile Include="Repositories\Purchasing\SupplierReturnRepository.cs" />
     <Compile Include="Repositories\Restaurant\MenuCategoryRepository.cs" />
+    <Compile Include="Repositories\Restaurant\MenuProfitabilityRepository.cs" />
     <Compile Include="Repositories\Restaurant\MenuItemRepository.cs" />
     <Compile Include="Repositories\Restaurant\MealPeriodRepository.cs" />
     <Compile Include="Repositories\Restaurant\OrderRepository.cs" />

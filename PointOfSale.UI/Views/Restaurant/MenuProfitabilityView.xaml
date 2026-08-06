@@ -1,0 +1,186 @@
+<UserControl x:Class="PointOfSale.UI.Views.Restaurant.MenuProfitabilityView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="1100">
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadedCommand}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
+    <UserControl.Resources>
+        <Style x:Key="ProfitabilityRowStyle" TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource Style.DataGrid.Row}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding BOMStatus}" Value="Healthy">
+                    <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
+                    <Setter Property="Foreground" Value="{StaticResource WarningBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">
+                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+                <!-- Food Cost % above 35 always reads as a cost risk, even if BOMStatus itself says "Healthy" -->
+                <DataTrigger Binding="{Binding IsHighFoodCost}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Menu Profitability" Style="{StaticResource HeaderTextStyle}"/>
+
+        <Border Grid.Row="1" Margin="0,0,0,4" Style="{StaticResource PanelCardStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Margin="0,0,12,0">
+                    <TextBlock Text="Filter by Category" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding Categories}"
+                              SelectedItem="{Binding SelectedCategory}"
+                              DisplayMemberPath="DisplayName"
+                              SelectedValuePath="Id"
+                              IsEditable="True"
+                              IsTextSearchEnabled="True"
+                              TextSearch.TextPath="DisplayName"
+                              Width="240"
+                              Style="{StaticResource ComboBoxStyle}"
+                              Margin="0"/>
+                </StackPanel>
+
+                <Button Grid.Column="2"
+                        Command="{Binding RefreshCommand}"
+                        Content="Refresh"
+                        Style="{StaticResource RefreshButtonStyle}"
+                        VerticalAlignment="Bottom"
+                        Height="32" Width="32"/>
+            </Grid>
+        </Border>
+
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding MenuProfitabilityItems}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  RowStyle="{StaticResource ProfitabilityRowStyle}"
+                  Style="{StaticResource DataGridStyle}">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="150"/>
+
+                <DataGridTextColumn Header="Menu Item" Binding="{Binding MenuItemName}" Width="*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="Variant" Binding="{Binding VariantName}" Width="120"/>
+
+                <DataGridTextColumn Header="BOM Cost" Binding="{Binding TotalBOMCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="Selling Price" Binding="{Binding SellingPrice, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="Gross Profit" Binding="{Binding GrossProfit, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="Food Cost %" Binding="{Binding FoodCostPercentage, StringFormat='{}{0:N2}%'}" Width="110" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsHighFoodCost}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTemplateColumn Header="BOM Status" Width="140">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="4" Padding="8,4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource StatusCompletedBackgroundBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
+                                                <Setter Property="Background" Value="{StaticResource StatusPartiallyReceivedBackgroundBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">
+                                                <Setter Property="Background" Value="{StaticResource StatusRejectedBackgroundBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding BOMStatus}" FontWeight="SemiBold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource StatusCompletedForegroundBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
+                                                    <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">
+                                                    <Setter Property="Foreground" Value="{StaticResource StatusRejectedForegroundBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Border Grid.RowSpan="3" Background="#80FFFFFF" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+            <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" Width="50" Height="50" IsIndeterminate="True"/>
+        </Border>
+    </Grid>
+
+</UserControl>
