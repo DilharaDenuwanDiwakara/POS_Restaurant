@@ -49,8 +49,9 @@
                                Margin="0,0,12,0"/>
 
                     <TextBox x:Name="InvoiceNumberTextBox"
-                             Text="{Binding InvoiceNumber, UpdateSourceTrigger=PropertyChanged}"
+                             Text="{Binding InvoiceNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                              Style="{StaticResource TextBoxStyle}"
+                             CharacterCasing="Upper"
                              Width="280"
                              Height="50"
                              FontSize="18"

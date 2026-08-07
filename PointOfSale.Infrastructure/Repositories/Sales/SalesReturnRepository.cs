@@ -182,8 +182,9 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                     command.Parameters.Add("@AuthorizedBy", SqlDbType.Int).Value = authorizedBy;
                     command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = createdBy;
 
-                    // @LocationId and @PeriodId are intentionally NOT supplied: the procedure
-                    // derives both internally from @SalesId / GETDATE() and defaults them to NULL.
+                    // @LocationId and @PeriodId are no longer part of [Sales].[uspProcessSalesReturn]'s
+                    // signature: the procedure derives the location from @SalesId and resolves the
+                    // open accounting period internally (querying the period table itself).
                     AddReturnLinesParameter(command, returnItems);
 
                     var newReturnIdParam = command.Parameters.Add("@NewReturnId", SqlDbType.BigInt);
@@ -202,7 +203,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             }
             catch (SqlException ex)
             {
-                throw new InvalidOperationException($"A database error occurred while processing the sales return for SalesId {salesId}.", ex);
+                throw new InvalidOperationException($"A database error occurred while processing the sales return for SalesId {salesId}: {ex.Message}", ex);
             }
         }
         #endregion

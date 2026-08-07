@@ -19,7 +19,7 @@ namespace PointOfSale.UI.ViewModels.Security
             CancelCommand = new RelayCommand(_ => RequestClose?.Invoke(false));
         }
 
-        /// <summary>Permission key the entered PIN's user must hold (e.g. "AUTHORIZE_SALES_RETURN").</summary>
+        /// <summary>Permission key the entered PIN's user must hold (e.g. "SALES_RETURN").</summary>
         public string RequiredPermission { get; set; }
 
         private string _actionDescription = "perform this action";

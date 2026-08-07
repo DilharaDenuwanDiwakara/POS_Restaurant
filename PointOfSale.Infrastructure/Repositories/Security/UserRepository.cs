@@ -107,7 +107,7 @@ namespace PointOfSale.Infrastructure.Repositories.Security
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandType = CommandType.Text;
-                    command.CommandText = "SELECT TOP 1 Id, FullName FROM [Auth].[User] WHERE PinCode = @PinCode AND IsActive = 1";
+                    command.CommandText = "SELECT TOP 1 Id, FullName FROM [Auth].[User] WHERE [Pin] = @PinCode AND IsActive = 1";
                     command.Parameters.Add("@PinCode", SqlDbType.NVarChar, 20).Value = pinCode;
 
                     await connection.OpenAsync();
@@ -407,9 +407,12 @@ namespace PointOfSale.Infrastructure.Repositories.Security
                 FullName = GetValue<string>(record, "FullName"),
                 Username = GetValue<string>(record, "Username"),
                 PasswordHash = GetValue<string>(record, "PasswordHash"),
-                // Guarded with HasColumn so user list/login keep working even before
-                // uspGetAllUsers/uspAuthenticateUser are updated to return PinCode.
-                Pin = HasColumn(record, "PinCode") ? GetValue<string>(record, "PinCode") : null,
+                // The underlying table column is [Pin], but uspGetAllUsers/uspAuthenticateUser
+                // alias it as PinCode in their result set; check both so this keeps working
+                // regardless of which name a given result set actually uses.
+                Pin = HasColumn(record, "PinCode") ? GetValue<string>(record, "PinCode")
+                    : HasColumn(record, "Pin") ? GetValue<string>(record, "Pin")
+                    : null,
                 Role = GetValue<int>(record, "RoleId"),
                 RoleName = GetValue<string>(record, "RoleName"),
                 IsActive = GetValue<bool>(record, "IsActive"),

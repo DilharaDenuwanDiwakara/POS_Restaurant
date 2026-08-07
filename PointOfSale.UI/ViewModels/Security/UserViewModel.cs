@@ -491,8 +491,8 @@ namespace PointOfSale.UI.ViewModels.Security
             ClearErrors(nameof(Pin));
             if (string.IsNullOrWhiteSpace(Pin)) return; // PIN is optional
 
-            if (!Regex.IsMatch(Pin, @"^\d{4}$"))
-                AddError(nameof(Pin), "PIN must be exactly 4 digits.");
+            if (!Regex.IsMatch(Pin, @"^\d{3}$"))
+                AddError(nameof(Pin), "PIN must be exactly 3 digits.");
         }
 
         private void ValidateLocation()

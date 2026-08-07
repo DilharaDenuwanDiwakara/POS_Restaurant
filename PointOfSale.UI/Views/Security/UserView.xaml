@@ -55,7 +55,7 @@
                             <TextBlock Text="PIN Code:" Style="{StaticResource LabelStyle}"/>
                             <TextBox Name="PinTextBox"
                                      Text="{Binding Pin, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                     MaxLength="4"
+                                     MaxLength="3"
                                      Style="{StaticResource TextBoxStyle}"
                                      PreviewTextInput="PinTextBox_PreviewTextInput"
                                      PreviewKeyDown="MoveFocusOnEnter"/>

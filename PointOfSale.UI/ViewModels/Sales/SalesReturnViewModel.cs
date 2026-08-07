@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -48,6 +49,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             {
                 if (SetProperty(ref _invoiceNumber, value))
                 {
+                    ValidateInvoiceNumber();
                     RefreshCommands();
                 }
             }
@@ -120,7 +122,16 @@ namespace PointOfSale.UI.ViewModels.Sales
             ProcessReturnCommand.RaiseCanExecuteChanged();
         }
 
-        private bool CanSearchInvoice() => !string.IsNullOrWhiteSpace(InvoiceNumber);
+        private bool CanSearchInvoice() => !string.IsNullOrWhiteSpace(InvoiceNumber) && !HasErrors;
+
+        private void ValidateInvoiceNumber()
+        {
+            ClearErrors(nameof(InvoiceNumber));
+            if (string.IsNullOrWhiteSpace(InvoiceNumber)) return;
+
+            if (!Regex.IsMatch(InvoiceNumber, @"^[a-zA-Z0-9]+$"))
+                AddError(nameof(InvoiceNumber), "Invoice number must be alphanumeric (no spaces or symbols).");
+        }
 
         private bool CanProcessReturn() =>
             SalesId > 0 &&
@@ -237,7 +248,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         {
             var dialogResult = _dialogService.ShowDialog<ManagerAuthorizationViewModel>(vm =>
             {
-                vm.RequiredPermission = "AUTHORIZE_SALES_RETURN";
+                vm.RequiredPermission = "SALES_RETURN";
                 vm.ActionDescription = "authorize this sales return";
             }, out var authVm);
 
