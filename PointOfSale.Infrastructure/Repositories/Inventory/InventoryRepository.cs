@@ -174,6 +174,56 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             return transfers;
         }
 
+        public async Task ProcessItemProvisioningAsync(
+            int branchId,
+            int locationId,
+            int inputProductId,
+            int inputUnitId,
+            long? inputBatchId,
+            decimal inputQty,
+            decimal inputUnitCost,
+            int createdBy,
+            List<ProvisioningOutputModel> outputLines)
+        {
+            if (outputLines == null || !outputLines.Any())
+            {
+                throw new ArgumentException("At least one provisioning output line is required.", nameof(outputLines));
+            }
+
+            var outputLinesTable = CreateProvisioningLinesDataTable(outputLines);
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[uspProcessItemProvisioning]"))
+                {
+                    command.Parameters.Add("@BranchId", SqlDbType.Int).Value = branchId;
+                    command.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
+                    command.Parameters.Add("@InputProductId", SqlDbType.Int).Value = inputProductId;
+                    command.Parameters.Add("@InputUnitId", SqlDbType.Int).Value = inputUnitId;
+                    command.Parameters.Add("@InputBatchId", SqlDbType.BigInt).Value = inputBatchId.HasValue ? (object)inputBatchId.Value : DBNull.Value;
+                    command.Parameters.Add("@InputQty", SqlDbType.Decimal).Value = inputQty;
+                    command.Parameters["@InputQty"].Precision = 18;
+                    command.Parameters["@InputQty"].Scale = 3;
+                    command.Parameters.Add("@InputUnitCost", SqlDbType.Decimal).Value = inputUnitCost;
+                    command.Parameters["@InputUnitCost"].Precision = 18;
+                    command.Parameters["@InputUnitCost"].Scale = 2;
+                    command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = createdBy;
+
+                    var linesParameter = command.Parameters.Add("@OutputLines", SqlDbType.Structured);
+                    linesParameter.TypeName = "[Inventory].[tvpItemProvisioningLine]";
+                    linesParameter.Value = outputLinesTable;
+
+                    await connection.OpenAsync();
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occurred while processing item provisioning.", ex);
+            }
+        }
+
         private StockTransfer MapStockTransfer(IDataRecord record)
         {
             return new StockTransfer
@@ -201,6 +251,28 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
                 BranchId = GetValue<int>(record, "BranchId"),
                 Name = GetValue<string>(record, "LocationName"),
             };
+        }
+
+        private DataTable CreateProvisioningLinesDataTable(IEnumerable<ProvisioningOutputModel> outputLines)
+        {
+            var table = new DataTable();
+            table.Columns.Add("OutputProductId", typeof(int));
+            table.Columns.Add("OutputUnitId", typeof(int));
+            table.Columns.Add("OutputQty", typeof(decimal));
+            table.Columns.Add("CostAllocationPercentage", typeof(decimal));
+            table.Columns.Add("IsWastage", typeof(bool));
+
+            foreach (var line in outputLines)
+            {
+                table.Rows.Add(
+                    line.OutputProductId,
+                    line.OutputUnitId,
+                    line.OutputQty,
+                    line.CostAllocationPercentage,
+                    line.IsWastage);
+            }
+
+            return table;
         }
     }
 }

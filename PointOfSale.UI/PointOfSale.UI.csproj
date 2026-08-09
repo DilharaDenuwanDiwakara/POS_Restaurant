@@ -394,6 +394,7 @@
     <Compile Include="ViewModels\Inventory\InventoryReportViewModel.cs" />
     <Compile Include="ViewModels\Inventory\ProductListViewModel.cs" />
     <Compile Include="ViewModels\Inventory\ProductViewModel.cs" />
+    <Compile Include="ViewModels\Inventory\ProvisioningViewModel.cs" />
     <Compile Include="ViewModels\Inventory\StockAdjustmentViewModel.cs" />
     <Compile Include="ViewModels\Inventory\StockTransferViewModel.cs" />
     <Compile Include="ViewModels\Inventory\UnitMeasureViewModel.cs" />
@@ -511,6 +512,9 @@
     </Compile>
     <Compile Include="Views\Inventory\ProductView.xaml.cs">
       <DependentUpon>ProductView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Inventory\ProvisioningView.xaml.cs">
+      <DependentUpon>ProvisioningView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Inventory\StockAdjustmentView.xaml.cs">
       <DependentUpon>StockAdjustmentView.xaml</DependentUpon>
@@ -787,6 +791,10 @@
     <Page Include="Views\Inventory\ProductView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Inventory\ProvisioningView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Inventory\StockAdjustmentView.xaml">
       <SubType>Designer</SubType>

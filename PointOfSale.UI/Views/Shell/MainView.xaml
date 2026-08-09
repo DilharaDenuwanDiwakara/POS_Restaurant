@@ -323,6 +323,14 @@
                                     </StackPanel>
                                 </RadioButton>
 
+                                <RadioButton Command="{Binding NavigateToProvisioningCommand}" 
+                                             Style="{StaticResource Style.Nav.RadioButton}"
+                                             Visibility="{Binding CanNavProvisioning, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Item Provisioning"/>
+                                    </StackPanel>
+                                </RadioButton>
+
                                 <RadioButton Command="{Binding NavigateToWastageCommand}" 
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavWastage, Converter={StaticResource BoolToVisibility}}">

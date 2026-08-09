@@ -180,6 +180,7 @@
     <Compile Include="Models\Inventory\ProductUnitConversion.cs" />
     <Compile Include="Models\Inventory\ProductUnitMeasureOption.cs" />
     <Compile Include="Models\Inventory\ProductBatch.cs" />
+    <Compile Include="Models\Inventory\ProvisioningOutputModel.cs" />
     <Compile Include="Models\Inventory\StockAdjustment.cs" />
     <Compile Include="Models\Inventory\StockTransfer.cs" />
     <Compile Include="Models\Inventory\StockTransferLine.cs" />

@@ -176,6 +176,7 @@ namespace PointOfSale.UI
             services.AddTransient<SupplierViewModel>();
 
             services.AddTransient<ProductViewModel>();
+            services.AddTransient<ProvisioningViewModel>();
             services.AddTransient<StockTransferViewModel>();
             services.AddTransient<StockAdjustmentViewModel>();
             services.AddTransient<BarcodePrintViewModel>();

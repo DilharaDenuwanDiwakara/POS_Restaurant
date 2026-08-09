@@ -162,6 +162,10 @@
                 <viewinventory:ProductListView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelinventory:ProvisioningViewModel}">
+                <viewinventory:ProvisioningView/>
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type viewmodelinventory:UnitMeasureViewModel}">
                 <viewinventorydialog:UnitMeasureWindow/>
             </DataTemplate>

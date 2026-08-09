@@ -11,7 +11,8 @@
       "PowerShell(& \"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"PointOfSale.UI\\\\PointOfSale.UI.csproj\" /p:Configuration=Debug /nologo /v:minimal 2>&1)",
       "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Microsoft Visual Studio\\\\2022\\\\BuildTools\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"PointOfSale.sln\" /t:Build /p:Configuration=Debug /v:minimal /nologo)",
       "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Microsoft Visual Studio\\\\2022\\\\BuildTools\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"PointOfSale.sln\" /t:Build /p:Configuration=Debug /p:BuildProjectReferences=true \"PointOfSale.Infrastructure\\\\PointOfSale.Infrastructure.csproj\" /v:minimal /nologo)",
-      "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Microsoft Visual Studio\\\\2022\\\\BuildTools\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"PointOfSale.Infrastructure\\\\PointOfSale.Infrastructure.csproj\" /t:Build /p:Configuration=Debug /v:minimal /nologo)"
+      "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Microsoft Visual Studio\\\\2022\\\\BuildTools\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"PointOfSale.Infrastructure\\\\PointOfSale.Infrastructure.csproj\" /t:Build /p:Configuration=Debug /v:minimal /nologo)",
+      "Bash(where dotnet *)"
     ]
   }
 }

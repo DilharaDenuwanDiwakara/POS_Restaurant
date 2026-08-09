@@ -53,9 +53,9 @@ namespace PointOfSale.Core.Models.Sales
                     OnStockExceeded?.Invoke(AvailableQuantity);
                     finalValue = AvailableQuantity;
                 }
-                else if (value < 0)
+                else if (value < 1)
                 {
-                    finalValue = 0;
+                    finalValue = 1;
                 }
 
                 if (SetProperty(ref _quantity, finalValue))

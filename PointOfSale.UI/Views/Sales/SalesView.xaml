@@ -447,7 +447,7 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Offer" Width="Auto" Binding="{Binding OfferDisplay}" IsReadOnly="True">
+                                    <DataGridTextColumn Header="Offer" Width="Auto" Binding="{Binding OfferDisplay}" IsReadOnly="True" Visibility="Collapsed">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
@@ -493,9 +493,13 @@
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource QuantityStepperButtonStyle}"/>
 
-                                                    <TextBlock Grid.Column="1"
-                                                               Text="{Binding Quantity}"
-                                                               Style="{StaticResource QuantityDisplayTextStyle}"/>
+                                                    <TextBox Grid.Column="1"
+                                                             Text="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{StaticResource QuantityInputStyle}"
+                                                             TextAlignment="Center"
+                                                             Width="65"
+                                                             Padding="2,0"
+                                                             IsEnabled="{Binding IsQuantityLocked, Converter={StaticResource InverseBooleanConverter}}"/>
 
                                                     <Button Grid.Column="2"
                                                             Content="+"
