@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -13,12 +14,27 @@ namespace PointOfSale.Core.Models.Inventory
         private string _productName;
         private string _unitName;
 
+        public ProvisioningOutputModel()
+        {
+            AllowedUOMs = new ObservableCollection<ProductUnitMeasureOption>();
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public ObservableCollection<ProductUnitMeasureOption> AllowedUOMs { get; }
 
         public int OutputProductId
         {
             get => _outputProductId;
-            set => SetProperty(ref _outputProductId, value);
+            set
+            {
+                if (SetProperty(ref _outputProductId, value))
+                {
+                    AllowedUOMs.Clear();
+                    OutputUnitId = 0;
+                    UnitName = null;
+                }
+            }
         }
 
         public int OutputUnitId

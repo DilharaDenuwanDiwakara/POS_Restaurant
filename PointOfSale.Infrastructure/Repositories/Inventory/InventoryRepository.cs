@@ -256,7 +256,13 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             }
             catch (SqlException ex)
             {
-                throw new InvalidOperationException("A database error occurred while processing item provisioning.", ex);
+                var batchValue = inputBatchId.HasValue ? inputBatchId.Value.ToString() : "NULL";
+                throw new InvalidOperationException(
+                    $"DB Error while processing item provisioning: {ex.Message} " +
+                    $"Parameters: BranchId={branchId}, LocationId={locationId}, InputProductId={inputProductId}, " +
+                    $"InputUnitId={inputUnitId}, InputBatchId={batchValue}, InputQty={inputQty}, " +
+                    $"InputUnitCost={inputUnitCost}, CreatedBy={createdBy}, OutputLineCount={outputLinesTable.Rows.Count}.",
+                    ex);
             }
         }
 

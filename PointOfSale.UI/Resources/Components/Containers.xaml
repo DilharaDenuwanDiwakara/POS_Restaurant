@@ -26,7 +26,7 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="12"/>
-        <Setter Property="Margin" Value="0,0,0,16"/>
+        <Setter Property="Margin" Value="0,0,0,12"/>
 
         <Setter Property="Effect">
             <Setter.Value>

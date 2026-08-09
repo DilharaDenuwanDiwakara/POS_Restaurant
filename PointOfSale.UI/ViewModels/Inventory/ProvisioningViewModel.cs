@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
@@ -17,14 +18,16 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private readonly IInventoryRepository _inventoryRepository;
         private readonly IProductRepository _productRepository;
         private readonly IUnitMeasureRepository _unitMeasureRepository;
+        private readonly IUOMConversionService _uomConversionService;
         private readonly IUserSessionService _userSessionService;
 
         private Location _selectedLocation;
         private Product _selectedInputProduct;
-        private UnitMeasure _selectedInputUnit;
+        private ProductUnitMeasureOption _selectedUOM;
         private long? _selectedInputBatchId;
         private decimal _inputQty;
         private decimal _inputUnitCost;
+        private decimal _totalInputCost;
         private decimal _totalAllocationPercentage;
         private ProvisioningOutputModel _selectedOutputLine;
 
@@ -32,17 +35,20 @@ namespace PointOfSale.UI.ViewModels.Inventory
             IInventoryRepository inventoryRepository,
             IProductRepository productRepository,
             IUnitMeasureRepository unitMeasureRepository,
+            IUOMConversionService uomConversionService,
             IUserSessionService userSessionService)
         {
             _inventoryRepository = inventoryRepository ?? throw new ArgumentNullException(nameof(inventoryRepository));
             _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
             _unitMeasureRepository = unitMeasureRepository ?? throw new ArgumentNullException(nameof(unitMeasureRepository));
+            _uomConversionService = uomConversionService ?? throw new ArgumentNullException(nameof(uomConversionService));
             _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
 
             SelectedBranchId = _userSessionService.BranchId;
             Locations = new ObservableCollection<Location>();
             Products = new ObservableCollection<Product>();
             Units = new ObservableCollection<UnitMeasure>();
+            AllowedUOMs = new ObservableCollection<ProductUnitMeasureOption>();
             OutputLines = new ObservableCollection<ProvisioningOutputModel>();
             OutputLines.CollectionChanged += OutputLinesCollectionChanged;
 
@@ -56,6 +62,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public ObservableCollection<Location> Locations { get; private set; }
         public ObservableCollection<Product> Products { get; private set; }
         public ObservableCollection<UnitMeasure> Units { get; private set; }
+        public ObservableCollection<ProductUnitMeasureOption> AllowedUOMs { get; private set; }
         public ObservableCollection<ProvisioningOutputModel> OutputLines { get; private set; }
 
         public RelayCommand AddOutputLineCommand { get; }
@@ -89,28 +96,38 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     if (value != null)
                     {
-                        SelectedInputUnit = Units.FirstOrDefault(x => x.UnitMeasureId == value.UnitMeasureId);
-                        if (InputUnitCost <= 0)
-                        {
-                            InputUnitCost = Math.Round(value.StandardCost, 2);
-                        }
+                        _ = LoadAllowedUOMsAsync(value.ProductId);
                     }
+                    else
+                    {
+                        AllowedUOMs.Clear();
+                        SelectedUOM = null;
+                    }
+
+                    CalculateTotalInputCost();
 
                     RaiseCommandStates();
                 }
             }
         }
 
-        public UnitMeasure SelectedInputUnit
+        public ProductUnitMeasureOption SelectedUOM
         {
-            get => _selectedInputUnit;
+            get => _selectedUOM;
             set
             {
-                if (SetProperty(ref _selectedInputUnit, value))
+                if (SetProperty(ref _selectedUOM, value))
                 {
+                    CalculateTotalInputCost();
                     RaiseCommandStates();
                 }
             }
+        }
+
+        public ProductUnitMeasureOption SelectedInputUnit
+        {
+            get => SelectedUOM;
+            set => SelectedUOM = value;
         }
 
         public long? SelectedInputBatchId
@@ -132,7 +149,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _inputQty, value))
                 {
-                    OnPropertyChanged(nameof(TotalInputCost));
+                    CalculateTotalInputCost();
                     RaiseCommandStates();
                 }
             }
@@ -145,13 +162,16 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _inputUnitCost, value))
                 {
-                    OnPropertyChanged(nameof(TotalInputCost));
                     RaiseCommandStates();
                 }
             }
         }
 
-        public decimal TotalInputCost => Math.Round(InputQty * InputUnitCost, 2);
+        public decimal TotalInputCost
+        {
+            get => _totalInputCost;
+            private set => SetProperty(ref _totalInputCost, value);
+        }
 
         public decimal TotalAllocationPercentage
         {
@@ -194,6 +214,27 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
+        private async Task LoadAllowedUOMsAsync(int productId)
+        {
+            try
+            {
+                AllowedUOMs.Clear();
+
+                var units = await _uomConversionService.GetDistinctUOMsForProductAsync(productId);
+                foreach (var unit in units)
+                {
+                    AllowedUOMs.Add(unit);
+                }
+
+                SelectedUOM = AllowedUOMs.FirstOrDefault(unit => unit.IsBaseUnit) ?? AllowedUOMs.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                SelectedUOM = null;
+                ErrorMessage = "Failed to load product UOMs: " + ex.Message;
+            }
+        }
+
         private void AddOutputLine()
         {
             var line = new ProvisioningOutputModel();
@@ -220,7 +261,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     SelectedBranchId,
                     SelectedLocationId,
                     SelectedInputProduct.ProductId,
-                    SelectedInputUnit.UnitMeasureId,
+                    SelectedUOM.UnitMeasureId,
                     SelectedInputBatchId,
                     InputQty,
                     InputUnitCost,
@@ -241,7 +282,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             return SelectedBranchId > 0
                 && SelectedLocationId > 0
                 && SelectedInputProduct != null
-                && SelectedInputUnit != null
+                && SelectedUOM != null
                 && InputQty > 0
                 && InputUnitCost >= 0
                 && OutputLines.Any()
@@ -275,7 +316,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private void OutputLinePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var line = sender as ProvisioningOutputModel;
-            if (line != null && (e.PropertyName == nameof(ProvisioningOutputModel.OutputProductId) || e.PropertyName == nameof(ProvisioningOutputModel.OutputUnitId)))
+            if (line != null && e.PropertyName == nameof(ProvisioningOutputModel.OutputProductId))
+            {
+                UpdateOutputLineDisplayNames(line);
+                _ = LoadAllowedOutputUOMsAsync(line);
+            }
+
+            if (line != null && e.PropertyName == nameof(ProvisioningOutputModel.OutputUnitId))
             {
                 UpdateOutputLineDisplayNames(line);
             }
@@ -293,8 +340,47 @@ namespace PointOfSale.UI.ViewModels.Inventory
             var product = Products.FirstOrDefault(x => x.ProductId == line.OutputProductId);
             line.ProductName = product?.ProductName;
 
-            var unit = Units.FirstOrDefault(x => x.UnitMeasureId == line.OutputUnitId);
-            line.UnitName = unit?.UnitMeasureName;
+            var allowedUnit = line.AllowedUOMs.FirstOrDefault(x => x.UnitMeasureId == line.OutputUnitId);
+            if (allowedUnit != null)
+            {
+                line.UnitName = allowedUnit.DisplayName;
+                return;
+            }
+
+            var fallbackUnit = Units.FirstOrDefault(x => x.UnitMeasureId == line.OutputUnitId);
+            line.UnitName = fallbackUnit?.UnitMeasureName;
+        }
+
+        private async Task LoadAllowedOutputUOMsAsync(ProvisioningOutputModel line)
+        {
+            if (line == null || line.OutputProductId <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                line.AllowedUOMs.Clear();
+
+                var units = await _uomConversionService.GetDistinctUOMsForProductAsync(line.OutputProductId);
+                foreach (var unit in units)
+                {
+                    line.AllowedUOMs.Add(unit);
+                }
+
+                var defaultUnit = line.AllowedUOMs.FirstOrDefault(unit => unit.IsBaseUnit)
+                    ?? line.AllowedUOMs.FirstOrDefault();
+
+                if (defaultUnit != null)
+                {
+                    line.OutputUnitId = defaultUnit.UnitMeasureId;
+                    line.UnitName = defaultUnit.DisplayName;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = "Failed to load output UOMs: " + ex.Message;
+            }
         }
 
         private void RecalculateAllocation()
@@ -305,7 +391,8 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private void ResetForm()
         {
             SelectedInputProduct = null;
-            SelectedInputUnit = null;
+            SelectedUOM = null;
+            AllowedUOMs.Clear();
             SelectedInputBatchId = null;
             InputQty = 0;
             InputUnitCost = 0;
@@ -318,6 +405,46 @@ namespace PointOfSale.UI.ViewModels.Inventory
         {
             ProcessProvisioningCommand.RaiseCanExecuteChanged();
             RemoveOutputLineCommand.RaiseCanExecuteChanged();
+        }
+
+        private void CalculateTotalInputCost()
+        {
+            if (SelectedInputProduct == null || SelectedUOM == null || InputQty <= 0)
+            {
+                InputUnitCost = SelectedInputProduct != null && SelectedUOM != null
+                    ? CalculateDisplayUnitCost(SelectedInputProduct.StandardCost, SelectedUOM.ConversionRate, SelectedUOM.IsMultiply)
+                    : 0m;
+
+                TotalInputCost = 0m;
+                return;
+            }
+
+            var baseQty = CalculateBaseQuantity(InputQty, SelectedUOM.ConversionRate, SelectedUOM.IsMultiply);
+            var baseCostPrice = SelectedInputProduct.StandardCost;
+
+            InputUnitCost = CalculateDisplayUnitCost(baseCostPrice, SelectedUOM.ConversionRate, SelectedUOM.IsMultiply);
+            TotalInputCost = Math.Round(baseQty * baseCostPrice, 2);
+        }
+
+        private static decimal CalculateBaseQuantity(decimal quantity, decimal conversionRate, bool isMultiply)
+        {
+            if (conversionRate <= 0m)
+            {
+                throw new InvalidOperationException("UOM conversion rate must be greater than zero.");
+            }
+
+            return isMultiply ? quantity * conversionRate : quantity / conversionRate;
+        }
+
+        private static decimal CalculateDisplayUnitCost(decimal baseCostPrice, decimal conversionRate, bool isMultiply)
+        {
+            if (conversionRate <= 0m)
+            {
+                return 0m;
+            }
+
+            var oneSelectedUnitInBase = CalculateBaseQuantity(1m, conversionRate, isMultiply);
+            return Math.Round(baseCostPrice * oneSelectedUnitInBase, 2);
         }
     }
 }

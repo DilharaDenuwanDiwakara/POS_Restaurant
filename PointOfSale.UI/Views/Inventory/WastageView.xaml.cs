@@ -41,7 +41,7 @@ namespace PointOfSale.UI.Views.Inventory
             };
         }
 
-        private void MoveFocusOnEnter(object sender, KeyEventArgs e)
+        private async void MoveFocusOnEnter(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
@@ -56,6 +56,13 @@ namespace PointOfSale.UI.Views.Inventory
 
                     var bindingExpr = cmb.GetBindingExpression(ComboBox.SelectedItemProperty);
                     bindingExpr?.UpdateSource();
+
+                    if (cmb == ProductCombobox && DataContext is WastageViewModel viewModel)
+                    {
+                        e.Handled = true;
+                        await viewModel.ConfirmSelectedProductAsync();
+                        return;
+                    }
                 }
                 else if (sender is TextBox txt)
                 {

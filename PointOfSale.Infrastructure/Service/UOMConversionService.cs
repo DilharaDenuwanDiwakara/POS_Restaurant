@@ -111,7 +111,9 @@ SELECT
     p.UnitMeasureId,
     um.Code,
     um.Name AS UnitMeasureName,
-    CAST(1 AS bit) AS IsBaseUnit
+    CAST(1 AS bit) AS IsBaseUnit,
+    CAST(1 AS decimal(18, 6)) AS ConversionRate,
+    CAST(1 AS bit) AS IsMultiply
 FROM BaseProduct p
 INNER JOIN [Inventory].[UnitMeasure] um ON um.Id = p.UnitMeasureId
 
@@ -121,7 +123,9 @@ SELECT
     puc.TargetUnitMeasureId AS UnitMeasureId,
     um.Code,
     um.Name AS UnitMeasureName,
-    CAST(0 AS bit) AS IsBaseUnit
+    CAST(0 AS bit) AS IsBaseUnit,
+    puc.ConversionRate,
+    puc.IsMultiply
 FROM [Inventory].[ProductUnitConversion] puc
 INNER JOIN [Inventory].[UnitMeasure] um ON um.Id = puc.TargetUnitMeasureId
 WHERE puc.ProductId = @ProductId
@@ -133,7 +137,9 @@ SELECT
     guc.ToUnitMeasureId AS UnitMeasureId,
     um.Code,
     um.Name AS UnitMeasureName,
-    CAST(0 AS bit) AS IsBaseUnit
+    CAST(0 AS bit) AS IsBaseUnit,
+    guc.Multiplier AS ConversionRate,
+    CAST(0 AS bit) AS IsMultiply
 FROM [Inventory].[GlobalUnitConversion] guc
 INNER JOIN BaseProduct p ON p.UnitMeasureId = guc.FromUnitMeasureId
 INNER JOIN [Inventory].[UnitMeasure] um ON um.Id = guc.ToUnitMeasureId
@@ -144,7 +150,9 @@ SELECT
     guc.FromUnitMeasureId AS UnitMeasureId,
     um.Code,
     um.Name AS UnitMeasureName,
-    CAST(0 AS bit) AS IsBaseUnit
+    CAST(0 AS bit) AS IsBaseUnit,
+    guc.Multiplier AS ConversionRate,
+    CAST(1 AS bit) AS IsMultiply
 FROM [Inventory].[GlobalUnitConversion] guc
 INNER JOIN BaseProduct p ON p.UnitMeasureId = guc.ToUnitMeasureId
 INNER JOIN [Inventory].[UnitMeasure] um ON um.Id = guc.FromUnitMeasureId;";
@@ -161,7 +169,9 @@ INNER JOIN [Inventory].[UnitMeasure] um ON um.Id = guc.FromUnitMeasureId;";
                             UnitMeasureId = GetValue<int>(reader, "UnitMeasureId"),
                             Code = GetValue<string>(reader, "Code"),
                             UnitMeasureName = GetValue<string>(reader, "UnitMeasureName"),
-                            IsBaseUnit = GetValue<bool>(reader, "IsBaseUnit")
+                            IsBaseUnit = GetValue<bool>(reader, "IsBaseUnit"),
+                            ConversionRate = GetValue<decimal>(reader, "ConversionRate"),
+                            IsMultiply = GetValue<bool>(reader, "IsMultiply")
                         });
                     }
                 }

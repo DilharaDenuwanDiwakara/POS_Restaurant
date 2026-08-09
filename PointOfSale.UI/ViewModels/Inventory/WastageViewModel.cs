@@ -22,6 +22,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private readonly IProductBatchRepository _productBatchRepository;
         private readonly IUserSessionService _sessionService;
         private readonly IDialogService _dialogService;
+        private readonly IUOMConversionService _uomConversionService;
 
         public WastageViewModel(
             IWastageRepository wastageRepository,
@@ -30,7 +31,8 @@ namespace PointOfSale.UI.ViewModels.Inventory
             IProductRepository productRepository,
             IProductBatchRepository productBatchRepository,
             IUserSessionService sessionService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            IUOMConversionService uomConversionService)
         {
             _wastageRepository = wastageRepository;
             _wastageReasonRepository = wastageReasonRepository;
@@ -39,10 +41,11 @@ namespace PointOfSale.UI.ViewModels.Inventory
             _productBatchRepository = productBatchRepository;
             _sessionService = sessionService;
             _dialogService = dialogService;
+            _uomConversionService = uomConversionService;
 
             // Initialize Commands
             SaveCommand = new AsyncRelayCommand(async _ => await SaveWastageAsync(), _ => CanSave);
-            AddLineCommand = new RelayCommand(_ => AddLine(), _ => CanAddLine);
+            AddLineCommand = new AsyncRelayCommand(async _ => await AddLineAsync(), _ => CanAddLine);
             RemoveLineCommand = new RelayCommand<WastageLine>(RemoveLine);
             ClearCommand = new RelayCommand(_ => ClearAll());
             AddReasonCommand = new RelayCommand(ExecuteOpenWastageReason);
@@ -51,6 +54,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             Products = new ObservableCollection<Product>();
             Reasons = new ObservableCollection<WastageReason>();
             AvailableBatches = new ObservableCollection<ProductBatch>();
+            AllowedUOMs = new ObservableCollection<ProductUnitMeasureOption>();
 
             // Load Initial Data
             _ = LoadInitialDataAsync();
@@ -107,6 +111,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public ObservableCollection<Product> Products { get; }
         public ObservableCollection<WastageReason> Reasons { get; }
         public ObservableCollection<ProductBatch> AvailableBatches { get; }
+        public ObservableCollection<ProductUnitMeasureOption> AllowedUOMs { get; }
 
         private string _barcode;
         public string Barcode
@@ -130,18 +135,23 @@ namespace PointOfSale.UI.ViewModels.Inventory
             get => _selectedProduct;
             set
             {
-                if (SetProperty(ref _selectedProduct, value))
+                if (Equals(_selectedProduct, value)) return;
+
+                if (value != null && value.ProductId > 0)
                 {
-                    if (value != null)
-                    {
-                        _ = LoadBatchesForProductAsync();
-                    }
-                    else
-                    {
-                        ClearItemEntry();
-                    }
+                    _selectedProduct = value;
+                    OnPropertyChanged();
+                    SelectedBatch = null;
+                    AvailableBatches.Clear();
+                    _ = LoadAllowedUOMsAsync(value.ProductId);
                     RefreshCommands();
+                    return;
                 }
+
+                _selectedProduct = null;
+                OnPropertyChanged();
+                ClearItemEntry();
+                RefreshCommands();
             }
         }
 
@@ -163,7 +173,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
             if (foundProduct != null)
             {
                 SelectedProduct = foundProduct;
-                FocusQuantity();
             }
         }
 
@@ -176,6 +185,25 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 if (SetProperty(ref _selectedBatch, value))
                 {
                     RefreshCommands(); // <--- Add This
+                }
+            }
+        }
+
+        private ProductUnitMeasureOption _selectedUOM;
+        public ProductUnitMeasureOption SelectedUOM
+        {
+            get => _selectedUOM;
+            set
+            {
+                if (SetProperty(ref _selectedUOM, value))
+                {
+                    if (value != null)
+                    {
+                        ClearErrors(nameof(SelectedUOM));
+                    }
+
+                    ValidateQuantity();
+                    RefreshCommands();
                 }
             }
         }
@@ -229,12 +257,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
         #region Logic
         private void RefreshCommands()
         {
-            (AddLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (AddLineCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             (SaveCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
         }
         public bool CanSave => WastageLines.Any() && LocationId > 0;
         public bool CanAddLine => SelectedProduct != null
             && SelectedBatch != null
+            && SelectedUOM != null
             && ReasonId > 0
             && (!string.IsNullOrWhiteSpace(Quantity))
             && !HasErrors;
@@ -295,12 +324,56 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 MessageBox.Show($"Error loading products: {ex.Message}");
             }
         }
-        private async Task LoadBatchesForProductAsync()
+
+        private async Task LoadAllowedUOMsAsync(int productId)
+        {
+            try
+            {
+                AllowedUOMs.Clear();
+
+                var units = await _uomConversionService.GetDistinctUOMsForProductAsync(productId);
+                foreach (var unit in units)
+                {
+                    AllowedUOMs.Add(unit);
+                }
+
+                SelectedUOM = AllowedUOMs.FirstOrDefault(unit => unit.IsBaseUnit) ?? AllowedUOMs.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                SelectedUOM = null;
+                MessageBox.Show($"Failed to load product UOMs: {ex.Message}", "Unit Measure", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        public async Task<bool> ConfirmSelectedProductAsync()
+        {
+            if (SelectedProduct == null || SelectedProduct.ProductId <= 0)
+            {
+                FocusProduct();
+                return false;
+            }
+
+            var hasStock = await LoadBatchesForProductAsync();
+
+            if (hasStock)
+            {
+                FocusQuantity();
+            }
+            else
+            {
+                FocusProduct();
+            }
+
+            return hasStock;
+        }
+
+        private async Task<bool> LoadBatchesForProductAsync()
         {
             AvailableBatches.Clear();
             SelectedBatch = null;
 
-            if (SelectedProduct == null || LocationId == 0) return;
+            if (SelectedProduct == null || LocationId == 0) return false;
 
             try
             {
@@ -315,7 +388,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     MessageBox.Show("No stock available for this product in the selected location.");
                     SelectedProduct = null; // Reset selection
-                    return;
+                    return false;
                 }
 
                 // 4. Update Internal List
@@ -353,19 +426,32 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     {
                         // User cancelled dialog -> Reset product
                         SelectedProduct = null;
+                        return false;
                     }
                 }
+
+                return SelectedBatch != null;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading batches: {ex.Message}");
                 SelectedProduct = null;
+                return false;
             }
         }
 
-        private void AddLine()
+        private async Task AddLineAsync()
         {
             if (!CanAddLine) return;
+
+            var quantity = Convert.ToDecimal(Quantity);
+            var baseQuantity = await GetBaseQuantityAsync(quantity, SelectedUOM.UnitMeasureId);
+
+            if (baseQuantity > SelectedBatch.AvailableQuantity)
+            {
+                MessageBox.Show($"Insufficient stock. Base Qty: {baseQuantity:N3}, Available: {SelectedBatch.AvailableQuantity:N3}");
+                return;
+            }
 
             // 1. Find Reason Name for display
             var reasonObj = Reasons.FirstOrDefault(r => r.Id == ReasonId);
@@ -378,8 +464,11 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 BatchId = SelectedBatch.BatchId,
                 WastageReasonId = ReasonId,
                 ReasonName = reasonObj?.Reason,
+                UnitMeasureId = SelectedUOM.UnitMeasureId,
+                UnitMeasureCode = SelectedUOM.Code,
+                UnitMeasureName = SelectedUOM.DisplayName,
                 UnitCost = SelectedBatch.UnitCost,
-                Quantity = Convert.ToDecimal(Quantity)
+                Quantity = quantity
             };
 
             WastageLines.Add(line);
@@ -402,8 +491,10 @@ namespace PointOfSale.UI.ViewModels.Inventory
             Barcode = string.Empty;
             SelectedProduct = null;
             SelectedBatch = null;
+            SelectedUOM = null;
             Quantity = string.Empty;
             AvailableBatches.Clear();
+            AllowedUOMs.Clear();
         }
         private void ClearAll()
         {
@@ -516,13 +607,28 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     AddError(nameof(Quantity), "Must be greater than 0");
                 }
-                // Check Stock
-                else if (SelectedBatch != null && currentQty > SelectedBatch.AvailableQuantity)
+                else if (SelectedBatch != null && SelectedUOM == null)
+                {
+                    AddError(nameof(SelectedUOM), "UOM required");
+                }
+                // Base-unit stock validation runs when Add is pressed because conversion is async.
+                else if (SelectedBatch != null && SelectedUOM != null && SelectedUOM.IsBaseUnit && currentQty > SelectedBatch.AvailableQuantity)
                 {
                     AddError(nameof(Quantity), $"Exceeds Stock (Max: {SelectedBatch.AvailableQuantity})");
                 }
             }
 
+        }
+
+        private async Task<decimal> GetBaseQuantityAsync(decimal quantity, int unitMeasureId)
+        {
+            var baseUnitMeasureId = await _uomConversionService.GetProductBaseUnitMeasureIdAsync(SelectedProduct.ProductId);
+
+            return await _uomConversionService.GetConvertedQuantityAsync(
+                SelectedProduct.ProductId,
+                unitMeasureId,
+                baseUnitMeasureId,
+                quantity);
         }
         #endregion
     }

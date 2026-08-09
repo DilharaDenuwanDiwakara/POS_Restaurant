@@ -90,9 +90,10 @@
                                     <ColumnDefinition Width="150"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="110"/>
                                     <ColumnDefinition Width="100"/>
                                     <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="120"/>
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Margin="0 0 8 0">
@@ -109,6 +110,7 @@
                                               ItemsSource="{Binding Products}"
                                               SelectedItem="{Binding SelectedProduct, Mode=TwoWay}"
                                               DisplayMemberPath="ProductName"
+                                              TextSearch.TextPath="ProductName"
                                               IsEditable="True"
                                               IsTextSearchEnabled="True"
                                               PreviewKeyDown="MoveFocusOnEnter"
@@ -143,6 +145,17 @@
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="3" Margin="0 0 8 0">
+                                    <TextBlock Text="UOM:" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox ItemsSource="{Binding AllowedUOMs}"
+                                              SelectedItem="{Binding SelectedUOM, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              DisplayMemberPath="DisplayName"
+                                              Style="{StaticResource ComboBoxStyle}"
+                                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                              PreviewKeyDown="MoveFocusOnEnter"/>
+                                    
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="4" Margin="0 0 8 0">
                                     <TextBlock Text="Available:" Style="{StaticResource LabelStyle}"/>
                                     <TextBox Text="{Binding SelectedBatch.AvailableQuantity, StringFormat=N3, FallbackValue='-'}"
                                              IsReadOnly="True"
@@ -153,7 +166,7 @@
                                     
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="4" Margin="0 0 8 0">
+                                <StackPanel Grid.Column="5" Margin="0 0 8 0">
                                     <TextBlock Text="Quantity:" Style="{StaticResource LabelStyle}"/>
                                     <TextBox x:Name="QtyTextBox"
                                              Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
@@ -166,13 +179,13 @@
                                     
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="5" VerticalAlignment="Bottom">
+                                <StackPanel Grid.Column="6" Margin="0" VerticalAlignment="Top">
                                     <Button x:Name="AddButton"
                                             Content="Add"
                                             Command="{Binding AddLineCommand}"
                                             Style="{StaticResource PrimaryButtonStyle}"
                                             Click="AddButton_Click"
-                                            Width="70" Height="32" Margin="0,0,0,12"/>
+                                            Margin="0,20,0,0"/>
                                     
                                 </StackPanel>
                             </Grid>
@@ -191,11 +204,12 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="*"/>
                             <DataGridTextColumn Header="Reason" Binding="{Binding ReasonName}" Width="Auto"/>
+                            <DataGridTextColumn Header="UOM" Binding="{Binding UnitMeasureName}" Width="110"/>
 
                             <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat=N3}" Width="120" FontWeight="Bold">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Left"/>
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -203,12 +217,12 @@
                             <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Width="80" Header="Action">
+                            <DataGridTemplateColumn Width="100" Header="Action">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"

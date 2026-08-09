@@ -9,6 +9,9 @@
         public long BatchId { get; set; }
         public int? WastageReasonId { get; set; }
         public string ReasonName { get; set; } // For UI Display
+        public int UnitMeasureId { get; set; }
+        public string UnitMeasureCode { get; set; }
+        public string UnitMeasureName { get; set; }
         public decimal Quantity { get; set; }
         public decimal UnitCost { get; set; }
         public decimal TotalCost => Quantity * UnitCost;

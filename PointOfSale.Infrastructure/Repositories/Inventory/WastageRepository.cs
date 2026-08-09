@@ -67,11 +67,18 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
                     table.Columns.Add("BatchId", typeof(long));
                     table.Columns.Add("WastageReasonId", typeof(int));
                     table.Columns.Add("Quantity", typeof(decimal));
+                    table.Columns.Add("UnitMeasureId", typeof(int));
                     table.Columns.Add("UnitCost", typeof(decimal));
 
                     foreach (var line in wastage.Lines)
                     {
-                        table.Rows.Add(line.ProductId, line.BatchId, line.WastageReasonId, line.Quantity, line.UnitCost);
+                        table.Rows.Add(
+                            line.ProductId,
+                            line.BatchId,
+                            line.WastageReasonId,
+                            line.Quantity,
+                            line.UnitMeasureId,
+                            line.UnitCost);
                     }
 
                     var linesParam = command.Parameters.AddWithValue("@WastageLines", table);

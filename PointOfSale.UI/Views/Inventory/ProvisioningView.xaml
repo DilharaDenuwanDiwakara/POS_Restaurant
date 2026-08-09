@@ -27,7 +27,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0">
+                <StackPanel Grid.Column="0" Margin="0,0,8,0">
                     <TextBlock Text="Location" Style="{StaticResource LabelStyle}"/>
                     <ComboBox ItemsSource="{Binding Locations}"
                               SelectedItem="{Binding SelectedLocation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -36,7 +36,7 @@
                               Style="{StaticResource ComboBoxStyle}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1">
+                <StackPanel Grid.Column="1" Margin="0,0,8,0">
                     <TextBlock Text="Search Product" Style="{StaticResource LabelStyle}"/>
                     <ComboBox ItemsSource="{Binding Products}"
                               SelectedItem="{Binding SelectedInputProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -46,22 +46,22 @@
                               Style="{StaticResource ComboBoxStyle}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2">
+                <StackPanel Grid.Column="2" Margin="0,0,8,0">
                     <TextBlock Text="Select Unit" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding Units}"
-                              SelectedItem="{Binding SelectedInputUnit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              DisplayMemberPath="UnitMeasureName"
+                    <ComboBox ItemsSource="{Binding AllowedUOMs}"
+                              SelectedItem="{Binding SelectedUOM, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              DisplayMemberPath="DisplayName"
                               IsEditable="True"
                               Style="{StaticResource ComboBoxStyle}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="3">
+                <StackPanel Grid.Column="3" Margin="0,0,8,0">
                     <TextBlock Text="Qty" Style="{StaticResource LabelStyle}"/>
                     <TextBox Text="{Binding InputQty, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N3}"
                              Style="{StaticResource TextBoxStyle}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="4">
+                <StackPanel Grid.Column="4" Margin="0,0,8,0">
                     <TextBlock Text="Cost" Style="{StaticResource LabelStyle}"/>
                     <TextBox Text="{Binding InputUnitCost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
                              Style="{StaticResource TextBoxStyle}"/>
@@ -83,15 +83,27 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <DockPanel>
-                    <TextBlock Text="Output Lines" Style="{StaticResource SubHeaderTextStyle}"/>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Output Lines"
+                               Style="{StaticResource SubHeaderTextStyle}"
+                               VerticalAlignment="Center"
+                               Margin="0"/>
+
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right">
                         <Button Command="{Binding AddOutputLineCommand}"
+                                Margin="0,0,8,0"
                                 Style="{StaticResource AddButtonStyle}"/>
                         <Button Command="{Binding RemoveOutputLineCommand}"
                                 Style="{StaticResource DeleteButtonStyle}"/>
                     </StackPanel>
-                </DockPanel>
+                </Grid>
 
                 <DataGrid Grid.Row="1"
                           ItemsSource="{Binding OutputLines}"
@@ -116,14 +128,19 @@
                         <DataGridTemplateColumn Header="Unit" Width="*">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding DataContext.Units, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    <TextBlock Text="{Binding UnitName}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <ComboBox ItemsSource="{Binding AllowedUOMs}"
                                               SelectedValue="{Binding OutputUnitId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                               SelectedValuePath="UnitMeasureId"
-                                              DisplayMemberPath="UnitMeasureName"
+                                              DisplayMemberPath="DisplayName"
                                               IsEditable="True"
                                               Style="{StaticResource ComboBoxStyle}"/>
                                 </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
 
                         <DataGridTextColumn Header="Output Qty"
@@ -163,7 +180,8 @@
                 <Button Grid.Column="1"
                         Content="PROCESS PROVISIONING"
                         Command="{Binding ProcessProvisioningCommand}"
-                        Style="{StaticResource ActionButtonStyle}"/>
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Width="200"/>
             </Grid>
         </Border>
     </Grid>
