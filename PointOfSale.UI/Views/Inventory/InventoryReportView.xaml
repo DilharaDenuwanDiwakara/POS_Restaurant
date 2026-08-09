@@ -39,6 +39,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Margin="0 0 12 0">
@@ -49,7 +50,15 @@
                                   Style="{StaticResource ComboBoxStyle}"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1">
+                    <StackPanel Grid.Column="1" Margin="0 0 12 0">
+                        <TextBlock Text="Select Location:" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding Locations}"
+                                  SelectedItem="{Binding SelectedLocation}"
+                                  DisplayMemberPath="Name"
+                                  Style="{StaticResource ComboBoxStyle}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
                         <TextBlock Text="Select Report Type:" Style="{StaticResource LabelStyle}"/>
                         <ComboBox ItemsSource="{Binding ReportTypes}"
                                   SelectedItem="{Binding SelectedReportType}"
@@ -121,35 +130,16 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Row 2: Location + Product -->
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Margin="0 0 6 0">
-                            <TextBlock Text="Select Location:" Style="{StaticResource LabelStyle}"/>
-                            <ComboBox ItemsSource="{Binding Locations}"
-                                      SelectedItem="{Binding SelectedLocation}"
-                                      DisplayMemberPath="Name"
-                                      Style="{StaticResource ComboBoxStyle}"
-                                      Margin="0,0,0,12"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1" Margin="6 0 0 0">
-                            <TextBlock Text="Select Product:" Style="{StaticResource LabelStyle}"/>
-                            <ComboBox ItemsSource="{Binding Products}"
-                                      SelectedItem="{Binding SelectedProduct}"
-                                      DisplayMemberPath="ProductName"
-                                      SelectedValuePath="ProductId"
-                                      IsEditable="True"
-                                      IsTextSearchEnabled="True"
-                                      TextSearch.TextPath="ProductName"
-                                      Style="{StaticResource ComboBoxStyle}"
-                                      Margin="0,0,0,12"/>
-                        </StackPanel>
-                    </Grid>
+                    <TextBlock Text="Select Product:" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding Products}"
+                              SelectedItem="{Binding SelectedProduct}"
+                              DisplayMemberPath="ProductName"
+                              SelectedValuePath="ProductId"
+                              IsEditable="True"
+                              IsTextSearchEnabled="True"
+                              TextSearch.TextPath="ProductName"
+                              Style="{StaticResource ComboBoxStyle}"
+                              Margin="0,0,0,12"/>
 
                 </StackPanel>
 

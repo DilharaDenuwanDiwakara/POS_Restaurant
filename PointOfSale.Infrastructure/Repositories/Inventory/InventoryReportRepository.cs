@@ -52,7 +52,7 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
                 {
                     using (var command = CreateCommand(connection, "[Inventory].[uspGetReorderLevelReport]"))
                     {
-                        command.Parameters.Add("@BranchId", SqlDbType.Int).Value = locationId;
+                        command.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
 
                         await connection.OpenAsync();
 
@@ -92,6 +92,8 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
                         {
                             dataTable.Load(reader);
                         }
+
+                        EnsureUnitMeasureColumn(dataTable);
                     }
                 }
             }
@@ -102,6 +104,21 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             }
 
             return dataTable;
+        }
+
+        private static void EnsureUnitMeasureColumn(DataTable dataTable)
+        {
+            if (!dataTable.Columns.Contains("UnitMeasure"))
+            {
+                dataTable.Columns.Add("UnitMeasure", typeof(string));
+            }
+
+            foreach (DataRow row in dataTable.Rows)
+            {
+                row["UnitMeasure"] = row["UnitMeasure"] != DBNull.Value
+                    ? row["UnitMeasure"].ToString()
+                    : string.Empty;
+            }
         }
 
         public async Task<DataTable> GetStockMovementLedgerAsync(DateTime startDate, DateTime endDate, int productId, int locationId)
@@ -132,14 +149,14 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             return dataTable;
         }
 
-        public async Task<List<CategoryValueDto>> GetInventoryValueByCategoryAsync(int branchId)
+        public async Task<List<CategoryValueDto>> GetInventoryValueByCategoryAsync(int locationId)
         {
             var list = new List<CategoryValueDto>();
 
             using (var conn = GetConnection())
             using (var cmd = CreateCommand(conn, "[Inventory].[uspGetInventoryValueByCategory]"))
             {
-                cmd.Parameters.AddWithValue("@BranchId", branchId);
+                cmd.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
 
                 await conn.OpenAsync();
                 using (var reader = await cmd.ExecuteReaderAsync())

@@ -88,7 +88,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             set
             {
                 if (SetProperty(ref _selectedBranch, value))
-                    _ = LoadLocationsByBranchAsync();
+                    _ = LoadBranchSelectionAsync();
             }
         }
 
@@ -208,6 +208,11 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
+        private async Task LoadBranchSelectionAsync()
+        {
+            await LoadLocationsByBranchAsync();
+        }
+
         // Cascading dropdown: called whenever SelectedBranch changes.
         private async Task LoadLocationsByBranchAsync()
         {
@@ -230,10 +235,15 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
-        // Chart uses the selected Location's Id — a proper [Inventory].[Location] key.
+        // Chart uses LocationId so it matches the selected stock report location.
         private async Task LoadCategoryChart()
         {
-            if (SelectedLocation == null) return;
+            if (SelectedBranch == null || SelectedBranch.Id <= 0 ||
+                SelectedLocation == null || SelectedLocation.Id <= 0)
+            {
+                InventoryValueSeries = Array.Empty<ISeries>();
+                return;
+            }
 
             try
             {
@@ -268,6 +278,12 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 return;
             }
 
+            if (SelectedLocation == null)
+            {
+                MessageBox.Show("Please select a Location.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 IsProcessing = true;
@@ -281,19 +297,19 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     case "Current Inventory Stock":
                         int? catId = (SelectedCategory?.Id == 0) ? (int?)null : (int?)SelectedCategory?.Id;
-                        data = await _reportRepository.GetStockReportAsync(ReportDate, catId, SelectedBranch.Id);
+                        data = await _reportRepository.GetStockReportAsync(ReportDate, catId, SelectedLocation.Id);
                         reportFileName = "InventoryStock";
                         rptFileName = "InventoryReport.rpt";
                         break;
 
                     case "Reorder Level List":
-                        data = await _reportRepository.GetReorderListAsync(SelectedBranch.Id);
+                        data = await _reportRepository.GetReorderListAsync(SelectedLocation.Id);
                         reportFileName = "ReorderList";
                         rptFileName = "ReorderReport.rpt";
                         break;
 
                     case "Expiry Reach List":
-                        data = await _reportRepository.GetExpiryListAsync(SelectedBranch.Id);
+                        data = await _reportRepository.GetExpiryListAsync(SelectedLocation.Id);
                         reportFileName = "ExpiryList";
                         rptFileName = "ExpiryReport.rpt";
                         break;
@@ -416,7 +432,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 report.SetDataSource(data);
 
                 if (report.ParameterFields["LocationName"] != null)
-                    report.SetParameterValue("LocationName", SelectedBranch.Name);
+                    report.SetParameterValue("LocationName", SelectedLocation?.Name ?? SelectedBranch?.Name);
 
                 if (report.ParameterFields["ReportDateParam"] != null)
                     report.SetParameterValue("ReportDateParam", DateTime.Now);

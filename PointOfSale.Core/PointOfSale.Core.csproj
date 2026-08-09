@@ -80,6 +80,7 @@
     <Compile Include="DTOs\CategoryTreeNode.cs" />
     <Compile Include="DTOs\CategoryValueDto.cs" />
     <Compile Include="DTOs\DashboardOverviewDto.cs" />
+    <Compile Include="DTOs\InventoryStockReportModel.cs" />
     <Compile Include="DTOs\MenuItemDto.cs" />
     <Compile Include="DTOs\OpenStockItemDto.cs" />
     <Compile Include="DTOs\OrderItemDto.cs" />
