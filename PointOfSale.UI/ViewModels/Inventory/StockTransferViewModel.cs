@@ -8,6 +8,7 @@ using System.Windows.Input;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
@@ -22,23 +23,27 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private readonly IProductRepository _productRepository;
         private readonly IProductBatchRepository _productBatchRepository;
         private readonly IInventoryRepository _inventoryRepository;
+        private readonly IUOMConversionService _uomConversionService;
         private readonly IUserSessionService _sessionService;// For saving transfer & loading batches
 
         public StockTransferViewModel(
                 IProductRepository productRepository,
                 IInventoryRepository inventoryRepository,
                 IProductBatchRepository productBatchRepository,
+                IUOMConversionService uomConversionService,
                 IUserSessionService sessionService)
         {
             _productRepository = productRepository;
             _inventoryRepository = inventoryRepository;
             _productBatchRepository = productBatchRepository;
+            _uomConversionService = uomConversionService ?? throw new ArgumentNullException(nameof(uomConversionService));
             _sessionService = sessionService;
 
             // Initialize Collections
             Locations = new ObservableCollection<Location>();
             Products = new ObservableCollection<Product>();
             AvailableBatches = new ObservableCollection<ProductBatch>();
+            AllowedUOMs = new ObservableCollection<ProductUnitMeasureOption>();
             TransferLines = new ObservableCollection<StockTransferLine>();
 
             TransferLines.CollectionChanged += (s, e) =>
@@ -50,7 +55,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             // Initialize Commands
             SaveTransferCommand = new RelayCommand(async _ => await SaveTransferAsync(), _ => CanSaveTransfer);
-            AddLineCommand = new RelayCommand(_ => AddLine(), _ => CanAddLine);
+            AddLineCommand = new AsyncRelayCommand(async _ => await AddLineAsync(), _ => CanAddLine);
             RemoveLineCommand = new RelayCommand<StockTransferLine>(RemoveLine);
             ClearCommand = new RelayCommand(_ => ClearAll());
             SearchHistoryCommand = new AsyncRelayCommand(async _ => await SearchHistoryAsync());
@@ -60,7 +65,11 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         }
         private void RefreshSaveCommand() => (SaveTransferCommand as RelayCommand)?.RaiseCanExecuteChanged();
-        private void RefreshAddCommand() => (AddLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        private void RefreshAddCommand()
+        {
+            (AddLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (AddLineCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+        }
 
         #region Properties - Header
 
@@ -152,11 +161,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
                     if (_selectedProduct != null)
                     {
-                        SelectedUnitMeasureName = _selectedProduct.UnitMeasureCode;
+                        _ = LoadAllowedUOMsAsync(_selectedProduct.ProductId);
                     }
                     else
                     {
                         SelectedUnitMeasureName = null;
+                        SelectedUOM = null;
+                        AllowedUOMs.Clear();
                     }
 
                     OnPropertyChanged(nameof(IsProductSelected));
@@ -166,6 +177,23 @@ namespace PointOfSale.UI.ViewModels.Inventory
         }
 
         public bool IsProductSelected => SelectedProduct != null;
+
+        public ObservableCollection<ProductUnitMeasureOption> AllowedUOMs { get; }
+
+        private ProductUnitMeasureOption _selectedUOM;
+        public ProductUnitMeasureOption SelectedUOM
+        {
+            get => _selectedUOM;
+            set
+            {
+                if (SetProperty(ref _selectedUOM, value))
+                {
+                    SelectedUnitMeasureName = value?.DisplayName;
+                    ValidateQuantity();
+                    RefreshAddCommand();
+                }
+            }
+        }
 
         private string _selectedUnitMeasureName;
         public string SelectedUnitMeasureName
@@ -273,6 +301,27 @@ namespace PointOfSale.UI.ViewModels.Inventory
             var allProducts = await _productRepository.GetAllAsync();
             Products = new ObservableCollection<Product>(allProducts);
         }
+        private async Task LoadAllowedUOMsAsync(int productId)
+        {
+            try
+            {
+                AllowedUOMs.Clear();
+
+                var units = await _uomConversionService.GetDistinctUOMsForProductAsync(productId);
+                foreach (var unit in units)
+                {
+                    AllowedUOMs.Add(unit);
+                }
+
+                SelectedUOM = AllowedUOMs.FirstOrDefault(unit => unit.IsBaseUnit) ?? AllowedUOMs.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                SelectedUOM = null;
+                SelectedUnitMeasureName = null;
+                MessageBox.Show($"Failed to load product UOMs: {ex.Message}", "Unit Measure", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
         public void SearchAndSelectProduct(string code)
         {
             if (string.IsNullOrWhiteSpace(code))
@@ -367,22 +416,27 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         public bool CanAddLine => SelectedProduct != null &&
             SelectedBatch != null &&
+            SelectedUOM != null &&
             !string.IsNullOrWhiteSpace(TransferQuantity) &&
             !HasErrors;
-        private void AddLine()
+        private async Task AddLineAsync()
         {
-            ValidateLine();
+            await ValidateLineAsync();
             if (HasErrors) return;
 
             decimal qtyToAdd = decimal.Parse(TransferQuantity);
+            decimal baseQtyToAdd = await GetBaseQuantityAsync(qtyToAdd, SelectedUOM.UnitMeasureId);
 
             // check if batch already exists in grid
-            var existing = TransferLines.FirstOrDefault(x => x.BatchId == SelectedBatch.BatchId);
+            var existing = TransferLines.FirstOrDefault(x =>
+                x.BatchId == SelectedBatch.BatchId &&
+                x.UnitMeasureId == SelectedUOM.UnitMeasureId);
 
             if (existing != null)
             {
                 // Merge logic
-                if ((existing.Quantity + qtyToAdd) > SelectedBatch.AvailableQuantity)
+                var existingBaseQty = await GetBaseQuantityAsync(existing.Quantity, existing.UnitMeasureId);
+                if ((existingBaseQty + baseQtyToAdd) > SelectedBatch.AvailableQuantity)
                 {
                     MessageBox.Show($"Cannot merge. Total quantity would exceed stock ({SelectedBatch.AvailableQuantity}).");
                     return;
@@ -396,7 +450,9 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     ProductId = SelectedProduct.ProductId,
                     ProductName = SelectedProduct.ProductName,
-                    UnitMeasureCode = SelectedProduct.UnitMeasureCode,
+                    UnitMeasureId = SelectedUOM.UnitMeasureId,
+                    UnitMeasureCode = SelectedUOM.Code,
+                    UnitMeasureName = SelectedUOM.DisplayName,
                     BatchId = SelectedBatch.BatchId,
                     ExpiryDate = SelectedBatch.ExpiryDate,
                     UnitCost = SelectedBatch.UnitCost,
@@ -424,6 +480,9 @@ namespace PointOfSale.UI.ViewModels.Inventory
         {
             Barcode = string.Empty;
             SelectedProduct = null;
+            SelectedUOM = null;
+            SelectedUnitMeasureName = null;
+            AllowedUOMs.Clear();
             SelectedBatch = null;
             TransferQuantity = string.Empty;
             AvailableBatches.Clear();
@@ -475,6 +534,17 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         private async Task OpenStockTransferReportAsync(long transferId)
         {
+            if (transferId <= 0)
+            {
+                throw new InvalidOperationException($"Invalid TransferId returned from save operation: {transferId}.");
+            }
+
+            var reportDataTable = await _inventoryRepository.GetStockTransferNoteReportAsync(transferId);
+            if (reportDataTable.Rows.Count == 0)
+            {
+                throw new Exception("The report query returned 0 rows. Check the TransferId parameter.");
+            }
+
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 StockTransferNote reportDocument = null;
@@ -483,7 +553,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     reportDocument = new StockTransferNote();
 
-                    ApplyLogonCredentials(reportDocument);
+                    reportDocument.SetDataSource(reportDataTable);
                     SetTransferIdParameter(reportDocument, transferId);
 
                     var previewWindow = new ZReportViewerWindow(reportDocument, disposeReportOnClose: true)
@@ -601,11 +671,17 @@ namespace PointOfSale.UI.ViewModels.Inventory
         #endregion
 
         #region Validation
-        private void ValidateLine()
+        private async Task ValidateLineAsync()
         {
             ClearAllErrors();
             if (SelectedBatch == null)
                 AddError(nameof(SelectedBatch), "Batch required");
+
+            if (SelectedUOM == null)
+                AddError(nameof(SelectedUOM), "UOM required");
+
+            if (SelectedProduct == null || SelectedBatch == null || SelectedUOM == null)
+                return;
 
             if (string.IsNullOrWhiteSpace(TransferQuantity))
             {
@@ -624,9 +700,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 AddError(nameof(TransferQuantity), "Quantity must be > 0");
             }
-            else if (SelectedBatch != null && qty > SelectedBatch.AvailableQuantity)
+            else if (SelectedProduct != null && SelectedUOM != null && SelectedBatch != null)
             {
-                AddError(nameof(TransferQuantity), $"Insufficient Stock (Max: {SelectedBatch.AvailableQuantity})");
+                var baseQty = await GetBaseQuantityAsync(qty, SelectedUOM.UnitMeasureId);
+                if (baseQty > SelectedBatch.AvailableQuantity)
+                {
+                    AddError(nameof(TransferQuantity), $"Insufficient Stock (Base Qty: {baseQty:N3}, Max: {SelectedBatch.AvailableQuantity:N3})");
+                }
             }
         }
         private void ValidateQuantity()
@@ -656,11 +736,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     AddError(nameof(TransferQuantity), "Must be > 0");
                 }
-                else if (SelectedBatch != null && currentQty > SelectedBatch.AvailableQuantity)
-                {
-                    // This was the error sticking before. Now it will clear if currentQty <= Available
-                    AddError(nameof(TransferQuantity), $"Exceeds Stock (Max: {SelectedBatch.AvailableQuantity})");
-                }
             }
             else
             {
@@ -668,6 +743,17 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
         #endregion
+
+        private async Task<decimal> GetBaseQuantityAsync(decimal quantity, int unitMeasureId)
+        {
+            var baseUnitMeasureId = await _uomConversionService.GetProductBaseUnitMeasureIdAsync(SelectedProduct.ProductId);
+
+            return await _uomConversionService.GetConvertedQuantityAsync(
+                SelectedProduct.ProductId,
+                unitMeasureId,
+                baseUnitMeasureId,
+                quantity);
+        }
 
         #region EventHandlers
         public event Action RequestQuantityFocus;

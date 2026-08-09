@@ -44,7 +44,13 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
                     await connection.OpenAsync();
                     await command.ExecuteNonQueryAsync();
 
-                    return (long)outParam.Value;
+                    var transferIdValue = command.Parameters["@TransferId"].Value;
+                    if (transferIdValue == null || transferIdValue == DBNull.Value)
+                    {
+                        throw new InvalidOperationException("Stock transfer was saved, but the database did not return a TransferId.");
+                    }
+
+                    return Convert.ToInt64(transferIdValue);
                 }
             }
         }
@@ -103,10 +109,11 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             table.Columns.Add("ProductId", typeof(int));
             table.Columns.Add("BatchId", typeof(long));
             table.Columns.Add("Quantity", typeof(decimal));
+            table.Columns.Add("UnitMeasureId", typeof(int));
 
             foreach (var line in lines)
             {
-                table.Rows.Add(line.ProductId, line.BatchId, line.Quantity);
+                table.Rows.Add(line.ProductId, line.BatchId, line.Quantity, line.UnitMeasureId);
             }
 
             return table;
@@ -172,6 +179,35 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             }
 
             return transfers;
+        }
+
+        public async Task<DataTable> GetStockTransferNoteReportAsync(long transferId)
+        {
+            if (transferId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(transferId), "A valid stock transfer ID is required.");
+            }
+
+            var reportTable = new DataTable("rptGetStockTransferNote");
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[rptGetStockTransferNote]"))
+                using (var adapter = new SqlDataAdapter(command))
+                {
+                    command.Parameters.Add("@TransferId", SqlDbType.BigInt).Value = transferId;
+
+                    await connection.OpenAsync();
+                    adapter.Fill(reportTable);
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException($"A database error occurred while loading Stock Transfer Note data for TransferId {transferId}.", ex);
+            }
+
+            return reportTable;
         }
 
         public async Task ProcessItemProvisioningAsync(
