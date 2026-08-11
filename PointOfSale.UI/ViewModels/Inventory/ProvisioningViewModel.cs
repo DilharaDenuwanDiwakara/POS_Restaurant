@@ -5,6 +5,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Inventory;
@@ -30,6 +32,9 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private decimal _totalInputCost;
         private decimal _totalAllocationPercentage;
         private ProvisioningOutputModel _selectedOutputLine;
+        private DateTime _filterFromDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        private DateTime _filterToDate = DateTime.Today;
+        private string _yieldReportStatus;
 
         public ProvisioningViewModel(
             IInventoryRepository inventoryRepository,
@@ -50,11 +55,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
             Units = new ObservableCollection<UnitMeasure>();
             AllowedUOMs = new ObservableCollection<ProductUnitMeasureOption>();
             OutputLines = new ObservableCollection<ProvisioningOutputModel>();
+            YieldReportData = new ObservableCollection<ProvisioningYieldModel>();
             OutputLines.CollectionChanged += OutputLinesCollectionChanged;
 
             AddOutputLineCommand = new RelayCommand(_ => AddOutputLine());
             RemoveOutputLineCommand = new RelayCommand(_ => RemoveSelectedOutputLine(), _ => SelectedOutputLine != null);
             ProcessProvisioningCommand = new AsyncRelayCommand(async _ => await ProcessProvisioningAsync(), _ => CanProcessProvisioning());
+            LoadYieldReportCommand = new AsyncRelayCommand(async _ => await LoadYieldReportAsync(), _ => SelectedLocation != null && SelectedLocation.Id > 0);
 
             _ = LoadDependenciesAsync();
         }
@@ -64,10 +71,12 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public ObservableCollection<UnitMeasure> Units { get; private set; }
         public ObservableCollection<ProductUnitMeasureOption> AllowedUOMs { get; private set; }
         public ObservableCollection<ProvisioningOutputModel> OutputLines { get; private set; }
+        public ObservableCollection<ProvisioningYieldModel> YieldReportData { get; private set; }
 
         public RelayCommand AddOutputLineCommand { get; }
         public RelayCommand RemoveOutputLineCommand { get; }
         public AsyncRelayCommand ProcessProvisioningCommand { get; }
+        public ICommand LoadYieldReportCommand { get; }
 
         public int SelectedBranchId { get; set; }
 
@@ -85,6 +94,24 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     RaiseCommandStates();
                 }
             }
+        }
+
+        public DateTime FilterFromDate
+        {
+            get => _filterFromDate;
+            set => SetProperty(ref _filterFromDate, value);
+        }
+
+        public DateTime FilterToDate
+        {
+            get => _filterToDate;
+            set => SetProperty(ref _filterToDate, value);
+        }
+
+        public string YieldReportStatus
+        {
+            get => _yieldReportStatus;
+            private set => SetProperty(ref _yieldReportStatus, value);
         }
 
         public Product SelectedInputProduct
@@ -277,6 +304,61 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
+        private async Task LoadYieldReportAsync()
+        {
+            if (SelectedLocation == null || SelectedLocation.Id <= 0)
+            {
+                MessageBox.Show("Please select a location before loading yield analysis.", "Yield Analysis", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (FilterFromDate.Date > FilterToDate.Date)
+            {
+                MessageBox.Show("From Date cannot be after To Date.", "Yield Analysis", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                ErrorMessage = string.Empty;
+                YieldReportStatus = "Loading yield report...";
+
+                var fromDate = FilterFromDate.Date;
+                var toDate = FilterToDate.Date.AddDays(1).AddTicks(-1);
+
+                var data = await _inventoryRepository.GetProvisioningYieldReportAsync(
+                    SelectedLocation.Id,
+                    fromDate,
+                    toDate);
+
+                YieldReportData.Clear();
+                foreach (var item in data)
+                {
+                    item.ConfigureDetailLoader(
+                        async provisionNumber => await _inventoryRepository.GetProvisioningYieldDetailsAsync(provisionNumber),
+                        ex => MessageBox.Show(ex.Message, "Yield Analysis Details", MessageBoxButton.OK, MessageBoxImage.Error));
+
+                    YieldReportData.Add(item);
+                }
+
+                YieldReportStatus = $"{YieldReportData.Count} row(s) loaded for {SelectedLocation.Name} ({fromDate:yyyy-MM-dd HH:mm:ss} to {toDate:yyyy-MM-dd HH:mm:ss}).";
+
+                if (YieldReportData.Count == 0)
+                {
+                    MessageBox.Show(
+                        $"No yield records found for LocationId {SelectedLocation.Id} ({SelectedLocation.Name}) between {fromDate:yyyy-MM-dd HH:mm:ss} and {toDate:yyyy-MM-dd HH:mm:ss}.",
+                        "Yield Analysis",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                YieldReportStatus = "Failed to load yield report.";
+                MessageBox.Show(ex.Message, "Yield Analysis", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private bool CanProcessProvisioning()
         {
             return SelectedBranchId > 0
@@ -405,6 +487,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         {
             ProcessProvisioningCommand.RaiseCanExecuteChanged();
             RemoveOutputLineCommand.RaiseCanExecuteChanged();
+            (LoadYieldReportCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
         }
 
         private void CalculateTotalInputCost()

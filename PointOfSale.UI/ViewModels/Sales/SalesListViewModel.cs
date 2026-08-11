@@ -30,7 +30,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             _dialogService = dialogService;
 
             SalesList = new ObservableCollection<InvoiceSummaryModel>();
-            PaymentTypes = new ObservableCollection<string> { "All", "Cash", "Credit", "Card" };
+            PaymentTypes = new ObservableCollection<string> { "All", "Cash", "Credit", "Card", "Bank Transfer" };
 
             SearchCommand = new AsyncRelayCommand(SearchSalesAsync);
             ReprintInvoiceCommand = new AsyncRelayCommand(ReprintInvoiceAsync);

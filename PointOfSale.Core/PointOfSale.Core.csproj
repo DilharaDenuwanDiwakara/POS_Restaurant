@@ -84,6 +84,8 @@
     <Compile Include="DTOs\MenuItemDto.cs" />
     <Compile Include="DTOs\OpenStockItemDto.cs" />
     <Compile Include="DTOs\OrderItemDto.cs" />
+    <Compile Include="DTOs\ProvisioningYieldDetailModel.cs" />
+    <Compile Include="DTOs\ProvisioningYieldModel.cs" />
     <Compile Include="DTOs\ProductLiteDto.cs" />
     <Compile Include="DTOs\ProductDto.cs" />
     <Compile Include="DTOs\ProductRawDto.cs" />
@@ -177,6 +179,7 @@
     <Compile Include="Models\Inventory\Category.cs" />
     <Compile Include="Models\Inventory\ItemTypeModel.cs" />
     <Compile Include="Models\Inventory\Location.cs" />
+    <Compile Include="Models\Inventory\PendingWastageModel.cs" />
     <Compile Include="Models\Inventory\Product.cs" />
     <Compile Include="Models\Inventory\ProductUnitConversion.cs" />
     <Compile Include="Models\Inventory\ProductUnitMeasureOption.cs" />
@@ -187,6 +190,7 @@
     <Compile Include="Models\Inventory\StockTransferLine.cs" />
     <Compile Include="Models\Inventory\UnitMeasure.cs" />
     <Compile Include="Models\Inventory\Wastage.cs" />
+    <Compile Include="Models\Inventory\WastageDetailModel.cs" />
     <Compile Include="Models\Inventory\WastageLine.cs" />
     <Compile Include="Models\Inventory\WastageReason.cs" />
     <Compile Include="Models\Purchasing\GoodPurchaseNote.cs" />

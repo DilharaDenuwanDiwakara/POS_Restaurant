@@ -15,6 +15,7 @@
     <converters:ScaleConverter x:Key="ScaleConverter"/>
     <converters:MarginColorConverter x:Key="MarginColorConverter"/>
     <converters:PinMaskConverter x:Key="PinMaskConverter"/>
+    <converters:YieldPercentageBrushConverter x:Key="YieldPercentageBrushConverter"/>
     
     <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
 

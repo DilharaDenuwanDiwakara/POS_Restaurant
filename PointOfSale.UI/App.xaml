@@ -198,6 +198,10 @@
                 <viewinventory:WastageView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelinventory:WastageApprovalViewModel}">
+                <viewinventory:WastageApprovalView/>
+            </DataTemplate>
+
 
             <!-- Sales -->
             <DataTemplate DataType="{x:Type viewmodelsales:CustomerViewModel}">

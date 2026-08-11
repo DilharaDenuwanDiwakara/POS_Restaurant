@@ -266,6 +266,147 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             }
         }
 
+        public async Task<List<ProvisioningYieldModel>> GetProvisioningYieldReportAsync(int locationId, DateTime fromDate, DateTime toDate)
+        {
+            var report = new List<ProvisioningYieldModel>();
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[uspGetProvisioningYieldReport]"))
+                {
+                    command.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
+                    command.Parameters.Add("@FromDate", SqlDbType.DateTime2).Value = fromDate;
+                    command.Parameters.Add("@ToDate", SqlDbType.DateTime2).Value = toDate;
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        var rowNumber = 0;
+                        while (await reader.ReadAsync())
+                        {
+                            rowNumber++;
+
+                            try
+                            {
+                                report.Add(new ProvisioningYieldModel
+                                {
+                                    ProvisionNumber = GetValue<string>(reader, "ProvisionNumber"),
+                                    ProvisionDate = GetValue<DateTime>(reader, "ProvisionDate"),
+                                    LocationName = GetValue<string>(reader, "LocationName"),
+                                    InputProductName = GetValue<string>(reader, "InputProductName"),
+                                    InputQty = GetValue<decimal>(reader, "InputQty"),
+                                    InputUnit = reader["InputUnit"] == DBNull.Value ? string.Empty : reader["InputUnit"].ToString(),
+                                    TotalInputCost = GetValue<decimal>(reader, "TotalInputCost"),
+                                    TotalUsableQty = GetValue<decimal>(reader, "TotalUsableQty"),
+                                    TotalWastageQty = GetValue<decimal>(reader, "TotalWastageQty"),
+                                    YieldPercentage = GetValue<decimal>(reader, "YieldPercentage")
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new InvalidOperationException(
+                                    $"Failed to map provisioning yield report row {rowNumber}. " +
+                                    "Expected columns: ProvisionNumber, ProvisionDate, LocationName, InputProductName, InputQty, InputUnit, TotalInputCost, TotalUsableQty, TotalWastageQty, YieldPercentage. " +
+                                    $"Details: {ex.Message}",
+                                    ex);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException($"Failed to load provisioning yield report: {ex.Message}", ex);
+            }
+
+            return report;
+        }
+
+        public async Task<decimal> GetRetailItemStockAsync(int variantId, int locationId)
+        {
+            if (variantId <= 0 || locationId <= 0)
+                return 0m;
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = @"
+                        SELECT ISNULL(SUM(ls.AvailableQuantity), 0)
+                        FROM [Inventory].[Recipe] r
+                        INNER JOIN [Inventory].[LocationStock] ls ON ls.ProductId = r.ProductId
+                        WHERE r.VariantId = @VariantId AND ls.LocationId = @LocationId;";
+
+                    command.Parameters.Add("@VariantId", SqlDbType.Int).Value = variantId;
+                    command.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
+
+                    await connection.OpenAsync();
+                    var result = await command.ExecuteScalarAsync();
+                    return result == null || result == DBNull.Value ? 0m : Convert.ToDecimal(result);
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occurred while checking retail item stock.", ex);
+            }
+        }
+
+        public async Task<List<ProvisioningYieldDetailModel>> GetProvisioningYieldDetailsAsync(string provisionNumber)
+        {
+            var details = new List<ProvisioningYieldDetailModel>();
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[uspGetProvisioningYieldDetails]"))
+                {
+                    command.Parameters.Add("@ProvisionNumber", SqlDbType.NVarChar, 50).Value = provisionNumber;
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        var rowNumber = 0;
+                        while (await reader.ReadAsync())
+                        {
+                            rowNumber++;
+
+                            try
+                            {
+                                details.Add(new ProvisioningYieldDetailModel
+                                {
+                                    OutputProductName = GetValue<string>(reader, "OutputProductName"),
+                                    Unit = reader["Unit"] == DBNull.Value ? string.Empty : reader["Unit"].ToString(),
+                                    OutputQty = GetValue<decimal>(reader, "OutputQty"),
+                                    CostAllocationPercentage = GetValue<decimal>(reader, "CostAllocationPercentage"),
+                                    CalculatedUnitCost = GetValue<decimal>(reader, "CalculatedUnitCost"),
+                                    IsWastage = GetValue<bool>(reader, "IsWastage")
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new InvalidOperationException(
+                                    $"Failed to map provisioning yield detail row {rowNumber} for {provisionNumber}. " +
+                                    "Expected columns: OutputProductName, Unit, OutputQty, CostAllocationPercentage, CalculatedUnitCost, IsWastage. " +
+                                    $"Details: {ex.Message}",
+                                    ex);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException($"Failed to load provisioning yield details for {provisionNumber}: {ex.Message}", ex);
+            }
+
+            return details;
+        }
+
         private StockTransfer MapStockTransfer(IDataRecord record)
         {
             return new StockTransfer

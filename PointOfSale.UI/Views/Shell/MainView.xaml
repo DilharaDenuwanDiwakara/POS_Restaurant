@@ -339,6 +339,14 @@
                                     </StackPanel>
                                 </RadioButton>
 
+                                <RadioButton Command="{Binding NavigateToWastageApprovalCommand}" 
+                                             Style="{StaticResource Style.Nav.RadioButton}"
+                                             Visibility="{Binding CanNavWastageApproval, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Wastage Approval"/>
+                                    </StackPanel>
+                                </RadioButton>
+
                                 <RadioButton Command="{Binding NavigateToStockAdjustmentCommand}" 
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavAdjustment, Converter={StaticResource BoolToVisibility}}">

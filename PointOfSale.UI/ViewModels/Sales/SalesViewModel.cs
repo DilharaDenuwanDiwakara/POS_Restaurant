@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.ComponentModel;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
+using System.Media;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
@@ -44,6 +46,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         private readonly ICustomerRepository _customerRepository;
         private readonly IMenuCategoryRepository _menuCategoryRepository;
         private readonly IMenuItemRepository _menuItemRepository;
+        private readonly IInventoryRepository _inventoryRepository;
         private readonly IProductBatchRepository _productBatchRepository;
         private readonly IPaymentTerminalRepository _paymentTerminalRepository;
         private readonly IShiftRepository _shiftRepository;
@@ -59,6 +62,9 @@ namespace PointOfSale.UI.ViewModels.Sales
         private const string CashPaymentMethod = "CASH";
         private const string CardPaymentMethod = "CARD";
         private const string CreditPaymentMethod = "CREDIT";
+        private const string BankTransferPaymentMethod = "BANK_TRANSFER";
+        private const string RetailCategoryIdSettingName = "RetailCategoryId";
+        private const string TerminalLocationIdSettingName = "TerminalLocationId";
 
         // Flag to prevent infinite loops between Barcode and SelectedProduct setters
         private bool _suppressProductSelectionTrigger;
@@ -85,6 +91,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                               IOrderRepository orderRepository,
                               ICustomerRepository customerRepository,
                               IMenuCategoryRepository menuCategoryRepository,
+                              IInventoryRepository inventoryRepository,
                               IProductBatchRepository productBatchRepository,
                               IPaymentTerminalRepository paymentTerminalRepository,
                               IShiftRepository shiftRepository,
@@ -102,6 +109,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             _orderRepository = orderRepository;
             _customerRepository = customerRepository;
             _menuCategoryRepository = menuCategoryRepository;
+            _inventoryRepository = inventoryRepository;
             _menuItemRepository = menuItemRepository;
             _productBatchRepository = productBatchRepository;
             _paymentTerminalRepository = paymentTerminalRepository;
@@ -246,7 +254,10 @@ namespace PointOfSale.UI.ViewModels.Sales
                     SellingPrice = value.DefaultPrice;
                 }
 
-                (AddProductCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                if (AddProductCommand is RelayCommand relayCommand)
+                    relayCommand.RaiseCanExecuteChanged();
+                else if (AddProductCommand is AsyncRelayCommand asyncRelayCommand)
+                    asyncRelayCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -254,13 +265,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         public string Barcode
         {
             get => _barcode;
-            set
-            {
-                if (SetProperty(ref _barcode, value))
-                {
-                    ApplyProductFilterByCode(value);
-                }
-            }
+            set => SetProperty(ref _barcode, value);
         }
 
         // --- Entry Inputs ---
@@ -306,6 +311,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 OnPropertyChanged(nameof(IsPaymentTypeCash));
                 OnPropertyChanged(nameof(IsPaymentTypeCard));
                 OnPropertyChanged(nameof(IsPaymentTypeCredit));
+                OnPropertyChanged(nameof(IsPaymentTypeBankTransfer));
                 OnPropertyChanged(nameof(IsNonCashPaymentType));
                 OnPropertyChanged(nameof(PaymentTypeDisplay));
                 OnPropertyChanged(nameof(IsPaymentValid));
@@ -351,7 +357,8 @@ namespace PointOfSale.UI.ViewModels.Sales
         public bool IsPaymentTypeCash => string.Equals(SelectedPaymentMethod, CashPaymentMethod, StringComparison.OrdinalIgnoreCase);
         public bool IsPaymentTypeCard => string.Equals(SelectedPaymentMethod, CardPaymentMethod, StringComparison.OrdinalIgnoreCase);
         public bool IsPaymentTypeCredit => string.Equals(SelectedPaymentMethod, CreditPaymentMethod, StringComparison.OrdinalIgnoreCase);
-        public bool IsNonCashPaymentType => IsPaymentTypeCard || IsPaymentTypeCredit;
+        public bool IsPaymentTypeBankTransfer => string.Equals(SelectedPaymentMethod, BankTransferPaymentMethod, StringComparison.OrdinalIgnoreCase);
+        public bool IsNonCashPaymentType => IsPaymentTypeCard || IsPaymentTypeCredit || IsPaymentTypeBankTransfer;
         public string PaymentTypeDisplay => GetPaymentTypeDisplayText();
 
         // --- Card / Terminal ---
@@ -404,17 +411,20 @@ namespace PointOfSale.UI.ViewModels.Sales
         public decimal LineDiscountPercent
         {
             get => _lineDiscountPercent;
-            set { if (SetProperty(ref _lineDiscountPercent, value)) { CalculateTotals(); } }
+            private set { if (SetProperty(ref _lineDiscountPercent, 0m)) { CalculateTotals(); } }
         }
 
-        private bool _isDiscountEnabled;
-        public bool IsDiscountEnabled { get => _isDiscountEnabled; set => SetProperty(ref _isDiscountEnabled, value); }
+        public bool IsDiscountEnabled => false;
 
         private bool _isPromoLoyaltyPanelVisible;
         public bool IsPromoLoyaltyPanelVisible { get => _isPromoLoyaltyPanelVisible; set => SetProperty(ref _isPromoLoyaltyPanelVisible, value); }
 
         private decimal _billDiscount;
-        public decimal BillDiscount { get => _billDiscount; set => SetProperty(ref _billDiscount, value); }
+        public decimal BillDiscount
+        {
+            get => _billDiscount;
+            private set => SetProperty(ref _billDiscount, 0m);
+        }
 
         private int _availableLoyaltyPoints;
         public int AvailableLoyaltyPoints
@@ -657,7 +667,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             IsPaymentPanelVisible &&
             CurrentPaymentAmount > 0 &&
             (!IsPaymentTypeCard || (SelectedPaymentTerminal != null && HasFourDigitReference(ReferenceNumber))) &&
-            (!IsPaymentTypeCredit || (HasSelectedStoreCreditCustomer() && !string.IsNullOrWhiteSpace(ReferenceNumber)));
+            (!IsPaymentTypeCredit || (HasSelectedStoreCreditCustomer() && !string.IsNullOrWhiteSpace(ReferenceNumber))) &&
+            (!IsPaymentTypeBankTransfer || !string.IsNullOrWhiteSpace(ReferenceNumber));
         #endregion
 
         #region Initialization & Data Loading
@@ -697,8 +708,8 @@ namespace PointOfSale.UI.ViewModels.Sales
         }
         private void InitializeCommands()
         {
-            AddProductCommand = new RelayCommand(
-                parameter => ExecuteAddProduct(parameter as MenuVariantDto),
+            AddProductCommand = new AsyncRelayCommand(
+                async parameter => await ExecuteAddProductAsync(parameter as MenuVariantDto),
                 parameter => parameter is MenuVariantDto || SelectedProduct != null);
             RemoveItemCommand = new RelayCommand(
                 parameter => ExecuteRemoveItem(parameter as SalesLine),
@@ -711,15 +722,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 parameter => parameter is SalesLine line && !line.IsQuantityLocked && line.Quantity > 1);
             CancelInvoiceCommand = new RelayCommand(_ => ExecuteCancelInvoice());
 
-            EnableDiscountCommad = new RelayCommand(_ =>
-            {
-                if (!TryEnableManualDiscount())
-                {
-                    return;
-                }
-
-                RequestBillDiscountFocus?.Invoke();
-            });
+            EnableDiscountCommad = new RelayCommand(_ => MessageBox.Show("Bill discounts are handled through the manager register.", "Discount", MessageBoxButton.OK, MessageBoxImage.Information));
             AddCustomerCommand = new AsyncRelayCommand(async _ => await ExecuteAddCustomerCommand());
             OpenCashInOutCommand = new RelayCommand(ExecuteOpenCashInOut);
             OpenSalesReturnCommand = new RelayCommand(ExecuteOpenSalesReturn);
@@ -729,7 +732,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 SelectedPaymentMethod = null;
                 IsPaymentInputVisible = false;
             });
-            AddPaymentCommand = new RelayCommand(_ => AddCurrentPayment(), _ => CanAddPayment());
+            AddPaymentCommand = new RelayCommand(_ => AddCurrentPayment(), _ => CanAttemptAddPayment());
             RemovePaymentCommand = new RelayCommand<PaymentDetail>(RemoveAppliedPayment, payment => payment != null);
             SaveSaleCommand = new AsyncRelayCommand(async _ => await SaveSalesAsync(printBill: false), _ => CanSaveSale());
             SaveAndPrintCommand = new AsyncRelayCommand(async _ => await SaveSalesAsync(printBill: true), _ => CanSaveSale());
@@ -742,7 +745,6 @@ namespace PointOfSale.UI.ViewModels.Sales
             });
             ApplyDiscountCodeCommand = new AsyncRelayCommand(async _ => await ApplyDiscountCodeAsync());
             RemoveAppliedDiscountCommand = new RelayCommand(_ => RemoveAppliedDiscount());
-            ApplyQuickDiscountCommand = new RelayCommand(ApplyQuickDiscount);
             ApplyLoyaltyCommand = new RelayCommand(_ => ApplyLoyaltyRedemption());
             RemoveLoyaltyCommand = new RelayCommand(_ => RemoveLoyaltyRedemption(), _ => HasAppliedLoyaltyPoints);
             TogglePromoLoyaltyPanelCommand = new RelayCommand(_ => IsPromoLoyaltyPanelVisible = !IsPromoLoyaltyPanelVisible);
@@ -908,11 +910,12 @@ namespace PointOfSale.UI.ViewModels.Sales
                 CalculateTotals();
             }
         }
-        private void ExecuteAddProduct()
+        private async Task ExecuteAddProductAsync()
         {
-            ExecuteAddProduct(SelectedProduct);
+            await ExecuteAddProductAsync(SelectedProduct);
         }
-        private void ExecuteAddProduct(MenuVariantDto product)
+
+        private async Task ExecuteAddProductAsync(MenuVariantDto product)
         {
             var productToAdd = product ?? SelectedProduct;
             if (productToAdd == null) return;
@@ -921,6 +924,30 @@ namespace PointOfSale.UI.ViewModels.Sales
                 SelectedProduct = productToAdd;
 
             decimal qtyToAdd = Quantity > 0 ? Quantity : 1;
+
+            if (IsRetailItem(productToAdd))
+            {
+                var terminalLocationId = GetPositiveAppSetting(TerminalLocationIdSettingName);
+                if (terminalLocationId <= 0)
+                {
+                    ShowWarning("Retail stock location is not configured for this terminal.");
+                    return;
+                }
+
+                var availableStock = await _inventoryRepository.GetRetailItemStockAsync(productToAdd.VariantId, terminalLocationId);
+                var currentCartQty = CartItems
+                    .Where(x =>
+                        !x.IsAutoGeneratedPromotionLine &&
+                        !x.IsImportedOrderLine &&
+                        x.ProductId == productToAdd.VariantId)
+                    .Sum(x => x.Quantity);
+
+                if ((currentCartQty + qtyToAdd) > availableStock)
+                {
+                    ShowWarning($"Insufficient Stock. Only {availableStock} items available at this location.");
+                    return;
+                }
+            }
 
             // 1. Check if Item exists in Cart (Merge)
             var existing = CartItems.FirstOrDefault(x =>
@@ -962,6 +989,27 @@ namespace PointOfSale.UI.ViewModels.Sales
             CalculateTotals();
             ClearProductEntryInputs();
         }
+
+        private bool IsRetailItem(MenuVariantDto product)
+        {
+            var retailCategoryId = GetPositiveAppSetting(RetailCategoryIdSettingName);
+            return product != null &&
+                   retailCategoryId > 0 &&
+                   product.MenuCategoryId == retailCategoryId;
+        }
+
+        private static int GetPositiveAppSetting(string key)
+        {
+            var rawValue = ConfigurationManager.AppSettings[key];
+            return int.TryParse(rawValue, out var value) && value > 0 ? value : 0;
+        }
+
+        private static void ShowWarning(string message)
+        {
+            SystemSounds.Hand.Play();
+            MessageBox.Show(message, "Stock Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
         private void ExecuteRemoveItem(SalesLine item = null)
         {
             var lineToRemove = item ?? SelectedCartItem;
@@ -1022,12 +1070,29 @@ namespace PointOfSale.UI.ViewModels.Sales
                 (!HasSelectedStoreCreditCustomer() || string.IsNullOrWhiteSpace(ReferenceNumber)))
                 return false;
 
+            if (IsPaymentTypeBankTransfer && string.IsNullOrWhiteSpace(ReferenceNumber))
+                return false;
+
             return true;
+        }
+
+        private bool CanAttemptAddPayment()
+        {
+            return CartItems?.Any() == true && IsPaymentPanelVisible;
         }
 
         private void AddCurrentPayment()
         {
-            if (!CanAddPayment()) return;
+            if (!CanAddPayment())
+            {
+                ValidatePayment();
+                var message = string.IsNullOrWhiteSpace(PaymentErrorMessage)
+                    ? "Complete the payment details before adding this payment."
+                    : PaymentErrorMessage;
+
+                MessageBox.Show(message, "Payment Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             AppliedPayments.Add(new PaymentDetail
             {
@@ -1113,7 +1178,6 @@ namespace PointOfSale.UI.ViewModels.Sales
             RedeemLoyaltyPointsInput = string.Empty;
 
             LineDiscountPercent = 0;
-            IsDiscountEnabled = false;
             IsPromoLoyaltyPanelVisible = false;
         }
         private void ClearProductEntryInputs()
@@ -1123,6 +1187,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             SellingPrice = 0;
             Quantity = 1; // RESET TO DEFAULT
             Discount = 0;
+            RefreshProductFilter();
         }
 
         private void SelectCategory(MenuCategory category)
@@ -1179,6 +1244,19 @@ namespace PointOfSale.UI.ViewModels.Sales
             _suppressProductSelectionTrigger = true;
             SelectedProduct = exactMatch;
             _suppressProductSelectionTrigger = false;
+        }
+
+        public bool SubmitBarcodeEntry(string code)
+        {
+            var term = (code ?? string.Empty).Trim();
+            Barcode = term;
+            ApplyProductFilterByCode(term);
+
+            if (SelectedProduct == null || AddProductCommand?.CanExecute(null) != true)
+                return false;
+
+            AddProductCommand.Execute(null);
+            return true;
         }
         #endregion
 
@@ -1295,7 +1373,6 @@ namespace PointOfSale.UI.ViewModels.Sales
             SelectedServedOrder = null;
             GenerateInvoiceNumber();
             LineDiscountPercent = 0;
-            IsDiscountEnabled = false;
             IsPromoLoyaltyPanelVisible = false;
             RemoveAppliedDiscount(true);
             RemoveLoyaltyRedemption(true);
@@ -1327,7 +1404,6 @@ namespace PointOfSale.UI.ViewModels.Sales
         public ICommand RemovePaymentCommand { get; private set; }
         public ICommand ApplyDiscountCodeCommand { get; private set; }
         public ICommand RemoveAppliedDiscountCommand { get; private set; }
-        public ICommand ApplyQuickDiscountCommand { get; private set; }
         public ICommand ApplyLoyaltyCommand { get; private set; }
         public ICommand RemoveLoyaltyCommand { get; private set; }
         public ICommand TogglePromoLoyaltyPanelCommand { get; private set; }
@@ -1538,57 +1614,6 @@ namespace PointOfSale.UI.ViewModels.Sales
         #region Discount Code
         private DiscountValidationResult _appliedDiscountValidation;
 
-        private bool TryEnableManualDiscount()
-        {
-            if (CartItems.Any(x => x.IsImportedOrderLine))
-            {
-                MessageBox.Show("This served restaurant order already includes its pricing and cannot take an extra bill discount here.", "Discount", MessageBoxButton.OK, MessageBoxImage.Information);
-                return false;
-            }
-            if (HasAppliedDiscountCode)
-            {
-                MessageBox.Show("A promo/coupon is already applied. Remove it before using manual discount.", "Discount", MessageBoxButton.OK, MessageBoxImage.Information);
-                return false;
-            }
-            if (HasAppliedLoyaltyPoints)
-            {
-                MessageBox.Show("Loyalty redemption is already applied. Remove it before using manual discount.", "Discount", MessageBoxButton.OK, MessageBoxImage.Information);
-                return false;
-            }
-            if (CartItems.Any(x => x.PromoDiscount > 0) || _autoBillDiscountAmount > 0)
-            {
-                MessageBox.Show("An automatic discount/promotion is already applied. Manual bill discount is not allowed.", "Discount", MessageBoxButton.OK, MessageBoxImage.Information);
-                return false;
-            }
-
-            IsDiscountEnabled = true;
-            return true;
-        }
-
-        private void ApplyQuickDiscount(object parameter)
-        {
-            var value = parameter?.ToString();
-
-            if (string.Equals(value, "Clear", StringComparison.OrdinalIgnoreCase))
-            {
-                LineDiscountPercent = 0;
-                IsDiscountEnabled = false;
-                return;
-            }
-
-            if (!decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var percent))
-            {
-                return;
-            }
-
-            if (!TryEnableManualDiscount())
-            {
-                return;
-            }
-
-            LineDiscountPercent = Math.Max(0, percent);
-        }
-
         private async Task ApplyDiscountCodeAsync()
         {
             try
@@ -1641,7 +1666,6 @@ namespace PointOfSale.UI.ViewModels.Sales
 
                 // Prevent stacking with manual bill discount
                 LineDiscountPercent = 0;
-                IsDiscountEnabled = false;
 
                 CalculateTotals();
                 OnPropertyChanged(nameof(HasAppliedDiscountCode));
@@ -2698,6 +2722,10 @@ namespace PointOfSale.UI.ViewModels.Sales
             {
                 PaymentErrorMessage = "Enter the store credit reference.";
             }
+            else if (IsPaymentTypeBankTransfer && string.IsNullOrWhiteSpace(ReferenceNumber))
+            {
+                PaymentErrorMessage = "Enter the transaction reference or slip number.";
+            }
             else
             {
                 PaymentErrorMessage = string.Empty;
@@ -2727,6 +2755,8 @@ namespace PointOfSale.UI.ViewModels.Sales
                     return CardPaymentMethod;
                 case SalesPaymentMethod.CREDIT:
                     return CreditPaymentMethod;
+                case SalesPaymentMethod.BANK_TRANSFER:
+                    return BankTransferPaymentMethod;
                 default:
                     return method.ToString();
             }
@@ -2749,6 +2779,10 @@ namespace PointOfSale.UI.ViewModels.Sales
                 case "CREDIT":
                 case "STORE_CREDIT":
                     return CreditPaymentMethod;
+                case "BANK_TRANSFER":
+                case "BANKTRANSFER":
+                case "BANK":
+                    return BankTransferPaymentMethod;
                 default:
                     return normalized;
             }
@@ -2761,7 +2795,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private bool RequiresReferenceNumber()
         {
-            return IsPaymentTypeCard || IsPaymentTypeCredit;
+            return IsPaymentTypeCard || IsPaymentTypeCredit || IsPaymentTypeBankTransfer;
         }
 
         private static string KeepDigitsOnly(string value)
@@ -2804,6 +2838,8 @@ namespace PointOfSale.UI.ViewModels.Sales
                     return "CARD PAYMENT";
                 case CreditPaymentMethod:
                     return "STORE CREDIT";
+                case BankTransferPaymentMethod:
+                    return "BANK TRANSFER";
                 default:
                     return string.Empty;
             }

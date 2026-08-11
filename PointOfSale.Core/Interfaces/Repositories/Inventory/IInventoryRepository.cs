@@ -14,6 +14,9 @@ namespace PointOfSale.Core.Interfaces.Repositories.Inventory
         Task<IEnumerable<Location>> GetLocationsByBranchAsync(int branchId);
         Task<IEnumerable<StockTransfer>> GetAllStockTransfersAsync(int branchId, DateTime? dateFrom, DateTime? dateTo);
         Task<DataTable> GetStockTransferNoteReportAsync(long transferId);
+        Task<decimal> GetRetailItemStockAsync(int variantId, int locationId);
         Task ProcessItemProvisioningAsync(int branchId, int locationId, int inputProductId, int inputUnitId, long? inputBatchId, decimal inputQty, decimal inputUnitCost, int createdBy, List<ProvisioningOutputModel> outputLines);
+        Task<List<ProvisioningYieldModel>> GetProvisioningYieldReportAsync(int locationId, DateTime fromDate, DateTime toDate);
+        Task<List<ProvisioningYieldDetailModel>> GetProvisioningYieldDetailsAsync(string provisionNumber);
     }
 }

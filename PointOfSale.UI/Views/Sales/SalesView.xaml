@@ -27,6 +27,9 @@
         <KeyBinding Key="F3"
                     Command="{Binding SelectPaymentMethodCommand}"
                     CommandParameter="{x:Static enums:SalesPaymentMethod.CREDIT}" />
+        <KeyBinding Key="F4"
+                    Command="{Binding SelectPaymentMethodCommand}"
+                    CommandParameter="{x:Static enums:SalesPaymentMethod.BANK_TRANSFER}" />
         <KeyBinding Key="Delete" Command="{Binding RemoveItemCommand}" />
     </Window.InputBindings>
 
@@ -155,9 +158,9 @@
 
                         <TextBox x:Name="BarcodeTextBox"
                                  Grid.Column="1"
-                                 Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                 Text="{Binding Barcode, UpdateSourceTrigger=Explicit, Mode=TwoWay}"
                                  Style="{StaticResource ProductInputStyle}"
-                                 KeyDown="BarcodeTextBox_KeyDown"
+                                 PreviewKeyDown="BarcodeTextBox_KeyDown"
                                  PreviewTextInput="AlphanumericOnly_PreviewTextInput"
                                  DataObject.Pasting="AlphanumericOnly_Pasting"
                                  Tag="Search or scan code"/>
@@ -577,32 +580,11 @@
                                     <TextBox x:Name="TxtLineDiscountPercent"
                                              Grid.Row="3"
                                              Grid.Column="1"
-                                             Text="{Binding LineDiscountPercent, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                             Text="{Binding LineDiscountPercent, StringFormat=N2, Mode=OneWay}"
                                              Style="{StaticResource DiscountValueStyle}"
-                                             IsEnabled="{Binding IsDiscountEnabled}"/>
-
-                                    <StackPanel Grid.Row="4"
-                                                Grid.ColumnSpan="2"
-                                                Orientation="Horizontal"
-                                                HorizontalAlignment="Right">
-                                        <Button Content="5%"
-                                                Command="{Binding ApplyQuickDiscountCommand}"
-                                                CommandParameter="5"
-                                                Style="{StaticResource QuickDiscountButtonStyle}"/>
-                                        <Button Content="10%"
-                                                Command="{Binding ApplyQuickDiscountCommand}"
-                                                CommandParameter="10"
-                                                Style="{StaticResource QuickDiscountButtonStyle}"/>
-                                        <Button Content="15%"
-                                                Command="{Binding ApplyQuickDiscountCommand}"
-                                                CommandParameter="15"
-                                                Style="{StaticResource QuickDiscountButtonStyle}"/>
-                                        <Button Content="Clear"
-                                                Command="{Binding ApplyQuickDiscountCommand}"
-                                                CommandParameter="Clear"
-                                                Style="{StaticResource QuickDiscountButtonStyle}"
-                                                Margin="0,8,0,0"/>
-                                    </StackPanel>
+                                             IsReadOnly="True"
+                                             Focusable="False"
+                                             IsTabStop="False"/>
 
                                     <Grid Grid.Row="5"
                                           Grid.ColumnSpan="2"
@@ -633,7 +615,7 @@
                                 </Grid>
                             </Border>
 
-                            <UniformGrid Columns="3" Margin="0,0,0,14">
+                            <UniformGrid Columns="4" Margin="0,0,0,14">
                                 <Button Content="CASH (F1)"
                                         Command="{Binding SelectPaymentMethodCommand}"
                                         CommandParameter="{x:Static enums:SalesPaymentMethod.CASH}"
@@ -645,6 +627,10 @@
                                 <Button Content="STAFF CREDIT (F3)"
                                         Command="{Binding SelectPaymentMethodCommand}"
                                         CommandParameter="{x:Static enums:SalesPaymentMethod.CREDIT}"
+                                        Style="{StaticResource PaymentModeButtonStyle}"/>
+                                <Button Content="BANK TRANSFER (F4)"
+                                        Command="{Binding SelectPaymentMethodCommand}"
+                                        CommandParameter="{x:Static enums:SalesPaymentMethod.BANK_TRANSFER}"
                                         Style="{StaticResource PaymentModeButtonStyle}"/>
                             </UniformGrid>
 
@@ -831,6 +817,65 @@
                                                    Text="{Binding PaymentErrorMessage}"
                                                    Style="{StaticResource PaymentErrorTextStyle}"/>
                                     </Grid>
+
+                                    <Grid MinHeight="180"
+                                          Visibility="{Binding IsPaymentTypeBankTransfer, Converter={StaticResource BoolToVisibility}}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0"
+                                                   Text="BANK TRANSFER"
+                                                   Style="{StaticResource PaymentHeaderStyle}"
+                                                   Margin="0,0,0,10"/>
+
+                                        <TextBlock Grid.Row="1"
+                                                   Text="Transaction Ref / Slip No:"
+                                                   Style="{StaticResource InputLabelStyle}"
+                                                   Margin="0,0,0,6"/>
+
+                                        <TextBox Grid.Row="2"
+                                                 Text="{Binding ReferenceNumber, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                 Style="{StaticResource CashInputStyle}"
+                                                 PreviewTextInput="AlphanumericOnly_PreviewTextInput"
+                                                 DataObject.Pasting="AlphanumericOnly_Pasting"
+                                                 TextAlignment="Left"
+                                                 MaxLength="50"
+                                                 Margin="0,0,0,10"/>
+
+                                        <TextBlock Grid.Row="3"
+                                                   Text="Amount:"
+                                                   Style="{StaticResource InputLabelStyle}"
+                                                   Margin="0,0,0,6"/>
+
+                                        <Grid Grid.Row="4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox Style="{StaticResource CashInputStyle}"
+                                                     Text="{Binding CurrentPaymentAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
+                                                     PreviewTextInput="DecimalAmount_PreviewTextInput"
+                                                     DataObject.Pasting="DecimalAmount_Pasting"
+                                                     InputScope="Number"/>
+
+                                            <Button Grid.Column="1"
+                                                    Content="ADD"
+                                                    Command="{Binding AddPaymentCommand}"
+                                                    Style="{StaticResource AddPaymentButtonStyle}"
+                                                    Margin="8,0,0,0"/>
+                                        </Grid>
+
+                                        <TextBlock Grid.Row="5"
+                                                   Text="{Binding PaymentErrorMessage}"
+                                                   Style="{StaticResource PaymentErrorTextStyle}"/>
+                                    </Grid>
                                 </Grid>
                             </Border>
 
@@ -864,6 +909,10 @@
                                                     </Style>
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
+                                            <DataGridTextColumn Header="Ref"
+                                                                Binding="{Binding ReferenceNumber}"
+                                                                Width="90"
+                                                                IsReadOnly="True"/>
                                             <DataGridTemplateColumn Header="Action" Width="42">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>

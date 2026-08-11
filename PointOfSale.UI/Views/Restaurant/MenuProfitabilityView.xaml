@@ -44,12 +44,22 @@
                               Margin="0"/>
                 </StackPanel>
 
-                <Button Grid.Column="2"
-                        Command="{Binding RefreshCommand}"
-                        Content="Refresh"
-                        Style="{StaticResource RefreshButtonStyle}"
-                        VerticalAlignment="Bottom"
-                        Height="32" Width="32"/>
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom">
+                    <Button Content="Export Excel"
+                            Command="{Binding ExportToExcelCommand}"
+                            Style="{StaticResource ExportExcelButtonStyle}"
+                            ToolTip="Export Menu Profitability to Excel (.xlsx)"
+                            Margin="0,0,8,0"/>
+
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource RefreshButtonStyle}"
+                            ToolTip="Refresh"
+                            Height="32"
+                            Width="32"/>
+                </StackPanel>
             </Grid>
         </Border>
 

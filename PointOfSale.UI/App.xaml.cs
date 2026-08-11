@@ -192,6 +192,7 @@ namespace PointOfSale.UI
             services.AddTransient<BatchSelectionViewModel>();
             services.AddTransient<ProductListViewModel>();
             services.AddTransient<WastageViewModel>();
+            services.AddTransient<WastageApprovalViewModel>();
             services.AddTransient<WastageReasonViewModel>();
 
             services.AddTransient<PriceUpdateViewModel>();

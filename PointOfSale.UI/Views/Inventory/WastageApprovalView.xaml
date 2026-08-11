@@ -1,0 +1,181 @@
+<UserControl x:Class="PointOfSale.UI.Views.Inventory.WastageApprovalView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="650"
+             d:DesignWidth="1100">
+
+    <Grid Margin="0,4,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,0,4">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Refresh"
+                        Command="{Binding LoadPendingCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Width="90"
+                        Height="30"/>
+
+                <TextBlock Text="Pending wastage documents awaiting manager review"
+                           Style="{StaticResource LabelStyle}"
+                           VerticalAlignment="Center"
+                           Margin="12,0,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}" Margin="0 0 8 0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Pending Wastage Queue" Style="{StaticResource SubHeaderTextStyle}" Margin="0,0,0,6"/>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding PendingWastageQueue}"
+                              SelectedItem="{Binding SelectedWastage}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              SelectionMode="Single"
+                              GridLinesVisibility="Horizontal"
+                              Style="{StaticResource DataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Wastage #" Binding="{Binding WastageNumber}" Width="120"/>
+                            <DataGridTextColumn Header="Location" Binding="{Binding LocationName}" Width="130"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding WastageDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="110"/>
+                            <DataGridTextColumn Header="Total Items" Binding="{Binding TotalItems}" Width="90"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Request By: " Style="{StaticResource LabelStyle}"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding SelectedWastage.RequestedBy}"
+                                   Style="{StaticResource LabelStyle}"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="Document Total: "
+                                   Style="{StaticResource LabelStyle}"
+                                   Margin="16,0,0,0"/>
+                        <TextBlock Grid.Column="3"
+                                   Text="{Binding SelectedWastage.TotalCost, StringFormat='Rs. {0:N2}'}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource BrandBrush}"/>
+                    </Grid>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding SelectedWastageItems}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              Style="{StaticResource DataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Item Name" Binding="{Binding ItemName}" Width="*"/>
+                            <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="140"/>
+                            <DataGridTextColumn Header="UOM" Binding="{Binding UOM}" Width="80">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat=N3}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Total Cost" Binding="{Binding TotalCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border Grid.Row="2" Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,8,0,0">
+                        <StackPanel>
+                            <Grid HorizontalAlignment="Right" Width="260" Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Text="TOTAL WASTAGE:" Style="{StaticResource LabelStyle}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding SelectedWastageTotalCost, StringFormat='Rs. {0:N2}'}"
+                                           FontSize="16"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource BrandBrush}"
+                                           TextAlignment="Right"
+                                           HorizontalAlignment="Right"/>
+                            </Grid>
+
+                            <TextBlock Text="Remarks:" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
+                            <TextBox Text="{Binding ApprovalRemarks, UpdateSourceTrigger=PropertyChanged}"
+                                     MaxLength="500"
+                                     AcceptsReturn="True"
+                                     Height="70"
+                                     VerticalContentAlignment="Top"
+                                     Style="{StaticResource TextBoxStyle}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button Content="Reject"
+                                Command="{Binding RejectCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Margin="0,0,10,0"/>
+
+                        <Button Content="Approve"
+                                Command="{Binding ApproveCommand}"
+                                Style="{StaticResource PrimaryButtonStyle}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

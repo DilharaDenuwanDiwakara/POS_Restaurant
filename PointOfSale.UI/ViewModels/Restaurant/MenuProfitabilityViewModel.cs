@@ -2,9 +2,11 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Restaurant;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.UI.Commands;
 
 namespace PointOfSale.UI.ViewModels.Restaurant
@@ -13,16 +15,20 @@ namespace PointOfSale.UI.ViewModels.Restaurant
     {
         private readonly IMenuProfitabilityRepository _menuProfitabilityRepository;
         private readonly IMenuCategoryRepository _categoryRepository;
+        private readonly IExcelService _excelService;
         private bool _isInitialized;
 
         public MenuProfitabilityViewModel(IMenuProfitabilityRepository menuProfitabilityRepository,
-                                           IMenuCategoryRepository categoryRepository)
+                                           IMenuCategoryRepository categoryRepository,
+                                           IExcelService excelService)
         {
-            _menuProfitabilityRepository = menuProfitabilityRepository;
-            _categoryRepository = categoryRepository;
+            _menuProfitabilityRepository = menuProfitabilityRepository ?? throw new ArgumentNullException(nameof(menuProfitabilityRepository));
+            _categoryRepository = categoryRepository ?? throw new ArgumentNullException(nameof(categoryRepository));
+            _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
 
             LoadedCommand = new AsyncRelayCommand(async _ => await OnViewLoadedAsync());
             RefreshCommand = new AsyncRelayCommand(async _ => await LoadMenuProfitabilityAsync());
+            ExportToExcelCommand = new AsyncRelayCommand(async _ => await ExportToExcelAsync());
         }
 
         #region Properties
@@ -52,6 +58,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
         #region Commands
         public ICommand LoadedCommand { get; }
         public ICommand RefreshCommand { get; }
+        public ICommand ExportToExcelCommand { get; }
         #endregion
 
         #region Logic
@@ -114,6 +121,43 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        private async Task ExportToExcelAsync()
+        {
+            if (MenuProfitabilityItems == null || !MenuProfitabilityItems.Any())
+            {
+                MessageBox.Show("No Menu Profitability data available to export.", "Export Excel", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                Title = "Export Menu Profitability to Excel",
+                FileName = $"MenuProfitability_{DateTime.Now:yyyyMMdd}.xlsx"
+            };
+
+            if (saveFileDialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            var exportItems = MenuProfitabilityItems.ToList();
+
+            try
+            {
+                await Task.Run(() => _excelService.ExportMenuProfitability(exportItems, saveFileDialog.FileName));
+                MessageBox.Show("Menu Profitability export completed successfully.", "Export Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "File Locked", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred while exporting Menu Profitability: {ex.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

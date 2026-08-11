@@ -80,7 +80,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 // Handle "All" or null logic for PaymentType
                 object pType = string.IsNullOrEmpty(paymentType) || paymentType == "All"
                                ? (object)DBNull.Value
-                               : paymentType;
+                               : NormalizePaymentTypeFilter(paymentType);
                 command.Parameters.AddWithValue("@PaymentType", pType);
 
                 await connection.OpenAsync();
@@ -271,6 +271,15 @@ ORDER BY sl.[Id];";
             return reader.IsDBNull(ordinal)
                 ? defaultValue
                 : reader.GetValue(ordinal).ToString();
+        }
+
+        private static string NormalizePaymentTypeFilter(string paymentType)
+        {
+            if (string.IsNullOrWhiteSpace(paymentType))
+                return paymentType;
+
+            var normalized = paymentType.Trim().ToUpperInvariant().Replace(" ", "_");
+            return normalized == "BANK_TRANSFER" ? "BANK_TRANSFER" : paymentType;
         }
         #endregion
     }

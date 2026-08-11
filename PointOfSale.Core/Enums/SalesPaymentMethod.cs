@@ -4,6 +4,7 @@ namespace PointOfSale.Core.Enums
     {
         CASH,
         CARD,
-        CREDIT
+        CREDIT,
+        BANK_TRANSFER
     }
 }

@@ -299,7 +299,6 @@
                                          Style="{StaticResource TextBoxStyle}" 
                                          Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
                                          PreviewKeyDown="MoveFocusOnEnter"
-                                         Focusable="False"
                                          GotKeyboardFocus="SelectAllText_GotFocus"
                                          Margin="0 0 8 0"/>
 
@@ -310,7 +309,6 @@
                                          MaxLength="5"
                                          Style="{StaticResource TextBoxStyle}"
                                          PreviewKeyDown="MoveFocusOnEnter"
-                                         Focusable="False"
                                          GotKeyboardFocus="SelectAllText_GotFocus"
                                          Margin="0"/>
 

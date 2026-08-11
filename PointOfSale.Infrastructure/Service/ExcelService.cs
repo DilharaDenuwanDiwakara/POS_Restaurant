@@ -228,6 +228,58 @@ namespace PointOfSale.Infrastructure.Service
                 workbook.SaveAs(filePath);
             }
         }
+
+        public void ExportMenuProfitability(IEnumerable<MenuProfitabilityDto> items, string filePath)
+        {
+            items = items ?? Enumerable.Empty<MenuProfitabilityDto>();
+
+            if (File.Exists(filePath))
+            {
+                EnsureFileIsNotLocked(filePath);
+            }
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Menu Profitability");
+
+                string[] headers =
+                {
+                    "Category", "Item Code", "Menu Item", "Variant", "BOM Cost",
+                    "Selling Price", "Gross Profit", "Food Cost %", "BOM Status"
+                };
+
+                for (var i = 0; i < headers.Length; i++)
+                {
+                    worksheet.Cell(1, i + 1).Value = headers[i];
+                    worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+                    worksheet.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.LightGray;
+                }
+
+                var row = 2;
+                foreach (var item in items)
+                {
+                    worksheet.Cell(row, 1).Value = item.CategoryName ?? string.Empty;
+                    worksheet.Cell(row, 2).Value = item.ItemCode ?? string.Empty;
+                    worksheet.Cell(row, 3).Value = item.MenuItemName ?? string.Empty;
+                    worksheet.Cell(row, 4).Value = item.VariantName ?? string.Empty;
+                    worksheet.Cell(row, 5).Value = item.TotalBOMCost;
+                    worksheet.Cell(row, 6).Value = item.SellingPrice;
+                    worksheet.Cell(row, 7).Value = item.GrossProfit;
+                    worksheet.Cell(row, 8).Value = item.FoodCostPercentage / 100m;
+                    worksheet.Cell(row, 9).Value = item.BOMStatus ?? string.Empty;
+
+                    row++;
+                }
+
+                worksheet.Columns(5, 7).Style.NumberFormat.Format = "#,##0.00";
+                worksheet.Column(8).Style.NumberFormat.Format = "0.00%";
+                worksheet.Range(1, 1, Math.Max(row - 1, 1), headers.Length).SetAutoFilter();
+                worksheet.SheetView.FreezeRows(1);
+                worksheet.Columns().AdjustToContents();
+
+                workbook.SaveAs(filePath);
+            }
+        }
         #endregion
 
         #region Private

@@ -195,24 +195,23 @@ namespace PointOfSale.UI.Views.Sales
 
         private void HandleBarcodeEnter(TextBox sourceTextBox)
         {
-            // 1. Force Binding Update so ViewModel gets the text immediately
-            sourceTextBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            var submittedCode = sourceTextBox?.Text;
+            var wasAdded = ViewModel?.SubmitBarcodeEntry(submittedCode) == true;
 
-            // 2. Auto-add when barcode / item code resolves to an exact product match.
-            if (ViewModel?.SelectedProduct != null &&
-                ViewModel.AddProductCommand?.CanExecute(null) == true)
+            if (sourceTextBox != null)
             {
-                ViewModel.AddProductCommand.Execute(null);
+                sourceTextBox.Clear();
+                sourceTextBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            }
+
+            if (wasAdded)
+            {
                 FocusControl(BarcodeTextBox);
                 return;
             }
 
-            // 3. No exact code match: move to manual product selection.
-            if (ProductComboBox != null)
-            {
-                ProductComboBox.Focus();
-                ProductComboBox.IsDropDownOpen = true;
-            }
+            // No exact code match: keep focus ready for the next scan/manual retry.
+            FocusControl(BarcodeTextBox);
         }
 
         private void HandleProductComboEnter(ComboBox sourceComboBox)
@@ -250,10 +249,6 @@ namespace PointOfSale.UI.Views.Sales
 
             switch (e.Key)
             {
-                case Key.F4: // Clear Pay Mode
-                    ViewModel.ClearPaymentMethodCommand.Execute(null);
-                    return true;
-
                 // --- Operations ---
                 case Key.F5: // Save Only
                     ExecuteIfCan(ViewModel.SaveSaleCommand);

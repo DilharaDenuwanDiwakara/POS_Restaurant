@@ -320,6 +320,7 @@
     <Compile Include="Converters\PinMaskConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\ScaleConverter.cs" />
+    <Compile Include="Converters\YieldPercentageBrushConverter.cs" />
     <Compile Include="Reports\ExpiryReport.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -398,6 +399,7 @@
     <Compile Include="ViewModels\Inventory\StockAdjustmentViewModel.cs" />
     <Compile Include="ViewModels\Inventory\StockTransferViewModel.cs" />
     <Compile Include="ViewModels\Inventory\UnitMeasureViewModel.cs" />
+    <Compile Include="ViewModels\Inventory\WastageApprovalViewModel.cs" />
     <Compile Include="ViewModels\Inventory\WastageReasonViewModel.cs" />
     <Compile Include="ViewModels\Inventory\WastageViewModel.cs" />
     <Compile Include="ViewModels\Purchasing\GoodsPurchaseNoteApprovalViewModel.cs" />
@@ -524,6 +526,9 @@
     </Compile>
     <Compile Include="Views\Inventory\WastageView.xaml.cs">
       <DependentUpon>WastageView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Inventory\WastageApprovalView.xaml.cs">
+      <DependentUpon>WastageApprovalView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Purchasing\GoodsPurchaseNoteApprovalView.xaml.cs">
       <DependentUpon>GoodsPurchaseNoteApprovalView.xaml</DependentUpon>
@@ -805,6 +810,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Inventory\WastageView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Inventory\WastageApprovalView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
