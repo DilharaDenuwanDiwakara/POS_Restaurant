@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Configuration;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data.SqlClient;
-using System.Globalization;
 using System.Linq;
 using System.Media;
 using System.Threading.Tasks;
@@ -81,9 +80,14 @@ namespace PointOfSale.UI.ViewModels.Sales
         private decimal? _pendingAutoDiscountRulesSubTotal;
         private bool _isRefreshingAutoDiscountRules;
         private bool _isCalculatingTotals;
+        private bool _isUpdatingCart;
         private bool _isApplyingCustomerSelection;
         private bool _isDataLoaded;
         private bool _isLoadingData;
+        private readonly Dictionary<string, MenuVariantDto> _productByCode =
+            new Dictionary<string, MenuVariantDto>(StringComparer.OrdinalIgnoreCase);
+        private readonly System.Windows.Threading.DispatcherTimer _productFilterDebounceTimer;
+        private readonly System.Windows.Threading.DispatcherTimer _autoDiscountRefreshDebounceTimer;
 
         public SalesViewModel(ISalesRepository salesRepository,
                               IDiscountRepository discountRepository,
@@ -127,13 +131,29 @@ namespace PointOfSale.UI.ViewModels.Sales
 
             // Timer for Clock
             var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            timer.Tick += (s, e) =>
-            {
-                CurrentDateTime = DateTime.Now;
-                if (CartItems != null && CartItems.Any())
-                    CalculateTotals();
-            };
+            timer.Tick += (s, e) => CurrentDateTime = DateTime.Now;
             timer.Start();
+
+            _productFilterDebounceTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(180)
+            };
+            _productFilterDebounceTimer.Tick += (s, e) =>
+            {
+                _productFilterDebounceTimer.Stop();
+                RefreshProductFilter();
+            };
+
+            _autoDiscountRefreshDebounceTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(300)
+            };
+            _autoDiscountRefreshDebounceTimer.Tick += (s, e) =>
+            {
+                _autoDiscountRefreshDebounceTimer.Stop();
+                if (_pendingAutoDiscountRulesSubTotal.HasValue && !_isRefreshingAutoDiscountRules)
+                    _ = RefreshPendingActiveAutoDiscountRulesAsync();
+            };
 
             Quantity = 1;
             IsServiceChargeEnabled = false;
@@ -265,7 +285,11 @@ namespace PointOfSale.UI.ViewModels.Sales
         public string Barcode
         {
             get => _barcode;
-            set => SetProperty(ref _barcode, value);
+            set
+            {
+                if (SetProperty(ref _barcode, value))
+                    QueueProductFilterRefresh();
+            }
         }
 
         // --- Entry Inputs ---
@@ -637,6 +661,17 @@ namespace PointOfSale.UI.ViewModels.Sales
         public bool HasAppliedPayments => AppliedPayments.Any();
         public bool IsPaymentWorkflowVisible => IsPaymentPanelVisible || HasAppliedPayments;
 
+        private int _currentOpenSalesId;
+        public int CurrentOpenSalesId
+        {
+            get => _currentOpenSalesId;
+            set
+            {
+                if (SetProperty(ref _currentOpenSalesId, value))
+                    (PrintPreBillCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+
         // State
         private bool _isProcessing;
         public bool IsProcessing { get => _isProcessing; set => SetProperty(ref _isProcessing, value); }
@@ -695,7 +730,8 @@ namespace PointOfSale.UI.ViewModels.Sales
                 if (e.OldItems != null)
                     foreach (SalesLine item in e.OldItems) item.PropertyChanged -= CartItem_PropertyChanged;
 
-                CalculateTotals();
+                if (!_isUpdatingCart)
+                    CalculateTotals();
             };
 
             AppliedPayments.CollectionChanged += (s, e) =>
@@ -716,10 +752,10 @@ namespace PointOfSale.UI.ViewModels.Sales
                 parameter => (parameter as SalesLine ?? SelectedCartItem) != null);
             IncreaseQuantityCommand = new RelayCommand(
                 parameter => ExecuteChangeQuantity(parameter as SalesLine, 1),
-                parameter => (parameter as SalesLine)?.IsQuantityLocked == false);
+                parameter => parameter is SalesLine);
             DecreaseQuantityCommand = new RelayCommand(
                 parameter => ExecuteChangeQuantity(parameter as SalesLine, -1),
-                parameter => parameter is SalesLine line && !line.IsQuantityLocked && line.Quantity > 1);
+                parameter => parameter is SalesLine);
             CancelInvoiceCommand = new RelayCommand(_ => ExecuteCancelInvoice());
 
             EnableDiscountCommad = new RelayCommand(_ => MessageBox.Show("Bill discounts are handled through the manager register.", "Discount", MessageBoxButton.OK, MessageBoxImage.Information));
@@ -736,6 +772,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             RemovePaymentCommand = new RelayCommand<PaymentDetail>(RemoveAppliedPayment, payment => payment != null);
             SaveSaleCommand = new AsyncRelayCommand(async _ => await SaveSalesAsync(printBill: false), _ => CanSaveSale());
             SaveAndPrintCommand = new AsyncRelayCommand(async _ => await SaveSalesAsync(printBill: true), _ => CanSaveSale());
+            PrintPreBillCommand = new AsyncRelayCommand(async _ => await PrintPreBillAsync(), _ => CanPrintPreBill());
+            RecallHeldSaleCommand = new AsyncRelayCommand(async _ => await RecallHeldSaleAsync());
             SelectPaymentMethodCommand = new RelayCommand<SalesPaymentMethod>(SelectPaymentMethod);
             SelectCategoryCommand = new RelayCommand<MenuCategory>(SelectCategory, category => category != null);
             RefreshOrdersCommand = new AsyncRelayCommand(async _ =>
@@ -875,10 +913,13 @@ namespace PointOfSale.UI.ViewModels.Sales
                 var products = await _menuItemRepository.GetAllVariantsForSalesAsync();
 
                 Products.Clear();
+                _productByCode.Clear();
                 foreach (var p in products)
                 {
                     p.ImageUrl = _storageService.GetSecureFileUrl(p.ImageUrl);
                     Products.Add(p);
+                    AddProductLookup(p.ItemCode, p);
+                    AddProductLookup(p.Barcode, p);
                 }
 
                 RefreshProductFilter();
@@ -907,7 +948,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             // If Quantity changes in the Grid, recalculate the whole invoice
             if (e.PropertyName == nameof(SalesLine.Quantity) || e.PropertyName == nameof(SalesLine.ManualDiscount))
             {
-                CalculateTotals();
+                if (!_isUpdatingCart)
+                    CalculateTotals();
             }
         }
         private async Task ExecuteAddProductAsync()
@@ -957,10 +999,17 @@ namespace PointOfSale.UI.ViewModels.Sales
 
             if (existing != null)
             {
-                existing.Quantity += qtyToAdd;
-                if (CartItems.IndexOf(existing) > 0)
+                _isUpdatingCart = true;
+                try
                 {
-                    CartItems.Move(CartItems.IndexOf(existing), 0);
+                    existing.Quantity += qtyToAdd;
+                    var currentIndex = CartItems.IndexOf(existing);
+                    if (currentIndex > 0)
+                        CartItems.Move(currentIndex, 0);
+                }
+                finally
+                {
+                    _isUpdatingCart = false;
                 }
             }
             else
@@ -983,7 +1032,15 @@ namespace PointOfSale.UI.ViewModels.Sales
                     TaxIds = productToAdd.TaxIds.ToList()
                 };
 
-                CartItems.Insert(0, line);
+                _isUpdatingCart = true;
+                try
+                {
+                    CartItems.Insert(0, line);
+                }
+                finally
+                {
+                    _isUpdatingCart = false;
+                }
             }
 
             CalculateTotals();
@@ -1035,8 +1092,17 @@ namespace PointOfSale.UI.ViewModels.Sales
                     return;
                 }
 
-                CartItems.Remove(lineToRemove);
-                RenumberCartItems();
+                _isUpdatingCart = true;
+                try
+                {
+                    CartItems.Remove(lineToRemove);
+                    RenumberCartItems();
+                }
+                finally
+                {
+                    _isUpdatingCart = false;
+                }
+
                 CalculateTotals();
             }
         }
@@ -1200,8 +1266,28 @@ namespace PointOfSale.UI.ViewModels.Sales
         {
             if (FilteredProducts == null) return;
 
+            _productFilterDebounceTimer?.Stop();
             FilteredProducts.Filter = FilterProduct;
             FilteredProducts.Refresh();
+        }
+
+        private void QueueProductFilterRefresh()
+        {
+            if (FilteredProducts == null || _productFilterDebounceTimer == null)
+                return;
+
+            _productFilterDebounceTimer.Stop();
+            _productFilterDebounceTimer.Start();
+        }
+
+        private void AddProductLookup(string code, MenuVariantDto product)
+        {
+            var key = (code ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(key) || product == null)
+                return;
+
+            if (!_productByCode.ContainsKey(key))
+                _productByCode.Add(key, product);
         }
 
         private bool FilterProduct(object item)
@@ -1232,14 +1318,11 @@ namespace PointOfSale.UI.ViewModels.Sales
 
             var term = (code ?? string.Empty).Trim();
 
+            _productFilterDebounceTimer?.Stop();
             RefreshProductFilter();
 
             // Physical barcode/item-code scans must resolve across all products, independent of the selected category chip.
-            var exactMatch = Products.FirstOrDefault(p =>
-                (!string.IsNullOrWhiteSpace(p.ItemCode) &&
-                 p.ItemCode.Equals(term, StringComparison.OrdinalIgnoreCase)) ||
-                (!string.IsNullOrWhiteSpace(p.Barcode) &&
-                 p.Barcode.Equals(term, StringComparison.OrdinalIgnoreCase)));
+            _productByCode.TryGetValue(term, out var exactMatch);
 
             _suppressProductSelectionTrigger = true;
             SelectedProduct = exactMatch;
@@ -1367,6 +1450,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             _currentRestaurantOrderId = null;
             CartItems.Clear();
             AppliedPayments.Clear();
+            CurrentOpenSalesId = 0;
             SelectedPaymentMethod = null;
             IsPaymentInputVisible = false;
             IsPaymentGridVisible = false;
@@ -1395,6 +1479,8 @@ namespace PointOfSale.UI.ViewModels.Sales
         public ICommand DecreaseQuantityCommand { get; private set; }
         public ICommand SaveSaleCommand { get; private set; }
         public ICommand SaveAndPrintCommand { get; private set; }
+        public ICommand PrintPreBillCommand { get; private set; }
+        public ICommand RecallHeldSaleCommand { get; private set; }
         public ICommand CancelInvoiceCommand { get; private set; }
         public ICommand SelectPaymentMethodCommand { get; private set; }
         public ICommand SelectCategoryCommand { get; private set; }
@@ -1429,6 +1515,12 @@ namespace PointOfSale.UI.ViewModels.Sales
                 payment.Amount > 0 &&
                 !string.IsNullOrWhiteSpace(payment.PaymentMethod));
         }
+
+        private bool CanPrintPreBill()
+        {
+            return CartItems?.Any() == true && CurrentOpenSalesId <= 0;
+        }
+
         private async Task SaveSalesAsync(bool printBill = false)
         {
             if (!CanSaveSale()) return;
@@ -1483,40 +1575,18 @@ namespace PointOfSale.UI.ViewModels.Sales
                 }
 
                 // Per-line tax extraction — must run before Sale.Lines is captured
-                foreach (var line in CartItems)
-                {
-                    var applicableTaxes = _taxConfigurations.Where(t => line.TaxIds.Contains(t.Id));
-                    var unitTax = TaxCalculator.ExtractUnitTax(line.UnitPrice, applicableTaxes);
+                if (HasStaffCreditPayment(cappedPayments) && !HasSelectedStoreCreditCustomer())
+                    throw new InvalidOperationException("Select a customer before settling a staff credit payment.");
 
-                    // Multiply the per-unit extracted amount by Quantity for the line total
-                    line.TaxAmount = Math.Round(unitTax * line.Quantity, 2, MidpointRounding.AwayFromZero);
-                }
+                RefreshLineTaxAmounts();
 
-                var sale = new Sale
-                {
-                    InvoiceNumber = InvoiceNumber,
-                    CustomerId = SelectedCustomer?.Id ?? null,
-                    SalesDate = DateTime.Now,
-                    TotalAmount = SubTotal,
-                    Discount = BillDiscount,
+                var salesId = CurrentOpenSalesId > 0
+                    ? CurrentOpenSalesId
+                    : await _salesRepository.HoldSaleAsync(BuildHoldSaleRequest());
 
-                    CashGiven = AppliedPayments
-                        .Where(payment => string.Equals(payment.PaymentMethod, CashPaymentMethod, StringComparison.OrdinalIgnoreCase))
-                        .Sum(payment => payment.Amount),
-
-                    IsTaxInvoice = false,
-                    TaxInvoiceNumber = null,
-                    CreatedBy = CurrentUser.UserId,
-                    BranchId = CurrentUser.BranchId,
-                    TaxAmount = TaxAmount,
-                    ServiceChargeAmount = ServiceChargeAmount,
-                    OrderId = SelectedServedOrder?.OrderId,
-                    ShiftId = CurrentUser.CurrentShiftId,
-                    Lines = CartItems.ToList(),
-                    Payments = cappedPayments
-                };
-
-                var salesId = await _salesRepository.CreateAsync(sale);
+                var finalized = await _salesRepository.FinalizeSaleAsync(BuildFinalizeSaleRequest(salesId, cappedPayments));
+                if (!finalized)
+                    throw new InvalidOperationException("The sale could not be finalized.");
 
                 if (HasAppliedDiscountCode && _appliedDiscountValidation != null && BillDiscount > 0)
                 {
@@ -1577,6 +1647,296 @@ namespace PointOfSale.UI.ViewModels.Sales
             {
                 IsProcessing = false;
             }
+        }
+
+        private async Task PrintPreBillAsync()
+        {
+            if (!CanPrintPreBill())
+                return;
+
+            try
+            {
+                IsProcessing = true;
+                RefreshLineTaxAmounts();
+
+                var salesId = await _salesRepository.HoldSaleAsync(BuildHoldSaleRequest());
+                CurrentOpenSalesId = salesId;
+
+                PrintBill(salesId);
+
+                ExecuteCancelInvoice();
+                RequestBarcodeFocus?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Pre-bill Failed: {ex.Message}", "Pre-Bill", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsProcessing = false;
+            }
+        }
+
+        private async Task RecallHeldSaleAsync()
+        {
+            try
+            {
+                IsProcessing = true;
+
+                var unpaidSales = await _salesRepository.GetUnpaidSalesAsync(CurrentUser.BranchId);
+                if (unpaidSales == null || unpaidSales.Count == 0)
+                {
+                    MessageBox.Show("No unpaid bills found.", "Recall Bills", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                var selectedSale = ShowRecallBillPicker(unpaidSales);
+
+                if (selectedSale == null)
+                    return;
+
+                var recalledSale = await _salesRepository.GetSaleForRecallAsync(selectedSale.SalesId);
+                if (recalledSale == null)
+                {
+                    MessageBox.Show("The selected bill is no longer available for recall.", "Recall Bills", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                LoadRecalledSaleIntoCart(recalledSale);
+                RequestBarcodeFocus?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Recall Failed: {ex.Message}", "Recall Bills", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsProcessing = false;
+            }
+        }
+
+        private HoldSaleRequestDto BuildHoldSaleRequest()
+        {
+            return new HoldSaleRequestDto
+            {
+                BranchId = CurrentUser.BranchId,
+                CustomerId = SelectedCustomer?.Id > 0 ? (int?)SelectedCustomer.Id : null,
+                TotalAmount = SubTotal,
+                Discount = BillDiscount,
+                IsTaxInvoice = false,
+                TaxInvoiceNumber = null,
+                CreatedBy = CurrentUser.UserId,
+                OrderId = SelectedServedOrder?.OrderId,
+                TaxAmount = TaxAmount,
+                ServiceChargeAmount = ServiceChargeAmount,
+                ShiftId = CurrentUser.CurrentShiftId,
+                Lines = CartItems.Select(line => new SaleLineRequestDto
+                {
+                    ProductId = line.ProductId,
+                    Quantity = line.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    DiscountAmount = line.LineDiscount,
+                    TaxAmount = line.TaxAmount
+                }).ToList()
+            };
+        }
+
+        private FinalizeSaleRequestDto BuildFinalizeSaleRequest(long salesId, IEnumerable<PaymentDetail> payments)
+        {
+            return new FinalizeSaleRequestDto
+            {
+                SalesId = salesId,
+                CustomerId = SelectedCustomer?.Id > 0 ? (int?)SelectedCustomer.Id : null,
+                CreatedBy = CurrentUser.UserId,
+                CashGiven = payments
+                    .Where(payment => string.Equals(payment.PaymentMethod, CashPaymentMethod, StringComparison.OrdinalIgnoreCase))
+                    .Sum(payment => payment.Amount),
+                Payments = payments.Select(payment => new SalePaymentRequestDto
+                {
+                    PaymentTerminalId = payment.PaymentTerminalId,
+                    PaymentMethod = payment.PaymentMethod,
+                    Amount = payment.Amount,
+                    ReferenceNumber = payment.ReferenceNumber
+                }).ToList()
+            };
+        }
+
+        private void RefreshLineTaxAmounts()
+        {
+            foreach (var line in CartItems)
+            {
+                if (!IsTaxEnabled)
+                {
+                    line.TaxAmount = 0m;
+                    continue;
+                }
+
+                var applicableTaxes = _taxConfigurations.Where(t => line.TaxIds.Contains(t.Id));
+                var unitTax = TaxCalculator.ExtractUnitTax(line.UnitPrice, applicableTaxes);
+                line.TaxAmount = Math.Round(unitTax * line.Quantity, 2, MidpointRounding.AwayFromZero);
+            }
+        }
+
+        private void LoadRecalledSaleIntoCart(RecalledSaleDto sale)
+        {
+            ExecuteCancelInvoice();
+
+            CurrentOpenSalesId = Convert.ToInt32(sale.SalesId);
+            InvoiceNumber = sale.InvoiceNumber;
+            SelectedCustomer = sale.CustomerId.HasValue
+                ? Customers.FirstOrDefault(customer => customer.Id == sale.CustomerId.Value)
+                : Customers.FirstOrDefault(customer => customer.Id == 0);
+            IsTaxEnabled = sale.TaxAmount > 0;
+            IsServiceChargeEnabled = sale.ServiceChargeAmount > 0;
+
+            var lineNumber = 1;
+            foreach (var line in sale.Lines)
+            {
+                var product = Products.FirstOrDefault(x => x.VariantId == line.ProductId);
+                CartItems.Add(new SalesLine
+                {
+                    Number = lineNumber++,
+                    ProductId = line.ProductId,
+                    MenuCategoryId = product?.MenuCategoryId,
+                    ProductName = product?.DisplayName ?? MenuVariantDto.RemoveStandardVariantSuffix(line.ProductName),
+                    UnitPrice = line.UnitPrice,
+                    Quantity = line.Quantity,
+                    ManualDiscount = line.DiscountAmount,
+                    TaxAmount = line.TaxAmount,
+                    TaxIds = product?.TaxIds?.ToList() ?? new List<int>(),
+                    AvailableQuantity = decimal.MaxValue,
+                    Note = string.Empty
+                });
+            }
+
+            CalculateTotals();
+            RaiseSaveCommandState();
+        }
+
+        private SalesListDto ShowRecallBillPicker(IList<SalesListDto> unpaidSales)
+        {
+            var grid = new System.Windows.Controls.DataGrid
+            {
+                ItemsSource = unpaidSales,
+                IsReadOnly = true,
+                Margin = new Thickness(18, 14, 18, 0),
+                MinHeight = 260,
+                MaxHeight = 320,
+                HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Disabled,
+                VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto
+            };
+            ApplyStyle(grid, "SalesDataGridStyle");
+            grid.SelectedIndex = 0;
+
+            grid.Columns.Add(new System.Windows.Controls.DataGridTextColumn { Header = "Invoice Number", Binding = new System.Windows.Data.Binding("InvoiceNumber"), Width = 170 });
+            grid.Columns.Add(new System.Windows.Controls.DataGridTextColumn { Header = "Date", Binding = new System.Windows.Data.Binding("SalesDate") { StringFormat = "dd/MM/yyyy HH:mm" }, Width = 150 });
+            grid.Columns.Add(new System.Windows.Controls.DataGridTextColumn { Header = "Customer", Binding = new System.Windows.Data.Binding("CustomerName"), Width = new System.Windows.Controls.DataGridLength(1, System.Windows.Controls.DataGridLengthUnitType.Star) });
+            grid.Columns.Add(new System.Windows.Controls.DataGridTextColumn
+            {
+                Header = "Amount",
+                Binding = new System.Windows.Data.Binding("NetAmount") { StringFormat = "Rs. {0:N2}" },
+                Width = 130,
+                HeaderStyle = TryFindStyle("RightAlignedDataGridColumnHeaderStyle"),
+                ElementStyle = TryFindStyle("RightAlignedTextStyle")
+            });
+
+            var recallButton = new System.Windows.Controls.Button
+            {
+                Content = "Recall Bill",
+                MinWidth = 120,
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+            ApplyStyle(recallButton, "PlaceOrderButtonStyle");
+
+            var cancelButton = new System.Windows.Controls.Button
+            {
+                Content = "Cancel",
+                MinWidth = 90
+            };
+            ApplyStyle(cancelButton, "SaveSaleSecondaryButtonStyle");
+
+            var buttons = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(18, 16, 18, 18)
+            };
+            buttons.Children.Add(recallButton);
+            buttons.Children.Add(cancelButton);
+
+            var title = new System.Windows.Controls.TextBlock
+            {
+                Text = "Recall Bills",
+                Margin = new Thickness(18, 16, 18, 0)
+            };
+            ApplyStyle(title, "OrderDetailsTitleStyle");
+
+            var layout = new System.Windows.Controls.DockPanel
+            {
+                Background = TryFindBrush("SalesCardBrush") ?? Brushes.White,
+                LastChildFill = true
+            };
+            System.Windows.Controls.DockPanel.SetDock(title, System.Windows.Controls.Dock.Top);
+            System.Windows.Controls.DockPanel.SetDock(buttons, System.Windows.Controls.Dock.Bottom);
+            layout.Children.Add(title);
+            layout.Children.Add(buttons);
+            layout.Children.Add(grid);
+
+            var window = new Window
+            {
+                Title = "Recall Bills",
+                Width = 720,
+                Height = 455,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive),
+                Content = layout,
+                Background = TryFindBrush("SalesBackgroundBrush") ?? Brushes.White
+            };
+
+            SalesListDto selected = null;
+            recallButton.Click += (s, e) =>
+            {
+                selected = grid.SelectedItem as SalesListDto;
+                if (selected == null)
+                {
+                    MessageBox.Show("Select a bill to recall.", "Recall Bills", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                window.DialogResult = true;
+            };
+            cancelButton.Click += (s, e) => window.DialogResult = false;
+            grid.MouseDoubleClick += (s, e) =>
+            {
+                selected = grid.SelectedItem as SalesListDto;
+                if (selected != null)
+                    window.DialogResult = true;
+            };
+
+            return window.ShowDialog() == true ? selected : null;
+        }
+
+        private static void ApplyStyle(FrameworkElement element, string resourceKey)
+        {
+            if (element == null || string.IsNullOrWhiteSpace(resourceKey))
+                return;
+
+            if (Application.Current.TryFindResource(resourceKey) is Style style)
+                element.Style = style;
+        }
+
+        private static Style TryFindStyle(string resourceKey)
+        {
+            return string.IsNullOrWhiteSpace(resourceKey)
+                ? null
+                : Application.Current.TryFindResource(resourceKey) as Style;
+        }
+
+        private static Brush TryFindBrush(string resourceKey)
+        {
+            return string.IsNullOrWhiteSpace(resourceKey)
+                ? null
+                : Application.Current.TryFindResource(resourceKey) as Brush;
         }
 
         private void PrintBill(long salesId)
@@ -1870,8 +2230,11 @@ namespace PointOfSale.UI.ViewModels.Sales
                 return;
 
             _pendingAutoDiscountRulesSubTotal = normalizedSubTotal;
-            if (!_isRefreshingAutoDiscountRules)
-                _ = RefreshPendingActiveAutoDiscountRulesAsync();
+            if (_isRefreshingAutoDiscountRules)
+                return;
+
+            _autoDiscountRefreshDebounceTimer?.Stop();
+            _autoDiscountRefreshDebounceTimer?.Start();
         }
 
         private async Task RefreshPendingActiveAutoDiscountRulesAsync()
@@ -2716,11 +3079,11 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
             else if (IsPaymentTypeCredit && !HasSelectedStoreCreditCustomer())
             {
-                PaymentErrorMessage = "Select a customer for store credit.";
+                PaymentErrorMessage = "Select a customer for staff credit.";
             }
             else if (IsPaymentTypeCredit && string.IsNullOrWhiteSpace(ReferenceNumber))
             {
-                PaymentErrorMessage = "Enter the store credit reference.";
+                PaymentErrorMessage = "Enter the staff credit reference.";
             }
             else if (IsPaymentTypeBankTransfer && string.IsNullOrWhiteSpace(ReferenceNumber))
             {
@@ -2793,6 +3156,12 @@ namespace PointOfSale.UI.ViewModels.Sales
             return SelectedCustomer != null && SelectedCustomer.Id > 0;
         }
 
+        private static bool HasStaffCreditPayment(IEnumerable<PaymentDetail> payments)
+        {
+            return payments != null && payments.Any(payment =>
+                string.Equals(payment.PaymentMethod, CreditPaymentMethod, StringComparison.OrdinalIgnoreCase));
+        }
+
         private bool RequiresReferenceNumber()
         {
             return IsPaymentTypeCard || IsPaymentTypeCredit || IsPaymentTypeBankTransfer;
@@ -2826,6 +3195,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             (AddPaymentCommand as RelayCommand)?.RaiseCanExecuteChanged();
             (SaveSaleCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             (SaveAndPrintCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+            (PrintPreBillCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
         }
 
         private string GetPaymentTypeDisplayText()

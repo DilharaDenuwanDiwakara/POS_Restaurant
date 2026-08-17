@@ -39,13 +39,28 @@ namespace PointOfSale.Core.DTOs
 
         public static string FormatDisplayName(string itemName, string variantName)
         {
+            var normalizedItemName = RemoveStandardVariantSuffix(itemName);
+
             if (string.IsNullOrWhiteSpace(variantName) ||
                 string.Equals(variantName.Trim(), "STANDARD", StringComparison.OrdinalIgnoreCase))
             {
-                return itemName;
+                return normalizedItemName;
             }
 
-            return $"{itemName} - {variantName.Trim()}";
+            return $"{normalizedItemName} - {variantName.Trim()}";
+        }
+
+        public static string RemoveStandardVariantSuffix(string itemName)
+        {
+            if (string.IsNullOrWhiteSpace(itemName))
+                return itemName;
+
+            const string standardSuffix = " - STANDARD";
+            var trimmed = itemName.Trim();
+
+            return trimmed.EndsWith(standardSuffix, StringComparison.OrdinalIgnoreCase)
+                ? trimmed.Substring(0, trimmed.Length - standardSuffix.Length).TrimEnd()
+                : trimmed;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

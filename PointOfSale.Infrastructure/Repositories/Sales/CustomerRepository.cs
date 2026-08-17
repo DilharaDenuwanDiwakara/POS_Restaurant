@@ -107,7 +107,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 using (var connection = GetConnection())
                 {
                     var sql = @"
-                        SELECT Id, Name, ContactNumber, IsTaxRegistered, TaxRegistrationNumber, Balance, LoyaltyPoints, IsActive 
+                        SELECT Id, Name, ContactNumber, BillingAddress, IsTaxRegistered, TaxRegistrationNumber, Balance, LoyaltyPoints, IsActive 
                         FROM [Sales].[Customer] 
                         WHERE ContactNumber = @ContactNumber";
 
@@ -209,6 +209,10 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
 
             command.Parameters.Add("@CustomerName", SqlDbType.NVarChar, 100).Value = customer.CustomerName;
             command.Parameters.Add("@ContactNumber", SqlDbType.NVarChar, 15).Value = customer.ContactNumber;
+            command.Parameters.Add("@BillingAddress", SqlDbType.NVarChar, 500).Value =
+                string.IsNullOrWhiteSpace(customer.BillingAddress)
+                    ? (object)DBNull.Value
+                    : customer.BillingAddress.Trim();
             command.Parameters.Add("@IsTaxRegistered", SqlDbType.Bit).Value = customer.IsTaxRegistered;
             command.Parameters.Add("@TaxRegistrationNumber", SqlDbType.NVarChar, 50).Value =
                 string.IsNullOrWhiteSpace(taxRegistrationNumber)
@@ -229,6 +233,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 Id = GetOptionalValue(record, "Id", GetOptionalValue(record, "CustomerId", 0)),
                 CustomerName = GetOptionalValue<string>(record, "Name", GetOptionalValue<string>(record, "CustomerName", null)),
                 ContactNumber = GetValue<string>(record, "ContactNumber"),
+                BillingAddress = GetOptionalValue<string>(record, "BillingAddress", null),
                 IsTaxRegistered = GetOptionalValue(record, "IsTaxRegistered", false),
                 TaxRegistrationNumber = GetOptionalValue<string>(record, "TaxRegistrationNumber", null),
                 Balance = GetValue<decimal>(record, "Balance"),

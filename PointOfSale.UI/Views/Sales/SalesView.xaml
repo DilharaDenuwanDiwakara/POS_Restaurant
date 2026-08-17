@@ -158,7 +158,7 @@
 
                         <TextBox x:Name="BarcodeTextBox"
                                  Grid.Column="1"
-                                 Text="{Binding Barcode, UpdateSourceTrigger=Explicit, Mode=TwoWay}"
+                                 Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                                  Style="{StaticResource ProductInputStyle}"
                                  PreviewKeyDown="BarcodeTextBox_KeyDown"
                                  PreviewTextInput="AlphanumericOnly_PreviewTextInput"
@@ -430,7 +430,11 @@
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Product Code" Width="120" Binding="{Binding ProductCode}" Visibility="Hidden"/>
 
-                                    <DataGridTextColumn Header="Product Name" Width="Auto" Binding="{Binding ProductName}">
+                                    <DataGridTextColumn Header="Product Name"
+                                                        Width="*"
+                                                        MinWidth="180"
+                                                        Binding="{Binding ProductName}"
+                                                        IsReadOnly="True">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextWrapping" Value="Wrap"/>
@@ -460,9 +464,9 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Unit Cost" Width="120" Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}" Visibility="Collapsed" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" ElementStyle="{StaticResource RightAlignedTextStyle}"/>
+                                    <DataGridTextColumn Header="Unit Cost" Width="120" Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}" Visibility="Collapsed" ElementStyle="{StaticResource RightAlignedTextStyle}"/>
 
-                                    <DataGridTextColumn Header="Price" Binding="{Binding UnitPrice, StringFormat='Rs. {0:N2}'}" Width="Auto" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                    <DataGridTextColumn Header="Price" Binding="{Binding UnitPrice, StringFormat='Rs. {0:N2}'}" Width="100" IsReadOnly="True">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -471,7 +475,7 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Discount" Width="Auto" Binding="{Binding LineDiscount, StringFormat='Rs. {0:N2}'}" IsReadOnly="True" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                    <DataGridTextColumn Header="Discount" Width="100" Binding="{Binding LineDiscount, StringFormat='Rs. {0:N2}'}" IsReadOnly="True">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -480,7 +484,7 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTemplateColumn Header="Qty" Width="Auto">
+                                    <DataGridTemplateColumn Header="Qty" Width="138">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Grid HorizontalAlignment="Center">
@@ -497,7 +501,7 @@
                                                             Style="{StaticResource QuantityStepperButtonStyle}"/>
 
                                                     <TextBox Grid.Column="1"
-                                                             Text="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             Text="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0}}"
                                                              Style="{StaticResource QuantityInputStyle}"
                                                              TextAlignment="Center"
                                                              Width="65"
@@ -514,10 +518,13 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <DataGridTemplateColumn Header="Total" Width="Auto" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                    <DataGridTemplateColumn Header="Total" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding Amount, StringFormat='Rs. {0:N2}'}" TextAlignment="Right" HorizontalAlignment="Right" />
+                                                <TextBlock Text="{Binding Amount, StringFormat='Rs. {0:N2}'}"
+                                                           TextAlignment="Right"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -1064,21 +1071,64 @@
                                 </Border>
                             </Grid>
                     <Grid Grid.Row="3" Margin="0,14,0,0">
+                        <Grid.Resources>
+                            <Style x:Key="BottomActionButtonStyle" TargetType="Button">
+                                <Setter Property="Height" Value="58"/>
+                                <Setter Property="FontSize" Value="16"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="8"
+                                                    SnapsToDevicePixels="True">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Opacity" Value="0.92"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter Property="Opacity" Value="0.84"/>
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Opacity" Value="0.45"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Grid.Resources>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="1.25*"/>
                         </Grid.ColumnDefinitions>
 
                         <Button Grid.Column="0"
-                                Content="Save Only"
-                                Command="{Binding SaveSaleCommand}"
-                                Style="{StaticResource SaveSaleSecondaryButtonStyle}"
+                                Content="Print Pre-Bill"
+                                Command="{Binding PrintPreBillCommand}"
+                                Style="{StaticResource BottomActionButtonStyle}"
+                                Background="#F59E0B"
                                 Margin="0,0,6,0"/>
 
                         <Button Grid.Column="1"
-                                Content="Save &amp; Print"
+                                Content="Recall Bills"
+                                Command="{Binding RecallHeldSaleCommand}"
+                                Style="{StaticResource BottomActionButtonStyle}"
+                                Background="#2563EB"
+                                Margin="6,0,6,0"/>
+
+                        <Button Grid.Column="2"
+                                Content="Settle / Pay"
                                 Command="{Binding SaveAndPrintCommand}"
-                                Style="{StaticResource PlaceOrderButtonStyle}"
+                                Style="{StaticResource BottomActionButtonStyle}"
+                                Background="#16A34A"
                                 Margin="6,0,0,0"/>
                     </Grid>
                 </Grid>

@@ -524,7 +524,8 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                              GROUP BY MenuItemId
                          ) tax ON tax.MenuItemId = m.Id
                          -- NOTE: Availability is intentionally not enforced here; existing sales loading only filters active menu items.
-                         WHERE m.IsActive = 1"
+                         WHERE m.IsActive = 1
+                         ORDER BY TRY_CAST(v.ItemCode AS INT) ASC, v.ItemCode ASC, v.Id ASC"
                      : @"
                          SELECT
                               v.Id,
@@ -554,7 +555,8 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                              GROUP BY MenuItemId
                          ) tax ON tax.MenuItemId = m.Id
                           -- NOTE: Availability is intentionally not enforced here; existing sales loading only filters active menu items.
-                          WHERE m.IsActive = 1";
+                          WHERE m.IsActive = 1
+                          ORDER BY TRY_CAST(RIGHT(REPLICATE('0', 5) + CAST(v.Id AS VARCHAR(10)), 5) AS INT) ASC, v.Id ASC";
 
                 using (var command = connection.CreateCommand())
                 {
@@ -592,7 +594,10 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                 }
             }
 
-            return resultByVariantId.Values;
+            return resultByVariantId.Values
+                .OrderBy(x => int.TryParse(x.ItemCode, out var n) ? n : int.MaxValue)
+                .ThenBy(x => x.ItemCode)
+                .ThenBy(x => x.VariantId);
         }
 
         public async Task<IEnumerable<VariantPriceDto>> GetVariantsByItemIdAsync(int menuItemId)
@@ -704,7 +709,7 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                     INNER JOIN [System].TaxConfiguration tc ON tc.Id = mit.TaxId
                     GROUP BY mit.MenuItemId
                 ) tax ON tax.MenuItemId = m.Id
-                ORDER BY m.Name";
+                ORDER BY TRY_CAST(bv.ItemCode AS INT), bv.ItemCode";
 
             using (var connection = GetConnection())
             {

@@ -6,6 +6,7 @@ namespace PointOfSale.Core.Models.Sales
     {
         public string CustomerName { get; set; }
         public string ContactNumber { get; set; }
+        public string BillingAddress { get; set; }
         public bool IsTaxRegistered { get; set; }
         public string TaxRegistrationNumber { get; set; }
         public decimal CreditLimit { get; set; }

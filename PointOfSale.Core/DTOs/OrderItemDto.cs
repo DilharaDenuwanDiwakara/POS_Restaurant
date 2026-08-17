@@ -4,6 +4,7 @@ namespace PointOfSale.Core.DTOs
     {
         public long OrderItemId { get; set; }
         public int VariantId { get; set; }
+        public string ItemCode { get; set; }
         public string ProductName { get; set; }
         public string VariantName { get; set; }
         public int Quantity { get; set; }

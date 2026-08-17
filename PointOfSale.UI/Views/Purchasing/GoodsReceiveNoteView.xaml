@@ -200,15 +200,25 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="120"  HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="HorizontalAlignment" Value="Right"/>
-                                                    <Setter Property="FontWeight" Value="Bold"/>
-                                                    <Setter Property="Background" Value="#FFFDE7"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                        <DataGridTemplateColumn Header="Unit Price" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding UnitPrice, StringFormat='Rs. {0:N2}'}"
+                                                               HorizontalAlignment="Right"
+                                                               FontWeight="Bold"
+                                                               Background="#FFFDE7"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                            <DataGridTemplateColumn.CellEditingTemplate>
+                                                <DataTemplate>
+                                                    <TextBox Text="{Binding UnitPrice, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat=N2}"
+                                                             HorizontalContentAlignment="Right"
+                                                             Background="#FFFDE7"
+                                                             Style="{StaticResource TextBoxStyle}"
+                                                             PreviewKeyDown="CommitGridEditOnEnter"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellEditingTemplate>
+                                        </DataGridTemplateColumn>
 
                                         <!--
                                             SELLING PRICE — locked when the master product has IsSellable = false.

@@ -154,7 +154,7 @@
                             <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,0">
                                 <TextBlock Text="Contact Number" Style="{StaticResource LabelStyle}"/>
                                 <TextBox Text="{Binding ContactNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                         MaxLength="10"
+                                         MaxLength="100"
                                          Style="{StaticResource TextBoxStyle}"
                                          PreviewKeyDown="MoveFocusOnEnter"/>
                             </StackPanel>

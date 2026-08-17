@@ -193,6 +193,10 @@
             <DataTemplate DataType="{x:Type viewmodelinventory:StockAdjustmentViewModel}">
                 <viewinventory:StockAdjustmentView/>
             </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelinventory:InternalIssueViewModel}">
+                <viewinventory:InternalIssueView/>
+            </DataTemplate>
             
             <DataTemplate DataType="{x:Type viewmodelinventory:WastageViewModel}">
                 <viewinventory:WastageView/>

@@ -110,6 +110,7 @@
     <Compile Include="Repositories\Inventory\CategoryRepository.cs" />
     <Compile Include="Repositories\Inventory\InventoryReportRepository.cs" />
     <Compile Include="Repositories\Inventory\InventoryRepository.cs" />
+    <Compile Include="Repositories\Inventory\InternalIssueRepository.cs" />
     <Compile Include="Repositories\Inventory\LocationRepository.cs" />
     <Compile Include="Repositories\Inventory\ProductBatchRepository.cs" />
     <Compile Include="Repositories\Inventory\ProductRepository.cs" />
@@ -163,6 +164,8 @@
     <None Include="app.config" />
     <None Include="Database\Inventory\ProductUnitConversion_IsMultiply.sql" />
     <None Include="Database\Inventory\StockTransfer_UOM_DatabaseChanges.sql" />
+    <None Include="Database\Sales\HoldRecallProcedures.sql" />
+    <None Include="Database\System\CompanyContactNumber_Length.sql" />
     <None Include="Database\Purchasing\uspGetAllGoodsPurchaseNotes.sql" />
     <None Include="Database\Purchasing\uspSubmitDraftPurchaseOrder.sql" />
     <None Include="Database\Purchasing\uspSoftDeletePurchaseNote.sql" />

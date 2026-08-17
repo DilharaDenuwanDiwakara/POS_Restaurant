@@ -11,6 +11,14 @@ namespace PointOfSale.Core.Interfaces.Repositories.Sales
     {
         Task<long> CreateAsync(Sale sale);
 
+        Task<int> HoldSaleAsync(HoldSaleRequestDto dto);
+
+        Task<bool> FinalizeSaleAsync(FinalizeSaleRequestDto dto);
+
+        Task<List<SalesListDto>> GetUnpaidSalesAsync(int branchId);
+
+        Task<RecalledSaleDto> GetSaleForRecallAsync(long salesId);
+
         DataTable GetInvoiceData(long salesId);
 
         Task<List<SalesListDto>> GetSalesListAsync(DateTime from, DateTime to, int? branchId, string paymentType);

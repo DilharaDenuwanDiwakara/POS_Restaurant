@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using System.Windows.Input;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Restaurant;
 using PointOfSale.Core.Interfaces.Services;
+using PointOfSale.Core.Models.Restaurant;
 using PointOfSale.UI.Commands;
 
 namespace PointOfSale.UI.ViewModels.Restaurant
@@ -82,10 +84,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                 Categories.Clear();
                 Categories.Add(new CategoryLookupItem { Id = 0, DisplayName = "ALL CATEGORIES", Level = 0 });
 
-                foreach (var category in categories.OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name))
-                {
-                    Categories.Add(new CategoryLookupItem { Id = category.Id, DisplayName = category.Name, Level = 0 });
-                }
+                BuildHierarchy(categories, null, 0);
 
                 // Set the backing field directly to avoid triggering a duplicate report load;
                 // OnViewLoadedAsync calls LoadMenuProfitabilityAsync explicitly right after this.
@@ -95,6 +94,26 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show($"Error loading categories: {ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void BuildHierarchy(IEnumerable<MenuCategory> allCategories, int? parentId, int level)
+        {
+            var children = allCategories
+                .Where(c => c.ParentId == parentId)
+                .OrderBy(c => c.DisplayOrder)
+                .ThenBy(c => c.Name);
+
+            foreach (var category in children)
+            {
+                Categories.Add(new CategoryLookupItem
+                {
+                    Id = category.Id,
+                    DisplayName = category.Name,
+                    Level = level
+                });
+
+                BuildHierarchy(allCategories, category.Id, level + 1);
             }
         }
 

@@ -108,6 +108,17 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
         }
 
+        private string _billingAddress;
+        public string BillingAddress
+        {
+            get => _billingAddress;
+            set
+            {
+                SetProperty(ref _billingAddress, value);
+                RaiseCanExecuteChanged();
+            }
+        }
+
         private bool _isTaxRegistered;
         public bool IsTaxRegistered
         {
@@ -166,6 +177,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             CustomerId = 0;
             CustomerName = string.Empty;
             ContactNumber = string.Empty;
+            BillingAddress = string.Empty;
             IsTaxRegistered = false;
             TaxRegistrationNumber = string.Empty;
             IsActive = true;
@@ -183,6 +195,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 CustomerId = SelectedCustomer.Id;
                 CustomerName = SelectedCustomer.CustomerName;
                 ContactNumber = SelectedCustomer.ContactNumber;
+                BillingAddress = SelectedCustomer.BillingAddress;
                 IsTaxRegistered = SelectedCustomer.IsTaxRegistered;
                 TaxRegistrationNumber = SelectedCustomer.IsTaxRegistered
                     ? SelectedCustomer.TaxRegistrationNumber
@@ -236,6 +249,12 @@ namespace PointOfSale.UI.ViewModels.Sales
             return !string.IsNullOrWhiteSpace(value) &&
                    value.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
         }
+
+        private static string NormalizeOptional(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
         private async Task SaveCustomerAsync()
         {
             var currentWindow = Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.IsActive);
@@ -258,6 +277,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 {
                     SelectedCustomer.CustomerName = CustomerName;
                     SelectedCustomer.ContactNumber = ContactNumber;
+                    SelectedCustomer.BillingAddress = NormalizeOptional(BillingAddress);
                     SelectedCustomer.IsTaxRegistered = IsTaxRegistered;
                     SelectedCustomer.TaxRegistrationNumber = IsTaxRegistered
                         ? TaxRegistrationNumber
@@ -286,6 +306,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                     {
                         CustomerName = CustomerName,
                         ContactNumber = ContactNumber,
+                        BillingAddress = NormalizeOptional(BillingAddress),
                         IsTaxRegistered = IsTaxRegistered,
                         TaxRegistrationNumber = IsTaxRegistered
                             ? TaxRegistrationNumber

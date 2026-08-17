@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Restaurant;
@@ -77,7 +78,10 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                 throw new InvalidOperationException($"A database error occurred while fetching items for Order #{orderId}.", ex);
             }
 
-            return items;
+            return items
+                .OrderBy(x => int.TryParse(x.ItemCode, out var n) ? n : int.MaxValue)
+                .ThenBy(x => x.ItemCode)
+                .ThenBy(x => x.OrderItemId);
         }
 
         #region Private Helpers
@@ -100,6 +104,7 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
             {
                 OrderItemId = GetValue<long>(record, "OrderItemId"),
                 VariantId = GetValue<int>(record, "VariantId"),
+                ItemCode = HasColumn(record, "ItemCode") ? GetValue<string>(record, "ItemCode") : null,
                 ProductName = GetValue<string>(record, "ProductName"),
                 VariantName = GetValue<string>(record, "VariantName"),
                 Quantity = GetValue<int>(record, "Quantity"),
@@ -109,6 +114,17 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                 OfferName = GetValue<string>(record, "OfferName"),
                 IsFreeItem = GetValue<bool>(record, "IsFreeItem")
             };
+        }
+
+        private static bool HasColumn(IDataRecord record, string columnName)
+        {
+            for (var i = 0; i < record.FieldCount; i++)
+            {
+                if (string.Equals(record.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
         }
         #endregion
     }

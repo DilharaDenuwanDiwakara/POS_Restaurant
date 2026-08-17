@@ -34,11 +34,11 @@
                     <TextBlock Text="Filter by Category" Style="{StaticResource LabelStyle}"/>
                     <ComboBox ItemsSource="{Binding Categories}"
                               SelectedItem="{Binding SelectedCategory}"
-                              DisplayMemberPath="DisplayName"
                               SelectedValuePath="Id"
                               IsEditable="True"
                               IsTextSearchEnabled="True"
                               TextSearch.TextPath="DisplayName"
+                              ItemTemplate="{StaticResource HierarchicalCategoryTemplate}"
                               Width="240"
                               Style="{StaticResource ComboBoxStyle}"
                               Margin="0"/>

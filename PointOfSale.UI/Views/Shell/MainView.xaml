@@ -331,6 +331,14 @@
                                     </StackPanel>
                                 </RadioButton>
 
+                                <RadioButton Command="{Binding NavigateToInternalIssueCommand}"
+                                             Style="{StaticResource Style.Nav.RadioButton}"
+                                             Visibility="{Binding CanNavInternalIssue, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Internal Stock Issue"/>
+                                    </StackPanel>
+                                </RadioButton>
+
                                 <RadioButton Command="{Binding NavigateToWastageCommand}" 
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavWastage, Converter={StaticResource BoolToVisibility}}">

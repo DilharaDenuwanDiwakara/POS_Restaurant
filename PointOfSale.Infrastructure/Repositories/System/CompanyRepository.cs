@@ -186,7 +186,7 @@ namespace PointOfSale.Infrastructure.Repositories.System
             command.Parameters.Add("@TaxRegistrationNumber", SqlDbType.NVarChar, 50).Value = (object)company.TaxRegistrationNumber ?? DBNull.Value;
             command.Parameters.Add("@AddressLine1", SqlDbType.NVarChar, 150).Value = (object)company.AddressLine1 ?? DBNull.Value;
             command.Parameters.Add("@AddressLine2", SqlDbType.NVarChar, 150).Value = (object)company.AddressLine2 ?? DBNull.Value;
-            command.Parameters.Add("@ContactNumber", SqlDbType.NVarChar, 50).Value = (object)company.ContactNumber ?? DBNull.Value;
+            command.Parameters.Add("@ContactNumber", SqlDbType.NVarChar, 100).Value = (object)company.ContactNumber ?? DBNull.Value;
             command.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = (object)company.Email ?? DBNull.Value;
             command.Parameters.Add("@Website", SqlDbType.NVarChar, 100).Value = (object)company.Website ?? DBNull.Value;
             command.Parameters.Add("@BaseCurrency", SqlDbType.NVarChar, 10).Value = (object)company.BaseCurrency ?? DBNull.Value;

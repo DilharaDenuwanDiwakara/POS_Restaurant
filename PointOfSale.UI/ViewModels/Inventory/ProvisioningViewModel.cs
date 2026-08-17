@@ -284,6 +284,12 @@ namespace PointOfSale.UI.ViewModels.Inventory
         {
             try
             {
+                if (SelectedInputProduct != null && InputQty > SelectedInputProduct.AvailableQuantity)
+                {
+                    ShowErrorMessage($"Cannot provision {InputQty:N3}. Only {SelectedInputProduct.AvailableQuantity:N3} available.");
+                    return;
+                }
+
                 await _inventoryRepository.ProcessItemProvisioningAsync(
                     SelectedBranchId,
                     SelectedLocationId,
@@ -302,6 +308,12 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 MessageBox.Show(ex.Message, "Provisioning", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void ShowErrorMessage(string message)
+        {
+            ErrorMessage = message;
+            MessageBox.Show(message, "Provisioning", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private async Task LoadYieldReportAsync()

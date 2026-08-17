@@ -94,5 +94,44 @@ namespace PointOfSale.UI.Views.Purchasing
             }
         }
 
+        private void CommitGridEditOnEnter(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter || !(sender is TextBox textBox))
+            {
+                return;
+            }
+
+            textBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+
+            if (Validation.GetHasError(textBox))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            var grid = FindAncestor<DataGrid>(textBox);
+            grid?.CommitEdit(DataGridEditingUnit.Cell, true);
+            grid?.CommitEdit(DataGridEditingUnit.Row, true);
+
+            textBox.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+            e.Handled = true;
+        }
+
+        private static T FindAncestor<T>(DependencyObject current)
+            where T : DependencyObject
+        {
+            while (current != null)
+            {
+                if (current is T match)
+                {
+                    return match;
+                }
+
+                current = System.Windows.Media.VisualTreeHelper.GetParent(current);
+            }
+
+            return null;
+        }
+
     }
 }

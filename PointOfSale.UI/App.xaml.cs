@@ -75,6 +75,7 @@ namespace PointOfSale.UI
             services.AddSingleton<IProductRepository, ProductRepository>();
             services.AddSingleton<IProductBatchRepository, ProductBatchRepository>();
             services.AddSingleton<IInventoryRepository, InventoryRepository>();
+            services.AddSingleton<IInternalIssueRepository, InternalIssueRepository>();
             services.AddSingleton<IStockAdjustmentRepository, StockAdjustmentRepository>();
             services.AddSingleton<IGoodsReceiveNoteRepository, GoodsReceiveNoteRepository>();
             services.AddSingleton<IGoodsPurchaseNoteRepository, GoodsPurchaseNoteRepository>();
@@ -179,6 +180,7 @@ namespace PointOfSale.UI
             services.AddTransient<ProvisioningViewModel>();
             services.AddTransient<StockTransferViewModel>();
             services.AddTransient<StockAdjustmentViewModel>();
+            services.AddTransient<InternalIssueViewModel>();
             services.AddTransient<BarcodePrintViewModel>();
             services.AddTransient<CategoryViewModel>();
             services.AddTransient<UnitMeasureViewModel>();

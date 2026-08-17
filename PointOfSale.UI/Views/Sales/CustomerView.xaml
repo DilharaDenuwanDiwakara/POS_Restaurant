@@ -46,6 +46,16 @@
                              Style="{StaticResource TextBoxStyle}"
                              PreviewKeyDown="MoveFocusOnEnter"/>
 
+                    <!-- Address -->
+                    <TextBlock Text="Address:" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding BillingAddress, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="500"
+                             MinHeight="64"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             Style="{StaticResource TextBoxStyle}"/>
+
                     <!-- Tax Registration -->
                     <CheckBox Content="Is Tax Registered (B2B)"
                               IsChecked="{Binding IsTaxRegistered, UpdateSourceTrigger=PropertyChanged}"
@@ -150,6 +160,13 @@
                             <DataGridTextColumn Header="ID" Binding="{Binding CustomerId}" Width="Auto" Visibility="Hidden"/>
                             <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerName}" Width="*" />
                             <DataGridTextColumn Header="Contact Number" Binding="{Binding ContactNumber}" Width="150"/>
+                            <DataGridTextColumn Header="Address" Binding="{Binding BillingAddress}" Width="220">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                             <DataGridTextColumn Header="Balance Amount" Binding="{Binding Balance, StringFormat='Rs. {0:N2}'}" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
