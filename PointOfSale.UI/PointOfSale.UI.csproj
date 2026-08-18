@@ -278,6 +278,11 @@
       <SubType>Component</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
+    <Compile Include="Reports\SettlementReceipt.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SettlementReceipt.rpt</DependentUpon>
+    </Compile>
     <Compile Include="Reports\StockMovementLedger.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1063,6 +1068,10 @@
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
       <LastGenOutput>SalesInvoice.cs</LastGenOutput>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\SettlementReceipt.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>SettlementReceipt.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Reports\StockMovementLedger.rpt">
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>

@@ -222,6 +222,10 @@ namespace PointOfSale.Infrastructure.Repositories
             command.Parameters.Add("@AccountTypeId", SqlDbType.Int).Value = account.AccountTypeId;
             command.Parameters.Add("@ParentAccountId", SqlDbType.Int).Value = (object)account.ParentAccountId ?? DBNull.Value;
             command.Parameters.Add("@Code", SqlDbType.VarChar, 50).Value = account.Code;
+            command.Parameters.Add("@GeneralAccountCode", SqlDbType.VarChar, 50).Value =
+                string.IsNullOrWhiteSpace(account.GeneralAccountCode)
+                    ? (object)DBNull.Value
+                    : account.GeneralAccountCode.Trim();
             command.Parameters.Add("@Name", SqlDbType.VarChar, 200).Value = account.Name;
             command.Parameters.Add("@Description", SqlDbType.NVarChar, 500).Value =
                 string.IsNullOrWhiteSpace(account.Description) ? (object)DBNull.Value : account.Description.Trim();
@@ -245,6 +249,7 @@ namespace PointOfSale.Infrastructure.Repositories
                 Id = GetValue<int>(record, "Id"),
                 ParentAccountId = GetValue<int?>(record, "ParentAccountId"),
                 Code = GetValue<string>(record, "Code"),
+                GeneralAccountCode = GetNullableString(record, "GeneralAccountCode"),
                 Name = GetValue<string>(record, "Name"),
                 Description = GetValue<string>(record, "Description"),
                 AccountTypeId = GetValue<int>(record, "AccountTypeId"),
@@ -255,6 +260,12 @@ namespace PointOfSale.Infrastructure.Repositories
                 UpdatedBy = GetValue<int?>(record, "UpdatedBy"),
                 UpdatedAt = GetValue<DateTime?>(record, "UpdatedAt")
             };
+        }
+
+        private static string GetNullableString(IDataRecord record, string columnName)
+        {
+            var ordinal = record.GetOrdinal(columnName);
+            return record.IsDBNull(ordinal) ? null : record.GetString(ordinal);
         }
 
         private AccountType MapAccountType(IDataRecord record)

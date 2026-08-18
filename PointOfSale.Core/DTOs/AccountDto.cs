@@ -10,6 +10,7 @@ namespace PointOfSale.Core.DTOs
         private int _id;
         private int? _parentAccountId;
         private string _code;
+        private string _generalAccountCode;
         private string _name;
         private string _description;
         private int _accountTypeId;
@@ -42,6 +43,12 @@ namespace PointOfSale.Core.DTOs
         {
             get => _code;
             set => SetProperty(ref _code, value);
+        }
+
+        public string GeneralAccountCode
+        {
+            get => _generalAccountCode;
+            set => SetProperty(ref _generalAccountCode, value);
         }
 
         public string Name

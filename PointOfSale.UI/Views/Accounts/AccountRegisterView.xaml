@@ -89,6 +89,12 @@
                              CharacterCasing="Upper"
                              PreviewKeyDown="MoveFocusOnEnter"/>
 
+                    <TextBlock Text="Head Office GL Code" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding GeneralAccountCode, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource TextBoxStyle}"
+                             MaxLength="50"
+                             PreviewKeyDown="MoveFocusOnEnter"/>
+
                     <TextBlock Text="Description" Style="{StaticResource LabelStyle}"/>
                     <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                              Style="{StaticResource TextBoxStyle}"
@@ -167,6 +173,7 @@
                               Style="{StaticResource DataGridStyle}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="GL No"    Binding="{Binding Code}"            Width="100"/>
+                            <DataGridTextColumn Header="HO GL Code" Binding="{Binding GeneralAccountCode}" Width="120"/>
                             <DataGridTextColumn Header="GL Name"  Binding="{Binding Name}"            Width="*"/>
                             <DataGridTextColumn Header="Type"     Binding="{Binding AccountTypeName}" Width="140"/>
                             <DataGridCheckBoxColumn Header="Header" Binding="{Binding IsHeader}"      Width="100"/>

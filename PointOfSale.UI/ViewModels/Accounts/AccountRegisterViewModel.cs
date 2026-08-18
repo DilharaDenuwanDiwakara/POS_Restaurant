@@ -30,6 +30,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
         private int _editableDigitsCount = 4;
         private string _codePatternHint = "0000";
         private string _accountName;
+        private string _generalAccountCode;
         private string _description;
         private bool _isActive = true;
         private bool _isHeader;
@@ -177,6 +178,12 @@ namespace PointOfSale.UI.ViewModels.Accounts
                     RaiseCanExecuteChanged();
                 }
             }
+        }
+
+        public string GeneralAccountCode
+        {
+            get => _generalAccountCode;
+            set => SetProperty(ref _generalAccountCode, value);
         }
 
         public string Description
@@ -384,6 +391,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
             IsEditMode = true;
             AccountName = SelectedAccount.Name;
+            GeneralAccountCode = SelectedAccount.GeneralAccountCode;
             Description = SelectedAccount.Description;
             IsActive = SelectedAccount.IsActive;
             IsHeader = SelectedAccount.IsHeader;
@@ -426,6 +434,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
                     AccountTypeId = SelectedAccountType.AccountTypeId,
                     ParentAccountId = SelectedParentAccount != null && SelectedParentAccount.Id > 0 ? (int?)SelectedParentAccount.Id : null,
                     Code = code,
+                    GeneralAccountCode = GeneralAccountCode?.Trim(),
                     Name = AccountName.Trim(),
                     Description = Description?.Trim(),
                     IsActive = IsActive,
@@ -443,6 +452,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             SelectedAccount.AccountTypeId = SelectedAccountType.AccountTypeId;
             SelectedAccount.ParentAccountId = SelectedParentAccount != null && SelectedParentAccount.Id > 0 ? (int?)SelectedParentAccount.Id : null;
             SelectedAccount.Code = code;
+            SelectedAccount.GeneralAccountCode = GeneralAccountCode?.Trim();
             SelectedAccount.Name = AccountName.Trim();
             SelectedAccount.Description = Description?.Trim();
             SelectedAccount.IsActive = IsActive;
@@ -695,6 +705,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             SelectedAccount = null;
             IsEditMode = false;
             AccountName = string.Empty;
+            GeneralAccountCode = string.Empty;
             Description = string.Empty;
             IsActive = true;
             IsHeader = false;
