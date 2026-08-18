@@ -39,6 +39,12 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                         }
                     }
                 }
+
+                foreach (var order in orders)
+                {
+                    var orderItems = await GetOrderItemsAsync(order.OrderId);
+                    order.ItemCount = orderItems.Sum(item => item.Quantity);
+                }
             }
             catch (SqlException ex)
             {
@@ -94,6 +100,9 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                 OrderId = GetValue<long>(record, "OrderId"),
                 TableName = GetValue<string>(record, "TableName"),
                 OrderNumber = GetValue<string>(record, "OrderNumber"),
+                CustomerName = GetOptionalString(record, "CustomerName"),
+                CustomerContactNumber = GetOptionalString(record, "CustomerContactNumber", "ContactNumber", "PhoneNumber", "CustomerPhoneNumber"),
+                ItemCount = HasColumn(record, "ItemCount") ? GetValue<int>(record, "ItemCount") : 0,
                 TotalAmount = GetValue<decimal>(record, "TotalAmount"),
                 OrderDate = GetValue<DateTime>(record, "OrderDate")
             };
@@ -125,6 +134,20 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
             }
 
             return false;
+        }
+
+        private static string GetOptionalString(IDataRecord record, params string[] columnNames)
+        {
+            foreach (var columnName in columnNames)
+            {
+                if (!HasColumn(record, columnName))
+                    continue;
+
+                var value = record[columnName];
+                return value == DBNull.Value || value == null ? null : Convert.ToString(value);
+            }
+
+            return null;
         }
         #endregion
     }

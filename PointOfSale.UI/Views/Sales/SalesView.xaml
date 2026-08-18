@@ -109,14 +109,19 @@
                                     </Grid>
 
                                     <TextBlock Grid.Row="1"
-                                               Text="{Binding TableName}"
+                                               Text="{Binding CustomerSummaryText}"
+                                               ToolTip="{Binding CustomerSummaryText}"
                                                Style="{StaticResource OrderCustomerTextStyle}"/>
 
-                                    <!-- // TODO: ServedOrderDto needs item count and status fields to replace these placeholder order-card visuals. -->
                                     <Grid Grid.Row="2" Margin="0,2,0,8">
-                                        <TextBlock Text="4 Items"
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding ItemCountText}"
                                                    Style="{StaticResource OrderMetaTextStyle}"/>
-                                        <TextBlock Text="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}"
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}"
                                                    Style="{StaticResource OrderAmountTextStyle}"/>
                                     </Grid>
 
