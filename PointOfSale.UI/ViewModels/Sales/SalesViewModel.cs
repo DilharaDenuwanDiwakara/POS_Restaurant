@@ -24,7 +24,6 @@ using PointOfSale.Core.Models.Sales;
 using PointOfSale.Core.Models.System;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
-using PointOfSale.UI.Reports;
 using PointOfSale.UI.Services;
 using PointOfSale.UI.ViewModels.Restaurant;
 using PointOfSale.UI.ViewModels.Security;
@@ -52,7 +51,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         private readonly IServiceProvider _serviceProvider;
         private readonly IUserSessionService _userSessionService;
         private readonly IDialogService _dialogService;
-        private readonly IConfigurationService _configurationService;
+        private readonly IReportService _reportService;
         private readonly ITaxConfigurationRepository _taxConfigurationRepository;
         private readonly CloudStorageService _storageService;
         private List<TaxConfiguration> _taxConfigurations = new List<TaxConfiguration>();
@@ -103,7 +102,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                               IUserSessionService userSessionService,
                               IDialogService dialogService,
                               IMenuItemRepository menuItemRepository,
-                              IConfigurationService configurationService,
+                              IReportService reportService,
                               ITaxConfigurationRepository taxConfigurationRepository,
                               CloudStorageService storageService)
         {
@@ -121,7 +120,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             _serviceProvider = serviceProvider;
             _userSessionService = userSessionService;
             _dialogService = dialogService;
-            _configurationService = configurationService;
+            _reportService = reportService ?? throw new ArgumentNullException(nameof(reportService));
             _taxConfigurationRepository = taxConfigurationRepository;
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
 
@@ -1580,7 +1579,8 @@ namespace PointOfSale.UI.ViewModels.Sales
 
                 RefreshLineTaxAmounts();
 
-                var salesId = CurrentOpenSalesId > 0
+                var isRecalledBill = CurrentOpenSalesId > 0;
+                var salesId = isRecalledBill
                     ? CurrentOpenSalesId
                     : await _salesRepository.HoldSaleAsync(BuildHoldSaleRequest());
 
@@ -1627,7 +1627,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 }
 
                 if (printBill)
-                    PrintBill(salesId);
+                    PrintFinalizedSale(salesId, isRecalledBill);
 
                 // In-memory removal: drop the just-billed order straight out of the ComboBox's
                 // source collection so the cashier sees it disappear immediately, with no extra
@@ -1662,7 +1662,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 var salesId = await _salesRepository.HoldSaleAsync(BuildHoldSaleRequest());
                 CurrentOpenSalesId = salesId;
 
-                PrintBill(salesId);
+                _reportService.PrintSalesInvoice(salesId);
 
                 ExecuteCancelInvoice();
                 RequestBarcodeFocus?.Invoke();
@@ -1939,30 +1939,14 @@ namespace PointOfSale.UI.ViewModels.Sales
                 : Application.Current.TryFindResource(resourceKey) as Brush;
         }
 
-        private void PrintBill(long salesId)
+        private void PrintFinalizedSale(long salesId, bool isRecalledBill)
         {
             try
             {
-                var printerName = _configurationService.GetLocalPrinterName();
-                if (string.IsNullOrWhiteSpace(printerName))
-                {
-                    MessageBox.Show("No POS printer configured. Set 'LocalPrinterName' in App.config.", "Print Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var invoiceData = _salesRepository.GetInvoiceData(salesId);
-                if (invoiceData == null || invoiceData.Rows.Count == 0)
-                {
-                    MessageBox.Show("No invoice data found for printing.", "Print Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                using (var report = new SalesInvoice())
-                {
-                    report.SetDataSource(invoiceData);
-                    report.PrintOptions.PrinterName = printerName;
-                    report.PrintToPrinter(1, false, 1, 0);
-                }
+                if (isRecalledBill)
+                    _reportService.PrintSettlementReceipt(salesId);
+                else
+                    _reportService.PrintSalesInvoice(salesId);
             }
             catch (Exception ex)
             {

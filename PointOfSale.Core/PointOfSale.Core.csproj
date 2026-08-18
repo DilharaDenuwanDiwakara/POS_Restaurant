@@ -158,6 +158,7 @@
     <Compile Include="Interfaces\Services\IConfigurationService.cs" />
     <Compile Include="Interfaces\Services\IDialogService.cs" />
     <Compile Include="Interfaces\Services\IExcelService.cs" />
+    <Compile Include="Interfaces\Services\IReportService.cs" />
     <Compile Include="Interfaces\Services\IUOMConversionService.cs" />
     <Compile Include="Interfaces\Services\ISalesInvoiceReportPreviewService.cs" />
     <Compile Include="Models\Accounts\DTOs\CustomerAdvance.cs" />

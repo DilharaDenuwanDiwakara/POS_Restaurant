@@ -282,6 +282,7 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>SettlementReceipt.rpt</DependentUpon>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Reports\StockMovementLedger.cs">
       <AutoGen>True</AutoGen>
@@ -377,6 +378,7 @@
     </Compile>
     <Compile Include="Stubs\CrystalReportsStubs.cs" Condition="'$(HasCrystalReports)' != 'true'" />
     <Compile Include="Services\DialogService.cs" />
+    <Compile Include="Services\CrystalReportService.cs" />
     <Compile Include="Services\SalesInvoiceReportPreviewService.cs" Condition="'$(HasCrystalReports)' == 'true'" />
     <Compile Include="Services\UnavailableSalesInvoiceReportPreviewService.cs" Condition="'$(HasCrystalReports)' != 'true'" />
     <Compile Include="Services\CloudStorageService.cs" />

@@ -128,6 +128,7 @@ namespace PointOfSale.UI
             services.AddSingleton<IConfigurationService, ConfigurationService>();
             services.AddSingleton<IUserSessionService, UserSessionService>();
             services.AddSingleton<IDialogService, DialogService>();
+            services.AddSingleton<IReportService, CrystalReportService>();
 #if NO_CRYSTAL_REPORTS
             services.AddSingleton<ISalesInvoiceReportPreviewService, UnavailableSalesInvoiceReportPreviewService>();
 #else
