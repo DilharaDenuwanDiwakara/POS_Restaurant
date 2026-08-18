@@ -65,7 +65,7 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Orders line" Style="{StaticResource SalesViewTitleStyle}"/>
+                        <TextBlock Text="Orders list" Style="{StaticResource SalesViewTitleStyle}"/>
                         <TextBlock Text="{Binding ServedOrders.Count, StringFormat=' ({0})'}"
                                    Style="{StaticResource SalesViewCountStyle}"/>
                     </StackPanel>
@@ -256,18 +256,19 @@
                                             </Grid>
                                         </Border>
 
-                                        <StackPanel Grid.Row="1" Margin="5">
+                                        <Grid Grid.Row="1" Height="58" Margin="5">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="32"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
                                             <TextBlock Text="{Binding DisplayName}"
-                                                       TextWrapping="Wrap"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       MaxHeight="40"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{StaticResource SalesTextBrush}"/>
-                                            <TextBlock Text="{Binding DefaultPrice, StringFormat='Rs. {0:N2}'}"
-                                                       Foreground="{StaticResource SalesAccentBrush}"
-                                                       FontWeight="Bold"
+                                                       Style="{StaticResource MenuProductNameStyle}"
+                                                       ToolTip="{Binding DisplayName}"/>
+                                            <TextBlock Grid.Row="1"
+                                                       Text="{Binding DefaultPrice, StringFormat='Rs. {0:N2}'}"
+                                                       Style="{StaticResource MenuProductPriceStyle}"
                                                        Margin="0,2,0,0"/>
-                                        </StackPanel>
+                                        </Grid>
 
                                         <Button Grid.Row="2"
                                                 Content="Add item"
