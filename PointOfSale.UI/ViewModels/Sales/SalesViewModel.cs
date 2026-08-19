@@ -3103,6 +3103,14 @@ namespace PointOfSale.UI.ViewModels.Sales
         {
             var paymentMethod = ToPaymentMethodCode(method);
 
+            if (IsPaymentInputVisible &&
+                string.Equals(SelectedPaymentMethod, paymentMethod, StringComparison.OrdinalIgnoreCase))
+            {
+                SelectedPaymentMethod = null;
+                IsPaymentInputVisible = false;
+                return;
+            }
+
             IsPaymentInputVisible = true;
             SelectedPaymentMethod = paymentMethod;
         }
