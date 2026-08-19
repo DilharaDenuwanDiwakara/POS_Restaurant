@@ -145,8 +145,11 @@ namespace PointOfSale.Core.Models.Sales
             get => BaseDiscountAmount + ManualDiscount + PromoDiscount;
             set
             {
+                var maxDiscount = UnitPrice * Quantity;
+                var clamped = value < 0 ? 0 : (value > maxDiscount ? maxDiscount : value);
+
                 BaseDiscountPerUnit = 0;
-                ManualDiscount = value;
+                ManualDiscount = clamped;
                 PromoDiscount = 0;
             }
         }

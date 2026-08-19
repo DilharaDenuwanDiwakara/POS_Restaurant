@@ -71,10 +71,9 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="Refresh"
-                                Command="{Binding RefreshOrdersCommand}"
+                        <Button Command="{Binding RefreshOrdersCommand}"
                                 ToolTip="Refresh Orders"
-                                Style="{StaticResource RefreshOrdersPillButtonStyle}"/>
+                                Style="{StaticResource RefreshButtonStyle}"/>
                     </StackPanel>
                 </Grid>
 
@@ -481,16 +480,22 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Discount" Width="100" Binding="{Binding LineDiscount, StringFormat='Rs. {0:N2}'}" IsReadOnly="True">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
+                                    <DataGridTemplateColumn Header="Discount" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding LineDiscount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0.##}}"
+                                                         Style="{StaticResource QuantityInputStyle}"
+                                                         TextAlignment="Right"
+                                                         Padding="4,0"
+                                                         IsEnabled="{Binding IsPriceLocked, Converter={StaticResource InverseBooleanConverter}}"
+                                                         PreviewTextInput="DecimalAmount_PreviewTextInput"
+                                                         DataObject.Pasting="DecimalAmount_Pasting"
+                                                         ToolTip="Discount for this line (Rs.)"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
 
-                                    <DataGridTemplateColumn Header="Qty" Width="138">
+                                    <DataGridTemplateColumn Header="Qty" Width="140">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Grid HorizontalAlignment="Center">
@@ -504,13 +509,14 @@
                                                             Content="-"
                                                             Command="{Binding DataContext.DecreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             CommandParameter="{Binding}"
+                                                            Margin="2 0 0 0"
                                                             Style="{StaticResource QuantityStepperButtonStyle}"/>
 
                                                     <TextBox Grid.Column="1"
                                                              Text="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0}}"
                                                              Style="{StaticResource QuantityInputStyle}"
                                                              TextAlignment="Center"
-                                                             Width="65"
+                                                             Width="50"
                                                              Padding="2,0"
                                                              IsEnabled="{Binding IsQuantityLocked, Converter={StaticResource InverseBooleanConverter}}"/>
 
@@ -518,6 +524,7 @@
                                                             Content="+"
                                                             Command="{Binding DataContext.IncreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             CommandParameter="{Binding}"
+                                                            Margin="0 0 2 0"
                                                             Style="{StaticResource QuantityStepperButtonStyle}"/>
                                                 </Grid>
                                             </DataTemplate>
@@ -535,7 +542,7 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <DataGridTemplateColumn Header="Action" Width="42">
+                                    <DataGridTemplateColumn Header="" Width="45">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Button Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -593,11 +600,23 @@
                                     <TextBox x:Name="TxtLineDiscountPercent"
                                              Grid.Row="3"
                                              Grid.Column="1"
-                                             Text="{Binding LineDiscountPercent, StringFormat=N2, Mode=OneWay}"
+                                             Text="{Binding LineDiscountPercent, StringFormat=N2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              Style="{StaticResource DiscountValueStyle}"
-                                             IsReadOnly="True"
-                                             Focusable="False"
-                                             IsTabStop="False"/>
+                                             IsEnabled="{Binding IsDiscountEnabled}"
+                                             PreviewTextInput="DecimalAmount_PreviewTextInput"
+                                             DataObject.Pasting="DecimalAmount_Pasting"/>
+
+                                    <StackPanel Grid.Row="4"
+                                                Grid.ColumnSpan="2"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Right"
+                                                IsEnabled="{Binding IsDiscountEnabled}">
+                                        <Button Content="5%" Command="{Binding ApplyQuickDiscountCommand}" CommandParameter="5" Style="{StaticResource QuickDiscountButtonStyle}"/>
+                                        <Button Content="10%" Command="{Binding ApplyQuickDiscountCommand}" CommandParameter="10" Style="{StaticResource QuickDiscountButtonStyle}"/>
+                                        <Button Content="15%" Command="{Binding ApplyQuickDiscountCommand}" CommandParameter="15" Style="{StaticResource QuickDiscountButtonStyle}"/>
+                                        <Button Content="20%" Command="{Binding ApplyQuickDiscountCommand}" CommandParameter="20" Style="{StaticResource QuickDiscountButtonStyle}"/>
+                                        <Button Content="Clear" Command="{Binding ApplyQuickDiscountCommand}" CommandParameter="0" Style="{StaticResource QuickDiscountButtonStyle}"/>
+                                    </StackPanel>
 
                                     <Grid Grid.Row="5"
                                           Grid.ColumnSpan="2"

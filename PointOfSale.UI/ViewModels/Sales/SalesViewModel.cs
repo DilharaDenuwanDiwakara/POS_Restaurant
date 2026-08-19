@@ -434,10 +434,14 @@ namespace PointOfSale.UI.ViewModels.Sales
         public decimal LineDiscountPercent
         {
             get => _lineDiscountPercent;
-            private set { if (SetProperty(ref _lineDiscountPercent, 0m)) { CalculateTotals(); } }
+            set
+            {
+                var clamped = value < 0 ? 0 : (value > 100 ? 100 : value);
+                if (SetProperty(ref _lineDiscountPercent, clamped)) { CalculateTotals(); }
+            }
         }
 
-        public bool IsDiscountEnabled => false;
+        public bool IsDiscountEnabled => true;
 
         private bool _isPromoLoyaltyPanelVisible;
         public bool IsPromoLoyaltyPanelVisible { get => _isPromoLoyaltyPanelVisible; set => SetProperty(ref _isPromoLoyaltyPanelVisible, value); }
@@ -446,7 +450,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         public decimal BillDiscount
         {
             get => _billDiscount;
-            private set => SetProperty(ref _billDiscount, 0m);
+            private set => SetProperty(ref _billDiscount, value);
         }
 
         private int _availableLoyaltyPoints;
@@ -757,7 +761,8 @@ namespace PointOfSale.UI.ViewModels.Sales
                 parameter => parameter is SalesLine);
             CancelInvoiceCommand = new RelayCommand(_ => ExecuteCancelInvoice());
 
-            EnableDiscountCommad = new RelayCommand(_ => MessageBox.Show("Bill discounts are handled through the manager register.", "Discount", MessageBoxButton.OK, MessageBoxImage.Information));
+            EnableDiscountCommad = new RelayCommand(_ => RequestBillDiscountFocus?.Invoke());
+            ApplyQuickDiscountCommand = new RelayCommand(ExecuteApplyQuickDiscount);
             AddCustomerCommand = new AsyncRelayCommand(async _ => await ExecuteAddCustomerCommand());
             OpenCashInOutCommand = new RelayCommand(ExecuteOpenCashInOut);
             OpenSalesReturnCommand = new RelayCommand(ExecuteOpenSalesReturn);
@@ -1370,11 +1375,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 decimal baseBillDiscount;
                 decimal appliedDiscountAmount = 0;
                 decimal appliedDiscountPercent = 0;
-                if (hasImportedRestaurantOrder)
-                {
-                    baseBillDiscount = 0;
-                }
-                else if (_appliedDiscountValidation != null)
+                if (!hasImportedRestaurantOrder && _appliedDiscountValidation != null)
                 {
                     baseBillDiscount = CalculateDiscountAmount(SubTotal, _appliedDiscountValidation);
                     appliedDiscountAmount = baseBillDiscount;
@@ -1469,6 +1470,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         #region Commands
         public ICommand EnableDiscountCommad { get; private set; }
+        public ICommand ApplyQuickDiscountCommand { get; private set; }
         public ICommand AddProductCommand { get; private set; }
         public ICommand AddCustomerCommand { get; private set; }
         public ICommand OpenCashInOutCommand { get; private set; }
@@ -2083,6 +2085,19 @@ namespace PointOfSale.UI.ViewModels.Sales
 
             CalculateTotals();
             (RemoveLoyaltyCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
+
+        private void ExecuteApplyQuickDiscount(object parameter)
+        {
+            if (parameter == null || !decimal.TryParse(parameter.ToString(), out var percent))
+                return;
+
+            // A manually-applied preset takes over from any manager discount code so the
+            // two mechanisms never silently stack.
+            if (HasAppliedDiscountCode)
+                RemoveAppliedDiscount(true);
+
+            LineDiscountPercent = percent;
         }
 
         private void RemoveAppliedDiscount(bool silent = false)
