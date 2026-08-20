@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace PointOfSale.Core.Models.Purchasing
@@ -31,40 +32,101 @@ namespace PointOfSale.Core.Models.Purchasing
         public bool IsTaxApplicable { get; set; }
 
         private decimal _quantityReceived;
+        private string _quantityReceivedInput;
         public decimal QuantityReceived
         {
             get => _quantityReceived;
             set
             {
-                // 1. CLAMPING LOGIC: Prevent receiving more than ordered
-                if (value > QuantityOrdered)
-                {
-                    value = QuantityOrdered;
-                }
-                // 2. Prevent negative numbers
-                else if (value < 0)
-                {
-                    value = 0;
-                }
+                value = NormalizeQuantityReceived(value);
 
-                SetProperty(ref _quantityReceived, value);
+                if (SetProperty(ref _quantityReceived, value))
+                {
+                    RefreshQuantityReceivedInput();
+                    OnPropertyChanged(nameof(LineTotal));
+                    OnPropertyChanged(nameof(HasQuantityDiscrepancy));
+                }
+            }
+        }
 
-                // 3. Trigger Total recalculation
-                OnPropertyChanged(nameof(LineTotal));
-                OnPropertyChanged(nameof(HasQuantityDiscrepancy));
+        public string QuantityReceivedInput
+        {
+            get => _quantityReceivedInput ?? FormatQuantityReceived(QuantityReceived);
+            set => SetProperty(ref _quantityReceivedInput, value);
+        }
+
+        public void CommitQuantityReceivedInput()
+        {
+            var text = QuantityReceivedInput?.Trim();
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                QuantityReceived = 0m;
+                RefreshQuantityReceivedInput();
+                return;
+            }
+
+            var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            var normalizedText = text
+                .Replace(".", decimalSeparator)
+                .Replace(",", decimalSeparator);
+
+            if (normalizedText == decimalSeparator)
+            {
+                normalizedText = "0" + decimalSeparator;
+            }
+            else if (normalizedText.EndsWith(decimalSeparator, StringComparison.Ordinal))
+            {
+                normalizedText += "0";
+            }
+
+            if (decimal.TryParse(normalizedText, NumberStyles.Number, CultureInfo.CurrentCulture, out var parsedValue))
+            {
+                QuantityReceived = parsedValue;
+                RefreshQuantityReceivedInput();
+            }
+            else
+            {
+                RefreshQuantityReceivedInput();
             }
         }
 
         public void SetStoredQuantityReceived(decimal value)
         {
-            if (value < 0)
+            value = Math.Max(0m, value);
+
+            if (SetProperty(ref _quantityReceived, value, nameof(QuantityReceived)))
             {
-                value = 0;
+                RefreshQuantityReceivedInput();
+                OnPropertyChanged(nameof(LineTotal));
+                OnPropertyChanged(nameof(HasQuantityDiscrepancy));
+            }
+        }
+
+        private decimal NormalizeQuantityReceived(decimal value)
+        {
+            if (value > QuantityOrdered)
+            {
+                return QuantityOrdered;
             }
 
-            SetProperty(ref _quantityReceived, value, nameof(QuantityReceived));
-            OnPropertyChanged(nameof(LineTotal));
-            OnPropertyChanged(nameof(HasQuantityDiscrepancy));
+            if (value < 0)
+            {
+                return 0m;
+            }
+
+            return value;
+        }
+
+        private static string FormatQuantityReceived(decimal value)
+        {
+            return value.ToString("0.###", CultureInfo.CurrentCulture);
+        }
+
+        private void RefreshQuantityReceivedInput()
+        {
+            _quantityReceivedInput = FormatQuantityReceived(QuantityReceived);
+            OnPropertyChanged(nameof(QuantityReceivedInput));
         }
 
         public int UnitMeasureId { get; set; }

@@ -43,6 +43,30 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 return (long)command.Parameters["@GoodsReceiveNoteId"].Value;
             }
         }
+
+        public async Task<long> UpsertDraftGoodsReceiveNoteAsync(GoodsReceiveNote goodsReceiveNote, IEnumerable<GoodsReceiveNoteLine> lines)
+        {
+            if (goodsReceiveNote == null)
+            {
+                throw new ArgumentNullException(nameof(goodsReceiveNote));
+            }
+
+            goodsReceiveNote.Lines = (lines ?? new List<GoodsReceiveNoteLine>()).ToList();
+            await PrepareBaseQuantitiesAsync(goodsReceiveNote.Lines);
+
+            using (var connection = GetConnection())
+            using (var command = CreateCommand(connection, "[Purchasing].[uspUpsertDraftGoodsReceiveNote]"))
+            {
+                AddDraftParameters(command, goodsReceiveNote);
+                AddLineItemsParameter(command, goodsReceiveNote.Lines);
+
+                await connection.OpenAsync();
+
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt64(result);
+            }
+        }
+
         public async Task<IEnumerable<GoodsReceiveNote>> GetAllAsync(int? supplierId, DateTime? dateFrom, DateTime? dateTo)
         {
             var receiveNotes = new List<GoodsReceiveNote>();
@@ -249,6 +273,19 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 throw new InvalidOperationException($"A database error occured while resubmitting the rejected GRN. {ex.Message}", ex);
             }
         }
+
+        public async Task SoftDeleteGRNAsync(long goodsReceiveNoteId, int deletedBy)
+        {
+            using (var connection = GetConnection())
+            using (var command = CreateCommand(connection, "[Purchasing].[uspSoftDeleteGoodsReceiveNote]"))
+            {
+                command.Parameters.AddWithValue("@GoodsReceiveNoteId", goodsReceiveNoteId);
+                command.Parameters.AddWithValue("@DeletedBy", deletedBy);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+        }
         #endregion
 
         #region Private Method
@@ -304,6 +341,39 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
             command.Parameters.AddWithValue("@DueDate", note.DueDate);
             command.Parameters.AddWithValue("@CreatedBy", note.CreatedBy);
         }
+
+        private void AddDraftParameters(SqlCommand command, GoodsReceiveNote note)
+        {
+            command.Parameters.Add("@Id", SqlDbType.BigInt).Value = note.GoodsReceiveNoteId;
+            command.Parameters.Add("@BranchId", SqlDbType.Int).Value = note.BranchId;
+            command.Parameters.Add("@SupplierId", SqlDbType.Int).Value =
+                note.SupplierId > 0 ? (object)note.SupplierId : DBNull.Value;
+            command.Parameters.Add("@PurchaseOrderId", SqlDbType.BigInt).Value =
+                note.PurchaseOrderId > 0 ? (object)note.PurchaseOrderId : DBNull.Value;
+            command.Parameters.Add("@GoodsReceiveNoteNumber", SqlDbType.VarChar, 50).Value =
+                string.IsNullOrWhiteSpace(note.GoodsReceiveNoteNumber) ? (object)DBNull.Value : note.GoodsReceiveNoteNumber.Trim();
+            command.Parameters.Add("@InvoiceNumber", SqlDbType.NVarChar, 100).Value =
+                string.IsNullOrWhiteSpace(note.InvoiceNumber) ? (object)DBNull.Value : note.InvoiceNumber.Trim();
+            command.Parameters.Add("@DiscountAmount", SqlDbType.Decimal).Value = note.DiscountAmount;
+            command.Parameters["@DiscountAmount"].Precision = 18;
+            command.Parameters["@DiscountAmount"].Scale = 2;
+            command.Parameters.Add("@TaxAmount", SqlDbType.Decimal).Value = note.TaxAmount;
+            command.Parameters["@TaxAmount"].Precision = 18;
+            command.Parameters["@TaxAmount"].Scale = 2;
+            command.Parameters.Add("@SubTotal", SqlDbType.Decimal).Value = note.SubTotal;
+            command.Parameters["@SubTotal"].Precision = 18;
+            command.Parameters["@SubTotal"].Scale = 2;
+            command.Parameters.Add("@ReceivedBy", SqlDbType.NVarChar, 100).Value =
+                string.IsNullOrWhiteSpace(note.ReceivedBy) ? (object)DBNull.Value : note.ReceivedBy.Trim();
+            command.Parameters.Add("@Notes", SqlDbType.NVarChar, 500).Value =
+                string.IsNullOrWhiteSpace(note.Notes) ? (object)DBNull.Value : note.Notes.Trim();
+            command.Parameters.Add("@ReceivedDate", SqlDbType.Date).Value = note.GoodsReceiveNoteDate.Date;
+            command.Parameters.Add("@CreditDays", SqlDbType.Int).Value = note.CreditDays;
+            command.Parameters.Add("@DueDate", SqlDbType.DateTime).Value = note.DueDate;
+            command.Parameters.Add("@Status", SqlDbType.NVarChar, 50).Value =
+                string.IsNullOrWhiteSpace(note.Status) ? GoodsReceiveNoteStatus.DRAFT.ToString() : note.Status.Trim();
+            command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = note.CreatedBy;
+        }
         private void AddLineItemsParameter(SqlCommand command, IEnumerable<GoodsReceiveNoteLine> lines)
         {
             var table = new DataTable();
@@ -354,22 +424,22 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 GoodsReceiveNoteId = GetValue<long>(record, "Id"),
                 BranchId = GetOptionalValue<int>(record, "BranchId"),
                 PurchaseOrderId = GetFirstOptionalInt64(record, "PurchaseOrderId", "GoodsPurchaseNoteId"),
-                SupplierId = GetValue<int>(record, "SupplierId"),
-                SupplierName = GetValue<string>(record, "SupplierName"),
-                GoodsReceiveNoteNumber = GetValue<string>(record, "GoodsReceiveNoteNumber"),
-                InvoiceNumber = GetValue<string>(record, "InvoiceNumber"),
-                SubTotal = GetValue<decimal>(record, "SubTotal"),
-                DiscountAmount = GetValue<decimal>(record, "DiscountAmount"),
-                TaxAmount = GetValue<decimal>(record, "TaxAmount"),
-                TotalAmount = GetValue<decimal>(record, "TotalAmount"),
-                Notes = GetValue<string>(record, "Note"),
-                ReceivedBy = GetValue<string>(record, "ReceivedBy"),
-                GoodsReceiveNoteDate = GetValue<DateTime>(record, "ReceivedDate"),
+                SupplierId = GetOptionalValue<int>(record, "SupplierId"),
+                SupplierName = GetOptionalValue<string>(record, "SupplierName"),
+                GoodsReceiveNoteNumber = GetOptionalValue<string>(record, "GoodsReceiveNoteNumber"),
+                InvoiceNumber = GetOptionalValue<string>(record, "InvoiceNumber"),
+                SubTotal = GetOptionalValue<decimal>(record, "SubTotal"),
+                DiscountAmount = GetOptionalValue<decimal>(record, "DiscountAmount"),
+                TaxAmount = GetOptionalValue<decimal>(record, "TaxAmount"),
+                TotalAmount = GetOptionalValue<decimal>(record, "TotalAmount"),
+                Notes = GetOptionalValue<string>(record, "Note"),
+                ReceivedBy = GetOptionalValue<string>(record, "ReceivedBy"),
+                GoodsReceiveNoteDate = GetOptionalValue<DateTime>(record, "ReceivedDate"),
                 CreditDays = GetOptionalValue<int>(record, "CreditDays"),
                 DueDate = GetOptionalValue<DateTime>(record, "DueDate"),
-                Status = GetValue<string>(record, "Status"),
-                CreatedBy = GetValue<int>(record, "CreatedBy"),
-                CreatedDate = GetValue<DateTime>(record, "CreatedAt"),
+                Status = GetOptionalValue<string>(record, "Status"),
+                CreatedBy = GetOptionalValue<int>(record, "CreatedBy"),
+                CreatedDate = GetOptionalValue<DateTime>(record, "CreatedAt"),
                 Username = GetOptionalValue<string>(record, "Username"),
                 PONumber = GetFirstOptionalString(record, "PONumber", "PoNumber", "PurchaseOrderNumber", "OriginalPONumber"),
                 CreatedByName = GetFirstOptionalString(record, "CreatedByName", "CreatorName", "ReceiverName")

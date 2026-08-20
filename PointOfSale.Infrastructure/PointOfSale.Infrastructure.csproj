@@ -166,9 +166,12 @@
     <None Include="Database\Inventory\StockTransfer_UOM_DatabaseChanges.sql" />
     <None Include="Database\Sales\HoldRecallProcedures.sql" />
     <None Include="Database\System\CompanyContactNumber_Length.sql" />
+    <None Include="Database\Purchasing\uspGetAllGoodsReceiveNotes.sql" />
     <None Include="Database\Purchasing\uspGetAllGoodsPurchaseNotes.sql" />
+    <None Include="Database\Purchasing\uspSoftDeleteGoodsReceiveNote.sql" />
     <None Include="Database\Purchasing\uspSubmitDraftPurchaseOrder.sql" />
     <None Include="Database\Purchasing\uspSoftDeletePurchaseNote.sql" />
+    <None Include="Database\Purchasing\uspUpsertDraftGoodsReceiveNote.sql" />
     <None Include="Database\Purchasing\usp_UpsertDraftPurchaseOrder.sql" />
     <None Include="packages.config" />
   </ItemGroup>

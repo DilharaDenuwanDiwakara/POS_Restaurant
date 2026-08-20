@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using PointOfSale.Core.Enums;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Purchasing;
@@ -25,9 +28,14 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         private readonly IUserSessionService _userSessionService;
         private readonly Task _taxRateLoadTask;
         private readonly Task _suppliersLoadTask;
+        private readonly DispatcherTimer _draftAutoSaveTimer;
         private decimal _inputTaxRate;
+        private long _currentGoodsReceiveNoteId;
         private long _editingRejectedGrnId;
         private bool _isLoadingRejectedGrn;
+        private bool _isResettingGoodsReceiveNote;
+        private bool _isDraftAutoSaveInProgress;
+        private bool _draftAutoSaveQueuedWhileSaving;
 
         public GoodsReceiveNoteViewModel(ISupplierRepository supplierRepository,
                                          IGoodsReceiveNoteRepository goodsReceiveNoteRepository,
@@ -42,13 +50,22 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             _userSessionService = userSessionService;
 
             GoodsReceiveNoteLines = new ObservableCollection<GoodsReceiveNoteLine>();
+            GoodsReceiveNoteLines.CollectionChanged += GoodsReceiveNoteLines_CollectionChanged;
+
+            _draftAutoSaveTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
+            _draftAutoSaveTimer.Tick += DraftAutoSaveTimer_Tick;
 
             SaveGRNCommand = new AsyncRelayCommand(async _ => await SaveGoodsReceiveNoteAsync(), _ => CanSaveGRN);
             NewGRNCommand = new RelayCommand(_ => CreateNewGRN());
             SearchCommand = new AsyncRelayCommand(async _ => await SearchGRNsAsync());
             RemoveLineCommand = new RelayCommand<GoodsReceiveNoteLine>(RemoveLineItem);
-            LoadRejectedGRNCommand = new AsyncRelayCommand(
-                async grn => await LoadRejectedGRNForEditAsync(grn as GoodsReceiveNote));
+            LoadEditableGRNCommand = new AsyncRelayCommand(
+                async grn => await LoadEditableGRNAsync(grn as GoodsReceiveNote));
+            DeleteDraftGRNCommand = new AsyncRelayCommand(
+                async grn => await DeleteDraftGRNAsync(grn as GoodsReceiveNote));
 
             this.PropertyChanged += (s, e) =>
             {
@@ -58,12 +75,11 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 {
                     (SaveGRNCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
                 }
-            };
 
-            GoodsReceiveNoteLines.CollectionChanged += (s, e) =>
-            {
-                (SaveGRNCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
-                CalculateTotals();
+                if (IsDraftHeaderProperty(e.PropertyName))
+                {
+                    ScheduleDraftAutoSave();
+                }
             };
 
             _taxRateLoadTask = LoadTaxRateAsync();
@@ -313,7 +329,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public ICommand NewGRNCommand { get; }
         public ICommand SearchCommand { get; set; }
         public ICommand RemoveLineCommand { get; }
-        public ICommand LoadRejectedGRNCommand { get; }
+        public ICommand LoadEditableGRNCommand { get; }
+        public ICommand DeleteDraftGRNCommand { get; }
         #endregion
 
         #region HelperMethod
@@ -378,30 +395,37 @@ namespace PointOfSale.UI.ViewModels.Purchasing
 
         private void CreateNewGRN()
         {
-            _editingRejectedGrnId = 0;
-            OnPropertyChanged(nameof(IsEditingRejectedGRN));
-            SelectedPO = null;
-            SelectedSupplierId = -1;
-            IsSupplierLocked = false;
-            ReceivedDate = DateTime.Today;
-            CreditDays = 0;
-            UpdateDueDate();
-            ReceivedBy = string.Empty;
-            InvoiceNumber = string.Empty;
-            Note = string.Empty;
-            SubTotal = 0;
-            BillDiscount = 0;
-            DiscountAmount = 0;
-            TaxAmount = 0;
-            NetAmount = 0;
-            ClearAllErrors();
-            foreach (var line in GoodsReceiveNoteLines)
+            _isResettingGoodsReceiveNote = true;
+            _draftAutoSaveTimer.Stop();
+
+            try
             {
-                line.PropertyChanged -= GoodsReceiveNoteLine_PropertyChanged;
+                _currentGoodsReceiveNoteId = 0;
+                _editingRejectedGrnId = 0;
+                OnPropertyChanged(nameof(IsEditingRejectedGRN));
+                SelectedPO = null;
+                SelectedSupplierId = -1;
+                IsSupplierLocked = false;
+                ReceivedDate = DateTime.Today;
+                CreditDays = 0;
+                UpdateDueDate();
+                ReceivedBy = string.Empty;
+                InvoiceNumber = string.Empty;
+                Note = string.Empty;
+                SubTotal = 0;
+                BillDiscount = 0;
+                DiscountAmount = 0;
+                TaxAmount = 0;
+                NetAmount = 0;
+                ClearAllErrors();
+                GoodsReceiveNoteLines.Clear();
+                _ = LoadPendingPOsAsync();
+                SelectedTabIndex = 0;
             }
-            GoodsReceiveNoteLines.Clear();
-            _ = LoadPendingPOsAsync();
-            SelectedTabIndex = 0;
+            finally
+            {
+                _isResettingGoodsReceiveNote = false;
+            }
 
         }
 
@@ -481,8 +505,6 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                             IsTaxApplicable = line.IsTaxApplicable
                         };
 
-                        grnLine.PropertyChanged += GoodsReceiveNoteLine_PropertyChanged;
-
                         GoodsReceiveNoteLines.Add(grnLine);
                     }
                 }
@@ -502,7 +524,31 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 e.PropertyName == nameof(GoodsReceiveNoteLine.LineDiscount))
             {
                 CalculateTotals();
+                ScheduleDraftAutoSave();
             }
+        }
+
+        private void GoodsReceiveNoteLines_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (GoodsReceiveNoteLine line in e.NewItems)
+                {
+                    line.PropertyChanged += GoodsReceiveNoteLine_PropertyChanged;
+                }
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (GoodsReceiveNoteLine line in e.OldItems)
+                {
+                    line.PropertyChanged -= GoodsReceiveNoteLine_PropertyChanged;
+                }
+            }
+
+            (SaveGRNCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+            CalculateTotals();
+            ScheduleDraftAutoSave();
         }
 
         private async Task SearchGRNsAsync()
@@ -520,6 +566,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 }
 
                 HistoryList = new ObservableCollection<GoodsReceiveNote>(results);
+                (LoadEditableGRNCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                (DeleteDraftGRNCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
 
                 if (HistoryList.Count == 0)
                 {
@@ -532,14 +580,14 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             }
         }
 
-        private bool CanLoadRejectedGRN(GoodsReceiveNote grn)
+        private bool CanEditGoodsReceiveNote(GoodsReceiveNote grn)
         {
-            return grn != null && grn.IsRejected;
+            return grn != null && (grn.IsDraft || grn.IsRejected);
         }
 
-        private async Task LoadRejectedGRNForEditAsync(GoodsReceiveNote grn)
+        private async Task LoadEditableGRNAsync(GoodsReceiveNote grn)
         {
-            if (!CanLoadRejectedGRN(grn))
+            if (!CanEditGoodsReceiveNote(grn))
                 return;
 
             try
@@ -547,9 +595,11 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 await _taxRateLoadTask;
                 await _suppliersLoadTask;
 
-                _editingRejectedGrnId = grn.GoodsReceiveNoteId;
+                _currentGoodsReceiveNoteId = grn.IsDraft ? grn.GoodsReceiveNoteId : 0;
+                _editingRejectedGrnId = grn.IsRejected ? grn.GoodsReceiveNoteId : 0;
                 OnPropertyChanged(nameof(IsEditingRejectedGRN));
 
+                _isResettingGoodsReceiveNote = true;
                 _isLoadingRejectedGrn = true;
                 try
                 {
@@ -607,7 +657,6 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                         line.QuantityOrdered = line.QuantityReceived;
                     }
 
-                    line.PropertyChanged += GoodsReceiveNoteLine_PropertyChanged;
                     GoodsReceiveNoteLines.Add(line);
                 }
 
@@ -618,8 +667,148 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to load rejected GRN for edit: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to load GRN for edit: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                _isResettingGoodsReceiveNote = false;
+            }
+        }
+
+        private async Task DeleteDraftGRNAsync(GoodsReceiveNote draft)
+        {
+            if (draft == null || !draft.IsDraft)
+            {
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Delete draft GRN {draft.GoodsReceiveNoteNumber}?\n\nThis only removes the draft. Approved and pending GRNs cannot be deleted here.",
+                "Delete Draft",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                await _goodsReceiveNoteRepository.SoftDeleteGRNAsync(draft.GoodsReceiveNoteId, _userSessionService.UserId);
+
+                if (_currentGoodsReceiveNoteId == draft.GoodsReceiveNoteId)
+                {
+                    CreateNewGRN();
+                }
+
+                var historyRow = HistoryList?.FirstOrDefault(row => row.GoodsReceiveNoteId == draft.GoodsReceiveNoteId);
+                if (historyRow != null)
+                {
+                    HistoryList.Remove(historyRow);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to delete draft GRN: {ex.Message}", "Delete Draft", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool IsDraftHeaderProperty(string propertyName)
+        {
+            return propertyName == nameof(SelectedPO) ||
+                   propertyName == nameof(SelectedSupplierId) ||
+                   propertyName == nameof(ReceivedDate) ||
+                   propertyName == nameof(CreditDays) ||
+                   propertyName == nameof(InvoiceNumber) ||
+                   propertyName == nameof(ReceivedBy) ||
+                   propertyName == nameof(Note) ||
+                   propertyName == nameof(BillDiscount);
+        }
+
+        private void ScheduleDraftAutoSave()
+        {
+            if (_isResettingGoodsReceiveNote || IsEditingRejectedGRN)
+            {
+                return;
+            }
+
+            if (_isDraftAutoSaveInProgress)
+            {
+                _draftAutoSaveQueuedWhileSaving = true;
+                return;
+            }
+
+            _draftAutoSaveTimer.Stop();
+            _draftAutoSaveTimer.Start();
+        }
+
+        private async void DraftAutoSaveTimer_Tick(object sender, EventArgs e)
+        {
+            _draftAutoSaveTimer.Stop();
+
+            if (!CanAutoSaveDraft)
+            {
+                return;
+            }
+
+            try
+            {
+                _isDraftAutoSaveInProgress = true;
+                ErrorMessage = null;
+
+                var draft = BuildGoodsReceiveNoteDraft();
+                _currentGoodsReceiveNoteId = await _goodsReceiveNoteRepository.UpsertDraftGoodsReceiveNoteAsync(draft, draft.Lines);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"GRN draft auto-save failed: {ex.Message}";
+                Debug.WriteLine($"GRN draft auto-save failed: {ex}");
+            }
+            finally
+            {
+                _isDraftAutoSaveInProgress = false;
+
+                if (_draftAutoSaveQueuedWhileSaving)
+                {
+                    _draftAutoSaveQueuedWhileSaving = false;
+                    ScheduleDraftAutoSave();
+                }
+            }
+        }
+
+        private bool CanAutoSaveDraft =>
+            !IsEditingRejectedGRN &&
+            SelectedPO != null &&
+            SelectedSupplierId.HasValue &&
+            SelectedSupplierId.Value > 0 &&
+            (GoodsReceiveNoteLines.Count > 0 ||
+             !string.IsNullOrWhiteSpace(InvoiceNumber) ||
+             !string.IsNullOrWhiteSpace(ReceivedBy) ||
+             !string.IsNullOrWhiteSpace(Note));
+
+        private GoodsReceiveNote BuildGoodsReceiveNoteDraft()
+        {
+            return new GoodsReceiveNote
+            {
+                GoodsReceiveNoteId = _currentGoodsReceiveNoteId,
+                BranchId = _userSessionService.BranchId,
+                SupplierId = SelectedSupplierId ?? 0,
+                PurchaseOrderId = SelectedPO?.GoodsPurchaseNoteId ?? 0,
+                InvoiceNumber = InvoiceNumber,
+                Notes = Note,
+                SubTotal = SubTotal,
+                DiscountAmount = DiscountAmount,
+                TaxAmount = TaxAmount,
+                TotalAmount = NetAmount,
+                ReceivedBy = ReceivedBy,
+                GoodsReceiveNoteDate = ReceivedDate,
+                CreditDays = CreditDays,
+                DueDate = DueDate,
+                Status = GoodsReceiveNoteStatus.DRAFT.ToString(),
+                CreatedBy = _userSessionService.UserId,
+                Lines = GoodsReceiveNoteLines.ToList()
+            };
         }
 
         private void RemoveLineItem(GoodsReceiveNoteLine lineToRemove)
@@ -649,6 +838,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 !HasErrors;
         private async Task SaveGoodsReceiveNoteAsync()
         {
+            _draftAutoSaveTimer.Stop();
             ValidateGRN();
             if (HasErrors) return;
 
@@ -659,6 +849,9 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                     BranchId = _userSessionService.BranchId,
                     SupplierId = SelectedSupplierId.Value,
                     PurchaseOrderId = SelectedPO.GoodsPurchaseNoteId,
+                    GoodsReceiveNoteNumber = HistoryList?
+                        .FirstOrDefault(row => row.GoodsReceiveNoteId == _currentGoodsReceiveNoteId)?
+                        .GoodsReceiveNoteNumber,
                     InvoiceNumber = InvoiceNumber,
                     Notes = Note,
                     SubTotal = SubTotal,
@@ -682,7 +875,9 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 }
                 else
                 {
-                    var newId = await _goodsReceiveNoteRepository.CreateAsync(grn);
+                    grn.GoodsReceiveNoteId = _currentGoodsReceiveNoteId;
+                    grn.Status = GoodsReceiveNoteStatus.PENDING_APPROVAL.ToString();
+                    var newId = await _goodsReceiveNoteRepository.UpsertDraftGoodsReceiveNoteAsync(grn, grn.Lines);
                     MessageBox.Show($"GRN {newId} Created Successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
 

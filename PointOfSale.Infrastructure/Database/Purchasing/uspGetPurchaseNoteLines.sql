@@ -28,6 +28,8 @@ BEGIN
         INNER JOIN [Purchasing].[GoodsReceiveNote] grn ON grn.[Id] = grnl.[GoodsReceiveNoteId]
         WHERE grnl.[GoodsPurchaseNoteLineId] = pol.[Id]
           AND grn.[Status] <> 'REJECTED'
+          AND grn.[Status] <> 'DRAFT'
+          AND grn.[Status] <> 'CANCELLED'
     ) received
     WHERE pol.[GoodsPurchaseNoteId] = @PurchaseNoteId
     ORDER BY pol.[Id];

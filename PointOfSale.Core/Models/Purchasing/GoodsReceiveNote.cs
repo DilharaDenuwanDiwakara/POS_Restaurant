@@ -31,6 +31,9 @@ namespace PointOfSale.Core.Models.Purchasing
             !string.IsNullOrWhiteSpace(Status) &&
             Status.Trim().IndexOf("REJECT", StringComparison.OrdinalIgnoreCase) >= 0;
 
+        public bool IsDraft =>
+            string.Equals(Status?.Trim(), "DRAFT", StringComparison.OrdinalIgnoreCase);
+
         public string PONumberDisplay =>
             string.IsNullOrWhiteSpace(PONumber) ? "N/A (Direct)" : PONumber;
 

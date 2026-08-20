@@ -146,15 +146,28 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Qty Received" Binding="{Binding QuantityReceived, UpdateSourceTrigger=PropertyChanged}" Width="120">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                                    <Setter Property="FontWeight" Value="Bold"/>
-                                                    <Setter Property="Background" Value="#FFFDE7"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                        <DataGridTemplateColumn Header="Qty Received" Width="120">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding QuantityReceived, StringFormat=N3}"
+                                                               HorizontalAlignment="Center"
+                                                               FontWeight="Bold"
+                                                               Background="#FFFDE7"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                            <DataGridTemplateColumn.CellEditingTemplate>
+                                                <DataTemplate>
+                                                    <TextBox Text="{Binding QuantityReceivedInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             HorizontalContentAlignment="Center"
+                                                             Background="#FFFDE7"
+                                                             Style="{StaticResource TextBoxStyle}"
+                                                             PreviewTextInput="QuantityReceivedTextBox_PreviewTextInput"
+                                                             DataObject.Pasting="QuantityReceivedTextBox_Pasting"
+                                                             LostFocus="QuantityReceivedTextBox_LostFocus"
+                                                             PreviewKeyDown="QuantityReceivedTextBox_PreviewKeyDown"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellEditingTemplate>
+                                        </DataGridTemplateColumn>
 
                                         <DataGridTextColumn Header="UOM" Binding="{Binding UnitMeasure}" Width="Auto"/>
 
@@ -461,29 +474,44 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Created By" Binding="{Binding Username}" Width="120"/>
-                            <DataGridTemplateColumn Header="Action" Width="70">
+                            <DataGridTemplateColumn Header="Action" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Command="{Binding DataContext.LoadRejectedGRNCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip="Edit rejected GRN">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource EditButtonStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsRejected}" Value="True">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Status}" Value="REJECTED">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Status}" Value="Rejected">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                        </Button>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Button Command="{Binding DataContext.LoadEditableGRNCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Edit GRN"
+                                                    Margin="0,0,6,0">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource EditButtonStyle}">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsDraft}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsRejected}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+
+                                            <Button Command="{Binding DataContext.DeleteDraftGRNCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Delete draft GRN">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource DeleteButtonStyle}">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsDraft}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

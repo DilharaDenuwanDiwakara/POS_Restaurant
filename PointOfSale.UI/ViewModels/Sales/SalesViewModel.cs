@@ -1666,6 +1666,8 @@ namespace PointOfSale.UI.ViewModels.Sales
 
                 _reportService.PrintSalesInvoice(salesId);
 
+                await LoadServedOrdersAsync();
+
                 ExecuteCancelInvoice();
                 RequestBarcodeFocus?.Invoke();
             }
@@ -1810,6 +1812,10 @@ namespace PointOfSale.UI.ViewModels.Sales
                     Note = string.Empty
                 });
             }
+
+            LineDiscountPercent = sale.TotalAmount > 0
+                ? Math.Round((sale.Discount / sale.TotalAmount) * 100m, 2, MidpointRounding.AwayFromZero)
+                : 0m;
 
             CalculateTotals();
             RaiseSaveCommandState();

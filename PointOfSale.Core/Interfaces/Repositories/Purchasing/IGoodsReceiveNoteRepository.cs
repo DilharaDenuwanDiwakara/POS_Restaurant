@@ -9,6 +9,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
     public interface IGoodsReceiveNoteRepository
     {
         Task<long> CreateAsync(GoodsReceiveNote goodsReceiveNote);
+        Task<long> UpsertDraftGoodsReceiveNoteAsync(GoodsReceiveNote goodsReceiveNote, IEnumerable<GoodsReceiveNoteLine> lines);
 
         Task<IEnumerable<GoodsReceiveNote>> GetAllAsync(int? supplierId, DateTime? dateFrom, DateTime? dateTo);
         Task<IEnumerable<GoodsReceiveNote>> GetPendingApprovalsAsync(int branchId, int? supplierId, DateTime? dateFrom, DateTime? dateTo);
@@ -16,6 +17,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
         Task<DataTable> GetGoodsReceiveNoteReportDataAsync(long goodsReceiveNoteId);
         Task ApproveRejectAsync(long goodsReceiveNoteId, bool isApproved, int actionBy, string remarks);
         Task ResubmitRejectedAsync(GoodsReceiveNote goodsReceiveNote);
+        Task SoftDeleteGRNAsync(long goodsReceiveNoteId, int deletedBy);
         Task<decimal> GetLastGrnCostPriceByProductIdAsync(int productId);
     }
 }

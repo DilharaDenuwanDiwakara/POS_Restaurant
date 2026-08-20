@@ -10,10 +10,12 @@ namespace PointOfSale.UI.Services
     public class CrystalReportService : IReportService
     {
         private readonly ISalesRepository _salesRepository;
+        private readonly IConfigurationService _configurationService;
 
-        public CrystalReportService(ISalesRepository salesRepository)
+        public CrystalReportService(ISalesRepository salesRepository, IConfigurationService configurationService)
         {
             _salesRepository = salesRepository ?? throw new ArgumentNullException(nameof(salesRepository));
+            _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         }
 
         public void PrintSalesInvoice(long salesId)
@@ -28,6 +30,7 @@ namespace PointOfSale.UI.Services
             using (var report = new SalesInvoice())
             {
                 report.SetDataSource(invoiceData);
+                report.PrintOptions.PrinterName = GetLocalPrinterNameOrThrow();
                 report.PrintToPrinter(1, false, 1, 0);
             }
         }
@@ -40,8 +43,18 @@ namespace PointOfSale.UI.Services
             using (var report = new SettlementReceipt())
             {
                 SetSalesIdParameter(report, salesId);
+                report.PrintOptions.PrinterName = GetLocalPrinterNameOrThrow();
                 report.PrintToPrinter(1, false, 1, 0);
             }
+        }
+
+        private string GetLocalPrinterNameOrThrow()
+        {
+            var printerName = _configurationService.GetLocalPrinterName();
+            if (string.IsNullOrWhiteSpace(printerName))
+                throw new InvalidOperationException("No POS printer configured. Set 'LocalPrinterName' in App.config.");
+
+            return printerName;
         }
 
         private static void SetSalesIdParameter(ReportDocument report, long salesId)
