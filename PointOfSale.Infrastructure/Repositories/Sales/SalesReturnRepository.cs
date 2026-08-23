@@ -27,31 +27,21 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 {
                     await connection.OpenAsync();
 
-                    SalesReturnLookupDto header;
-
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandType = CommandType.Text;
-                        command.CommandText = @"
-                            SELECT TOP 1
-                                s.[Id] AS SalesId,
-                                s.[InvoiceNumber],
-                                s.[BranchId],
-                                s.[ShiftId],
-                                s.[SalesDate]
-                            FROM [Sales].[Sales] s
-                            WHERE s.[InvoiceNumber] = @InvoiceNumber
-                              AND s.[Status] = 'COMPLETED';";
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.CommandText = "[Sales].[uspGetInvoiceForReturn]";
                         command.Parameters.Add("@InvoiceNumber", SqlDbType.NVarChar, 50).Value = invoiceNumber.Trim();
 
                         using (var reader = await command.ExecuteReaderAsync())
                         {
+                            // 1. Read Result Set 1: The Header
                             if (!await reader.ReadAsync())
                             {
-                                return null;
+                                return null; // Invoice not found or not completed
                             }
 
-                            header = new SalesReturnLookupDto
+                            var header = new SalesReturnLookupDto
                             {
                                 SalesId = GetValue<long>(reader, "SalesId"),
                                 InvoiceNumber = GetValue<string>(reader, "InvoiceNumber"),
@@ -59,56 +49,28 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                                 ShiftId = GetValue<int?>(reader, "ShiftId"),
                                 SalesDate = GetValue<DateTime>(reader, "SalesDate")
                             };
-                        }
-                    }
 
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.CommandType = CommandType.Text;
-                        // Product-name fallback chain (Restaurant variant/menu item, then Inventory product,
-                        // then a generic placeholder) mirrors SalesRepository.GetSalesLineItemsAsync.
-                        command.CommandText = @"
-                            SELECT
-                                sl.[Id] AS SalesLineId,
-                                COALESCE(
-                                    NULLIF(
-                                        LTRIM(RTRIM(
-                                            CASE
-                                                WHEN ISNULL(v.[Name], '') <> '' AND ISNULL(mi.[Name], '') <> ''
-                                                    THEN mi.[Name] + ' - ' + v.[Name]
-                                                ELSE ISNULL(mi.[Name], '')
-                                            END)), ''),
-                                    NULLIF(p.[Name], ''),
-                                    CONCAT('Item #', CAST(sl.[ProductId] AS NVARCHAR(20)))) AS ProductName,
-                                CAST(sl.[Quantity] AS DECIMAL(18, 3)) AS SoldQty,
-                                CAST(sl.[UnitPrice] AS DECIMAL(18, 2)) AS UnitPrice
-                            FROM [Sales].[SalesLine] sl
-                            LEFT JOIN [Restaurant].[Variant] v ON v.[Id] = sl.[ProductId]
-                            LEFT JOIN [Restaurant].[MenuItem] mi ON mi.[Id] = v.[MenuItemId]
-                            LEFT JOIN [Inventory].[Product] p ON p.[Id] = sl.[ProductId]
-                            WHERE sl.[SalesId] = @SalesId
-                            ORDER BY sl.[Id];";
-                        command.Parameters.Add("@SalesId", SqlDbType.BigInt).Value = header.SalesId;
-
-                        using (var reader = await command.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
+                            // 2. Read Result Set 2: The Lines
+                            if (await reader.NextResultAsync())
                             {
-                                header.Lines.Add(new SalesReturnItemModel
+                                while (await reader.ReadAsync())
                                 {
-                                    SalesLineId = GetValue<long>(reader, "SalesLineId"),
-                                    ProductName = GetValue<string>(reader, "ProductName"),
-                                    SoldQty = GetValue<decimal>(reader, "SoldQty"),
-                                    UnitPrice = GetValue<decimal>(reader, "UnitPrice"),
-                                    ReturnQty = 0,
-                                    ReturnReasonId = 0,
-                                    IsWastage = false
-                                });
+                                    header.Lines.Add(new SalesReturnItemModel
+                                    {
+                                        SalesLineId = GetValue<long>(reader, "SalesLineId"),
+                                        ProductName = GetValue<string>(reader, "ProductName"),
+                                        SoldQty = GetValue<decimal>(reader, "SoldQty"), // This is now the "Remaining Qty"
+                                        UnitPrice = GetValue<decimal>(reader, "UnitPrice"),
+                                        ReturnQty = 0,
+                                        ReturnReasonId = 0,
+                                        IsWastage = false
+                                    });
+                                }
                             }
+
+                            return header;
                         }
                     }
-
-                    return header;
                 }
             }
             catch (SqlException ex)

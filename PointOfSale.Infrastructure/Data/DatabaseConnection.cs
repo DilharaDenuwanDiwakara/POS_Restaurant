@@ -9,8 +9,8 @@ namespace PointOfSale.Infrastructure
 
         public DatabaseConnection()
         {
-            var connection = ConfigurationManager.ConnectionStrings["ServerConnection"]
-                ?? ConfigurationManager.ConnectionStrings["ServerConnection"];
+            var connection = ConfigurationManager.ConnectionStrings["LocalConnection"]
+                ?? ConfigurationManager.ConnectionStrings["LocalConnection"];
 
             _connectionString = connection.ConnectionString;
         }

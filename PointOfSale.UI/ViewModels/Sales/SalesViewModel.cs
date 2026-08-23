@@ -1418,14 +1418,23 @@ namespace PointOfSale.UI.ViewModels.Sales
 
                 BillDiscount = baseBillDiscount + LoyaltyDiscountAmount;
 
-                decimal taxableValue = SubTotal - BillDiscount;
+                NetAmount = Math.Max(0, SubTotal - BillDiscount);
 
-                ServiceChargeAmount = IsServiceChargeEnabled ? (taxableValue * 0.10m) : 0;
+                const decimal serviceChargeRate = 0.10m;
+                const decimal taxRate = 0.18m;
 
-                decimal taxBase = taxableValue + ServiceChargeAmount;
-                TaxAmount = IsTaxEnabled ? (taxBase * 0.18m) : 0;
+                var amountExcludingServiceCharge = IsServiceChargeEnabled
+                    ? NetAmount / (1 + serviceChargeRate)
+                    : NetAmount;
 
-                NetAmount = taxableValue + ServiceChargeAmount + TaxAmount;
+                ServiceChargeAmount = IsServiceChargeEnabled
+                    ? Math.Round(NetAmount - amountExcludingServiceCharge, 2, MidpointRounding.AwayFromZero)
+                    : 0;
+
+                TaxAmount = IsTaxEnabled
+                    ? Math.Round(amountExcludingServiceCharge - (amountExcludingServiceCharge / (1 + taxRate)), 2, MidpointRounding.AwayFromZero)
+                    : 0;
+
                 RemainingBalance = NetAmount - AppliedPayments.Sum(x => x.Amount);
 
                 if (IsPaymentTypeCash)
@@ -1553,6 +1562,10 @@ namespace PointOfSale.UI.ViewModels.Sales
                 if (!CanSaveSale())
                     throw new InvalidOperationException("Apply payments until the remaining balance is settled.");
 
+                var rawCashGiven = AppliedPayments
+                    .Where(payment => string.Equals(payment.PaymentMethod, CashPaymentMethod, StringComparison.OrdinalIgnoreCase))
+                    .Sum(payment => payment.Amount);
+
                 decimal balanceToPay = NetAmount; // Use your ViewModel's NetAmount property
                 var cappedPayments = new List<PaymentDetail>();
 
@@ -1582,11 +1595,9 @@ namespace PointOfSale.UI.ViewModels.Sales
                 RefreshLineTaxAmounts();
 
                 var isRecalledBill = CurrentOpenSalesId > 0;
-                var salesId = isRecalledBill
-                    ? CurrentOpenSalesId
-                    : await _salesRepository.HoldSaleAsync(BuildHoldSaleRequest());
+                var salesId = await _salesRepository.HoldSaleAsync(BuildHoldSaleRequest());
 
-                var finalized = await _salesRepository.FinalizeSaleAsync(BuildFinalizeSaleRequest(salesId, cappedPayments));
+                var finalized = await _salesRepository.FinalizeSaleAsync(BuildFinalizeSaleRequest(salesId, cappedPayments, rawCashGiven));
                 if (!finalized)
                     throw new InvalidOperationException("The sale could not be finalized.");
 
@@ -1723,6 +1734,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         {
             return new HoldSaleRequestDto
             {
+                SalesId = CurrentOpenSalesId > 0 ? (int?)CurrentOpenSalesId : null,
                 BranchId = CurrentUser.BranchId,
                 CustomerId = SelectedCustomer?.Id > 0 ? (int?)SelectedCustomer.Id : null,
                 TotalAmount = SubTotal,
@@ -1745,16 +1757,14 @@ namespace PointOfSale.UI.ViewModels.Sales
             };
         }
 
-        private FinalizeSaleRequestDto BuildFinalizeSaleRequest(long salesId, IEnumerable<PaymentDetail> payments)
+        private FinalizeSaleRequestDto BuildFinalizeSaleRequest(long salesId, IEnumerable<PaymentDetail> payments, decimal cashGiven)
         {
             return new FinalizeSaleRequestDto
             {
                 SalesId = salesId,
                 CustomerId = SelectedCustomer?.Id > 0 ? (int?)SelectedCustomer.Id : null,
                 CreatedBy = CurrentUser.UserId,
-                CashGiven = payments
-                    .Where(payment => string.Equals(payment.PaymentMethod, CashPaymentMethod, StringComparison.OrdinalIgnoreCase))
-                    .Sum(payment => payment.Amount),
+                CashGiven = cashGiven,
                 Payments = payments.Select(payment => new SalePaymentRequestDto
                 {
                     PaymentTerminalId = payment.PaymentTerminalId,

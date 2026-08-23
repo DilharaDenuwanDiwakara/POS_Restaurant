@@ -4,6 +4,7 @@ namespace PointOfSale.Core.DTOs
 {
     public class HoldSaleRequestDto
     {
+        public int? SalesId { get; set; }
         public int BranchId { get; set; }
         public int? CustomerId { get; set; }
         public decimal TotalAmount { get; set; }

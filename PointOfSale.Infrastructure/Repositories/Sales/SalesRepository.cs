@@ -327,6 +327,7 @@ ORDER BY TRY_CAST(v.[ItemCode] AS INT) ASC, v.[ItemCode] ASC, sl.[Id] ASC;";
 
         private void AddHoldSaleParameters(SqlCommand command, HoldSaleRequestDto dto)
         {
+            command.Parameters.AddWithValue("@CurrentSalesId", dto.SalesId ?? (object)DBNull.Value);
             command.Parameters.Add("@BranchId", SqlDbType.Int).Value = dto.BranchId;
             command.Parameters.Add("@CustomerId", SqlDbType.Int).Value = (object)dto.CustomerId ?? DBNull.Value;
             command.Parameters.Add("@TotalAmount", SqlDbType.Decimal).Value = dto.TotalAmount;
