@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CrystalDecisions.CrystalReports.Engine;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Repositories.Accounts;
@@ -12,6 +15,7 @@ using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Accounts.Entities;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.Views.Sales;
 
 namespace PointOfSale.UI.ViewModels.Accounts
 {
@@ -41,6 +45,8 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
             SaveExpenseCommand = new AsyncRelayCommand(async _ => await SaveExpenseAsync());
             LoadExpensesCommand = new AsyncRelayCommand(async _ => await LoadExpensesAsync());
+            SearchExpensesCommand = new AsyncRelayCommand(async _ => await LoadExpensesAsync());
+            PrintExpenseCommand = new AsyncRelayCommand(async parameter => await PrintExpenseAsync(parameter));
             NewExpenseCommand = new RelayCommand(_ => CreateNewExpense());
 
             _ = LoadExpensesAsync();
@@ -107,6 +113,32 @@ namespace PointOfSale.UI.ViewModels.Accounts
             }
         }
 
+        private DateTime _fromDate = DateTime.Today;
+        public DateTime FromDate
+        {
+            get => _fromDate;
+            set
+            {
+                if (SetProperty(ref _fromDate, value))
+                {
+                    CommandManager.InvalidateRequerySuggested();
+                }
+            }
+        }
+
+        private DateTime _toDate = DateTime.Today;
+        public DateTime ToDate
+        {
+            get => _toDate;
+            set
+            {
+                if (SetProperty(ref _toDate, value))
+                {
+                    CommandManager.InvalidateRequerySuggested();
+                }
+            }
+        }
+
         private decimal _amount;
         public decimal Amount
         {
@@ -148,6 +180,8 @@ namespace PointOfSale.UI.ViewModels.Accounts
         #region Command
         public ICommand SaveExpenseCommand { get; }
         public ICommand LoadExpensesCommand { get; }
+        public ICommand SearchExpensesCommand { get; }
+        public ICommand PrintExpenseCommand { get; }
         public ICommand NewExpenseCommand { get; }
         public ICommand OpenAddExpensesCategoryCommand => new RelayCommand(ExecuteOpenAddCategories);
 
@@ -216,7 +250,13 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 ExpensesList.Clear();
                 var currentBranchId = _userSessionService.BranchId;
 
-                var items = await _expensesRepository.GetAllAsync(currentBranchId);
+                if (ToDate.Date < FromDate.Date)
+                {
+                    MessageBox.Show("To Date cannot be earlier than From Date.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var items = await _expensesRepository.GetAllAsync(currentBranchId, FromDate, ToDate);
                 if (items == null) return;
 
                 foreach (var item in items)
@@ -289,8 +329,10 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
                 };
 
-                await _expensesRepository.CreateAsync(expense);
-                MessageBox.Show("Expenses saved succesfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                var expensesId = await _expensesRepository.CreateAsync(expense);
+                MessageBox.Show("Expenses saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                await OpenExpenseVoucherAsync(expensesId);
 
                 await LoadExpensesAsync();
                 CreateNewExpense();
@@ -300,6 +342,112 @@ namespace PointOfSale.UI.ViewModels.Accounts
             {
                 MessageBox.Show($"Error saving: {ex.Message}");
             }
+        }
+
+        private async Task PrintExpenseAsync(object parameter)
+        {
+            var expense = parameter as Expenses;
+            if (expense == null || expense.ExpensesId <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await OpenExpenseVoucherAsync(expense.ExpensesId);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open Expense Voucher preview: {ex.Message}", "Expense Voucher", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task OpenExpenseVoucherAsync(int expensesId)
+        {
+            try
+            {
+                DataTable reportData = await _expensesRepository.GetExpenseVoucherAsync(expensesId);
+
+                if (reportData == null || reportData.Rows.Count == 0)
+                {
+                    MessageBox.Show(
+                        "No data found for this Expense Voucher.",
+                        "Expense Voucher",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    ReportDocument reportDocument = null;
+
+                    try
+                    {
+                        reportDocument = new ReportDocument();
+                        reportDocument.Load(ResolveExpenseVoucherReportPath());
+                        reportDocument.SetDataSource(reportData);
+
+                        var previewWindow = new ZReportViewerWindow(reportDocument, disposeReportOnClose: true)
+                        {
+                            Title = "Expense Payment Voucher"
+                        };
+
+                        var owner = Application.Current.MainWindow;
+                        if (owner != null && owner != previewWindow)
+                        {
+                            previewWindow.Owner = owner;
+                            previewWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                        }
+                        else
+                        {
+                            previewWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                        }
+
+                        previewWindow.ShowDialog();
+                        reportDocument = null;
+                    }
+                    finally
+                    {
+                        if (reportDocument != null)
+                        {
+                            reportDocument.Close();
+                            reportDocument.Dispose();
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Expense was saved, but the voucher could not be opened: {ex.Message}",
+                    "Expense Voucher",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+
+        private static string ResolveExpenseVoucherReportPath()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var candidatePaths = new[]
+            {
+                Path.Combine(baseDirectory, "Reports", "ExpenseVoucher.rpt"),
+                Path.Combine(baseDirectory, "ExpenseVoucher.rpt"),
+                Path.GetFullPath(Path.Combine(baseDirectory, @"..\..\Reports\ExpenseVoucher.rpt"))
+            };
+
+            foreach (var candidatePath in candidatePaths)
+            {
+                if (File.Exists(candidatePath))
+                {
+                    return candidatePath;
+                }
+            }
+
+            throw new FileNotFoundException(
+                "Crystal report file not found. Expected ExpenseVoucher.rpt under the application Reports folder.",
+                candidatePaths[0]);
         }
         #endregion
 
@@ -329,7 +477,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             ClearErrors(nameof(Description));
             if (!string.IsNullOrWhiteSpace(Description) && Description.Length > 500)
                 AddError(nameof(Description), "Description cannot exceed 500 characters.");
-            else if (!string.IsNullOrWhiteSpace(Description) && !Regex.IsMatch(Description, @"^[a-zA-Z0-9\s]+$"))
+            else if (!string.IsNullOrWhiteSpace(Description) && !Regex.IsMatch(Description, @"^[a-zA-Z0-9\s\-\(\)]+$"))
                 AddError(nameof(Description), "Cannot contain special character");
         }
         #endregion

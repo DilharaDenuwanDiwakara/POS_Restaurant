@@ -84,18 +84,23 @@
 
                         <!-- Amount -->
                         <TextBlock Text="Amount" Style="{StaticResource LabelStyle}"/>
-                        <TextBox Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                        <TextBox Text="{Binding Amount, UpdateSourceTrigger=LostFocus, ValidatesOnNotifyDataErrors=True, StringFormat={}{0:N2}}"
                                  Style="{StaticResource TextBoxStyle}"
+                                 TextAlignment="Right"
                                  PreviewKeyDown="MoveFocusOnEnter"
+                                 PreviewTextInput="AmountTextBox_PreviewTextInput"
+                                 DataObject.Pasting="AmountTextBox_Pasting"
                                  GotKeyboardFocus="SelectAllText_GotFocus"
                                  MaxLength="50"/>
 
                         <!-- Description -->
                         <TextBlock Text="Description" Style="{StaticResource LabelStyle}"/>
-                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, StringFormat=N2 }"
+                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                                  Grid.Column="1"
                                  Style="{StaticResource TextBoxStyle}"
                                  PreviewKeyDown="MoveFocusOnEnter"
+                                 PreviewTextInput="DescriptionTextBox_PreviewTextInput"
+                                 DataObject.Pasting="DescriptionTextBox_Pasting"
                                  Margin="0"/>
 
                         <!-- Action Buttons -->
@@ -132,6 +137,9 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Column="0" Margin="0"
@@ -145,7 +153,33 @@
                                     ToolTip="Refresh Expenses List"
                                     Margin="10,0,0,0"/>
 
-                            <Button Grid.Column="3" Visibility="Hidden"
+                            <TextBlock Grid.Column="3"
+                                       Text="From Date"
+                                       Style="{StaticResource LabelStyle}"
+                                       VerticalAlignment="Center"
+                                       Margin="16,0,6,0"/>
+
+                            <DatePicker Grid.Column="4"
+                                        SelectedDate="{Binding FromDate, UpdateSourceTrigger=PropertyChanged}"
+                                        Style="{StaticResource DatePickerStyle}"
+                                        Width="130"
+                                        Margin="0,0,8,0"/>
+
+                            <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="To Date"
+                                           Style="{StaticResource LabelStyle}"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,6,0"/>
+                                <DatePicker SelectedDate="{Binding ToDate, UpdateSourceTrigger=PropertyChanged}"
+                                            Style="{StaticResource DatePickerStyle}"
+                                            Width="130"
+                                            Margin="0,0,8,0"/>
+                                <Button Content="Search"
+                                        Command="{Binding SearchExpensesCommand}"
+                                        Style="{StaticResource PrimaryButtonStyle}"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="6" Visibility="Hidden"
                                     Command="{Binding CancelAdvanceCommand}" 
                                     Style="{StaticResource DeleteButtonStyle}" 
                                     ToolTip="Delete Supplier"/>
@@ -155,6 +189,7 @@
 
                     <!-- Data Grid -->
                     <DataGrid Grid.Row="1"
+                          x:Name="ExpensesDataGrid"
                           ItemsSource="{Binding ExpensesList}"
                           SelectedItem="{Binding SelectedExpense, UpdateSourceTrigger=PropertyChanged}"
                           Style="{StaticResource DataGridStyle}"
@@ -165,6 +200,7 @@
                           IsReadOnly="True">
 
                         <DataGrid.Columns>
+                            <DataGridTextColumn Header="Voucher No" Binding="{Binding VoucherNumber}" Width="130"/>
                             <DataGridTextColumn Header="ID" Binding="{Binding ExpensesId}" Width="60" Visibility="Hidden"/>
                             <DataGridTextColumn Header="Expenses Date" Binding="{Binding ExpensesDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="150" />
                             <DataGridTextColumn Header="Expenses CategoryId" Binding="{Binding ExpensesCategoryId}" Width="*" Visibility="Hidden" />
@@ -178,6 +214,16 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Action" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.PrintExpenseCommand, ElementName=ExpensesDataGrid}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource DataGridPrintButtonStyle}"
+                                                ToolTip="Print expense voucher"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

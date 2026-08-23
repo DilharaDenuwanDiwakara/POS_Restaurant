@@ -40,6 +40,11 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
         }
         public async Task<IEnumerable<Expenses>> GetAllAsync(int locationId)
         {
+            return await GetAllAsync(locationId, DateTime.Today, DateTime.Today);
+        }
+
+        public async Task<IEnumerable<Expenses>> GetAllAsync(int locationId, DateTime fromDate, DateTime toDate)
+        {
             var expensesList = new List<Expenses>();
 
             try
@@ -48,6 +53,8 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
                 using (var command = CreateCommand(connection, "[Accounts].[uspGetAllExpenses]"))
                 {
                     command.Parameters.AddWithValue("@LocationId", locationId);
+                    command.Parameters.Add("@FromDate", SqlDbType.Date).Value = fromDate.Date;
+                    command.Parameters.Add("@ToDate", SqlDbType.Date).Value = toDate.Date;
 
                     await connection.OpenAsync();
                     using (var reader = await command.ExecuteReaderAsync())
@@ -64,6 +71,35 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
             catch (SqlException ex)
             {
                 throw new InvalidOperationException("A database error occurred while retrieving expenses.", ex);
+            }
+        }
+
+        public async Task<DataTable> GetExpenseVoucherAsync(int expensesId)
+        {
+            var dataTable = new DataTable();
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Accounts].[uspGetExpenseVoucher]"))
+                {
+                    command.Parameters.Add("@ExpensesId", SqlDbType.Int).Value = expensesId;
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        dataTable.Load(reader);
+                    }
+                }
+
+                return dataTable;
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(
+                    $"A database error occurred while retrieving Expense Voucher {expensesId}.",
+                    ex);
             }
         }
         #endregion
@@ -84,9 +120,14 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
         }
         private Expenses MapExpense(IDataRecord record)
         {
+            var expensesId = GetValue<int>(record, "Id");
+
             return new Expenses
             {
-                ExpensesId = GetValue<int>(record, "Id"),
+                ExpensesId = expensesId,
+                VoucherNumber = HasRecordColumn(record, "VoucherNumber")
+                    ? GetValue<string>(record, "VoucherNumber")
+                    : expensesId.ToString(),
                 ExpensesDate = GetValue<DateTime>(record, "ExpensesDate"),
                 ExpensesCategoryId = GetValue<int>(record, "ExpensesCategoryId"),
                 ExpensesCategoryName = GetValue<string>(record, "ExpensesCategory"),
@@ -94,6 +135,19 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
                 Description = GetValue<string>(record, "Description"),
 
             };
+        }
+
+        private static bool HasRecordColumn(IDataRecord record, string columnName)
+        {
+            for (var i = 0; i < record.FieldCount; i++)
+            {
+                if (string.Equals(record.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
         #endregion
     }

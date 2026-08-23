@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -10,6 +11,9 @@ namespace PointOfSale.UI.Views.Accounts
     /// </summary>
     public partial class ExpensesView : UserControl
     {
+        private static readonly Regex AmountInputRegex = new Regex(@"^[0-9]*(\.[0-9]*)?$");
+        private static readonly Regex DescriptionInputRegex = new Regex(@"^[a-zA-Z0-9\s\-\(\)]*$");
+
         public ExpensesView()
         {
             InitializeComponent();
@@ -19,10 +23,10 @@ namespace PointOfSale.UI.Views.Accounts
         {
             if (e.Key == Key.Enter)
             {
-                // Push latest value into ViewModel → triggers validation
+                // Push latest value into ViewModel - triggers validation
                 if (sender is ComboBox cmb)
                 {
-                    // If the dropdown is open, Enter should select the item first. 
+                    // If the dropdown is open, Enter should select the item first.
                     // Don't move focus yet.
                     if (cmb.IsDropDownOpen) return;
 
@@ -62,6 +66,63 @@ namespace PointOfSale.UI.Views.Accounts
             {
                 Dispatcher.BeginInvoke(new Action(() => txt.SelectAll()));
             }
+        }
+
+        private void AmountTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                e.Handled = !IsValidAmountText(GetTextAfterInput(textBox, e.Text));
+            }
+        }
+
+        private void AmountTextBox_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (!(sender is TextBox textBox) || !e.DataObject.GetDataPresent(typeof(string)))
+            {
+                e.CancelCommand();
+                return;
+            }
+
+            var pasteText = e.DataObject.GetData(typeof(string)) as string;
+            if (!IsValidAmountText(GetTextAfterInput(textBox, pasteText)))
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private void DescriptionTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !DescriptionInputRegex.IsMatch(e.Text);
+        }
+
+        private void DescriptionTextBox_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (!e.DataObject.GetDataPresent(typeof(string)))
+            {
+                e.CancelCommand();
+                return;
+            }
+
+            var pasteText = e.DataObject.GetData(typeof(string)) as string;
+            if (pasteText == null || !DescriptionInputRegex.IsMatch(pasteText))
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private static bool IsValidAmountText(string text)
+        {
+            return string.IsNullOrEmpty(text) || AmountInputRegex.IsMatch(text);
+        }
+
+        private static string GetTextAfterInput(TextBox textBox, string input)
+        {
+            input = input ?? string.Empty;
+
+            var currentText = textBox.Text ?? string.Empty;
+            return currentText.Remove(textBox.SelectionStart, textBox.SelectionLength)
+                              .Insert(textBox.SelectionStart, input);
         }
     }
 }

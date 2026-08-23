@@ -5,6 +5,7 @@ namespace PointOfSale.Core.Models.Accounts.Entities
     public class Expenses
     {
         public int ExpensesId { get; set; }
+        public string VoucherNumber { get; set; }
         public DateTime ExpensesDate { get; set; }
         public int ExpensesCategoryId { get; set; }
         public string ExpensesCategoryName { get; set; }
