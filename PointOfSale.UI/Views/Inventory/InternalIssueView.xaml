@@ -23,8 +23,6 @@
                     <ColumnDefinition Width="1.1*"/>
                     <ColumnDefinition Width="1.1*"/>
                     <ColumnDefinition Width="1.1*"/>
-                    <ColumnDefinition Width="1.1*"/>
-                    <ColumnDefinition Width="1.1*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -54,30 +52,6 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Margin="0,0,10,0">
-                    <TextBlock Text="Expense Account" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding ExpenseAccounts}"
-                              SelectedItem="{Binding SelectedExpenseAccount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              DisplayMemberPath="DisplayText"
-                              IsEditable="True"
-                              IsTextSearchEnabled="True"
-                              TextSearch.TextPath="DisplayText"
-                              Style="{StaticResource ComboBoxStyle}"
-                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Column="3" Margin="0,0,10,0">
-                    <TextBlock Text="Credit Account" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding CreditAccounts}"
-                              SelectedItem="{Binding SelectedCreditAccount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              DisplayMemberPath="DisplayText"
-                              IsEditable="True"
-                              IsTextSearchEnabled="True"
-                              TextSearch.TextPath="DisplayText"
-                              Style="{StaticResource ComboBoxStyle}"
-                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Column="4" Margin="0,0,10,0">
                     <TextBlock Text="Issue Type" Style="{StaticResource LabelStyle}"/>
                     <ComboBox ItemsSource="{Binding IssueTypes}"
                               SelectedItem="{Binding IssueType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -85,14 +59,14 @@
                               ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="5">
+                <StackPanel Grid.Column="3">
                     <TextBlock Text="Issue Date" Style="{StaticResource LabelStyle}"/>
                     <DatePicker SelectedDate="{Binding IssueDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 IsTodayHighlighted="True"
                                 Style="{StaticResource DatePickerStyle}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="6" Margin="0,12,0,0">
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,12,0,0">
                     <TextBlock Text="Remarks" Style="{StaticResource LabelStyle}"/>
                     <TextBox Text="{Binding Remarks, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              MaxLength="255"

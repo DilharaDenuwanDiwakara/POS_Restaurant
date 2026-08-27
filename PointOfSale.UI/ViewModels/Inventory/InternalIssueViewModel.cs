@@ -8,11 +8,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using PointOfSale.Core.DTOs;
-using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Interfaces.Repositories.Restaurant;
+using PointOfSale.Core.Interfaces.Repositories.System;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Models.Restaurant;
+using PointOfSale.Core.Models.System;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
 
@@ -20,44 +21,43 @@ namespace PointOfSale.UI.ViewModels.Inventory
 {
     public class InternalIssueViewModel : BaseViewModel
     {
+        private const string WastageIssueType = "Damage / Wastage";
+
         private readonly IInternalIssueRepository _internalIssueRepository;
         private readonly IStationRepository _stationRepository;
-        private readonly IAccountingRepository _accountingRepository;
+        private readonly IAccountMappingRepository _accountMappingRepository;
         private readonly IProductRepository _productRepository;
         private readonly IInventoryRepository _inventoryRepository;
         private readonly IUserSessionService _userSessionService;
 
         private Station _selectedStation;
         private Location _selectedLocation;
-        private AccountDto _selectedExpenseAccount;
-        private AccountDto _selectedCreditAccount;
         private DateTime _issueDate = DateTime.Today;
         private string _issueType = "Consumable";
         private string _remarks;
         private decimal _totalValue;
+        private int _defaultWastageAccountId;
         private bool _isBusy;
 
         public InternalIssueViewModel(
             IInternalIssueRepository internalIssueRepository,
             IStationRepository stationRepository,
-            IAccountingRepository accountingRepository,
+            IAccountMappingRepository accountMappingRepository,
             IProductRepository productRepository,
             IInventoryRepository inventoryRepository,
             IUserSessionService userSessionService)
         {
             _internalIssueRepository = internalIssueRepository ?? throw new ArgumentNullException(nameof(internalIssueRepository));
             _stationRepository = stationRepository ?? throw new ArgumentNullException(nameof(stationRepository));
-            _accountingRepository = accountingRepository ?? throw new ArgumentNullException(nameof(accountingRepository));
+            _accountMappingRepository = accountMappingRepository ?? throw new ArgumentNullException(nameof(accountMappingRepository));
             _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
             _inventoryRepository = inventoryRepository ?? throw new ArgumentNullException(nameof(inventoryRepository));
             _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
 
             Stations = new ObservableCollection<Station>();
             Locations = new ObservableCollection<Location>();
-            ExpenseAccounts = new ObservableCollection<AccountDto>();
-            CreditAccounts = new ObservableCollection<AccountDto>();
             Products = new ObservableCollection<Product>();
-            IssueTypes = new ObservableCollection<string> { "Consumable", "Pre-Processing" };
+            IssueTypes = new ObservableCollection<string> { "Consumable", WastageIssueType };
             IssueLines = new ObservableCollection<InternalIssueLineEntry>();
             IssueLines.CollectionChanged += IssueLines_CollectionChanged;
 
@@ -69,8 +69,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         public ObservableCollection<Station> Stations { get; }
         public ObservableCollection<Location> Locations { get; }
-        public ObservableCollection<AccountDto> ExpenseAccounts { get; }
-        public ObservableCollection<AccountDto> CreditAccounts { get; }
         public ObservableCollection<Product> Products { get; }
         public ObservableCollection<string> IssueTypes { get; }
         public ObservableCollection<InternalIssueLineEntry> IssueLines { get; }
@@ -93,30 +91,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
             set
             {
                 if (SetProperty(ref _selectedLocation, value))
-                {
-                    RefreshSaveCommand();
-                }
-            }
-        }
-
-        public AccountDto SelectedExpenseAccount
-        {
-            get => _selectedExpenseAccount;
-            set
-            {
-                if (SetProperty(ref _selectedExpenseAccount, value))
-                {
-                    RefreshSaveCommand();
-                }
-            }
-        }
-
-        public AccountDto SelectedCreditAccount
-        {
-            get => _selectedCreditAccount;
-            set
-            {
-                if (SetProperty(ref _selectedCreditAccount, value))
                 {
                     RefreshSaveCommand();
                 }
@@ -153,6 +127,12 @@ namespace PointOfSale.UI.ViewModels.Inventory
             private set => SetProperty(ref _totalValue, value);
         }
 
+        public int DefaultWastageAccountId
+        {
+            get => _defaultWastageAccountId;
+            private set => SetProperty(ref _defaultWastageAccountId, value);
+        }
+
         public bool IsBusy
         {
             get => _isBusy;
@@ -176,8 +156,8 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
                 var stations = await _stationRepository.GetAllAsync(_userSessionService.BranchId);
                 var locations = await _inventoryRepository.GetLocationsByBranchAsync(_userSessionService.BranchId);
-                var accounts = (await _accountingRepository.GetAccountsAsync()).ToList();
                 var products = await _productRepository.GetAllAsync();
+                var accountMappings = await _accountMappingRepository.GetSystemAccountMappingsAsync();
 
                 Stations.Clear();
                 foreach (var station in stations.Where(s => s != null))
@@ -191,29 +171,18 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     Locations.Add(location);
                 }
 
-                ExpenseAccounts.Clear();
-                foreach (var account in accounts.Where(IsPostingExpenseAccount))
-                {
-                    ExpenseAccounts.Add(account);
-                }
-
-                CreditAccounts.Clear();
-                foreach (var account in accounts.Where(IsPostingAssetAccount))
-                {
-                    CreditAccounts.Add(account);
-                }
-
                 Products.Clear();
                 foreach (var product in products.Where(p => p != null && p.IsActive))
                 {
                     Products.Add(product);
                 }
 
+                DefaultWastageAccountId = accountMappings.TryGetValue(AccountMappingKeys.WastageExpense, out var wastageAccountId)
+                    ? wastageAccountId ?? 0
+                    : 0;
+
                 SelectedStation = Stations.FirstOrDefault();
                 SelectedLocation = Locations.FirstOrDefault();
-                SelectedExpenseAccount = ExpenseAccounts.FirstOrDefault();
-                SelectedCreditAccount = CreditAccounts.FirstOrDefault(a =>
-                    ContainsText(a.Name, "inventory") || ContainsText(a.AccountTypeName, "asset")) ?? CreditAccounts.FirstOrDefault();
             }
             catch (Exception ex)
             {
@@ -230,8 +199,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
             return !IsBusy
                 && SelectedStation != null
                 && SelectedLocation != null
-                && SelectedExpenseAccount != null
-                && SelectedCreditAccount != null
                 && !string.IsNullOrWhiteSpace(IssueType)
                 && GetValidLines().Any();
         }
@@ -259,8 +226,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     TotalValue = TotalValue,
                     Remarks = string.IsNullOrWhiteSpace(Remarks) ? null : Remarks.Trim(),
                     CreatedBy = _userSessionService.UserId,
-                    DebitAccountId = SelectedExpenseAccount.Id,
-                    CreditAccountId = SelectedCreditAccount.Id,
+                    WastageAccountId = IssueType == WastageIssueType ? DefaultWastageAccountId : (int?)null,
                     Lines = validLines.Select(line => new InternalIssueLineDto
                     {
                         ProductId = line.ProductId,
@@ -344,27 +310,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private void RefreshSaveCommand()
         {
             (SaveCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
-        }
-
-        private static bool IsPostingExpenseAccount(AccountDto account)
-        {
-            return IsPostingAccount(account) && account.AccountTypeId == 5;
-        }
-
-        private static bool IsPostingAssetAccount(AccountDto account)
-        {
-            return IsPostingAccount(account) && account.AccountTypeId == 1;
-        }
-
-        private static bool IsPostingAccount(AccountDto account)
-        {
-            return account != null && account.IsActive && !account.IsHeader;
-        }
-
-        private static bool ContainsText(string value, string searchText)
-        {
-            return !string.IsNullOrWhiteSpace(value)
-                && value.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
     }

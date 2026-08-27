@@ -59,8 +59,7 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             command.Parameters.Add("@Remarks", SqlDbType.NVarChar, 255).Value =
                 string.IsNullOrWhiteSpace(dto.Remarks) ? (object)DBNull.Value : dto.Remarks.Trim();
             command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = dto.CreatedBy;
-            command.Parameters.Add("@DebitAccountId", SqlDbType.Int).Value = dto.DebitAccountId;
-            command.Parameters.Add("@CreditAccountId", SqlDbType.Int).Value = dto.CreditAccountId;
+            command.Parameters.Add("@WastageAccountId", SqlDbType.Int).Value = (object)dto.WastageAccountId ?? DBNull.Value;
         }
 
         private static void AddLinesParameter(SqlCommand command, IEnumerable<InternalIssueLineDto> lines)

@@ -49,14 +49,10 @@ namespace PointOfSale.Core.DTOs
         public int CreatedBy { get; set; }
 
         /// <summary>
-        /// Gets or sets the debit account used for the accounting entry.
+        /// Gets or sets the wastage expense account to debit when the issue type is Wastage.
+        /// Debit/Credit accounts are otherwise resolved automatically from category-level GL mappings.
         /// </summary>
-        public int DebitAccountId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the credit account used for the accounting entry.
-        /// </summary>
-        public int CreditAccountId { get; set; }
+        public int? WastageAccountId { get; set; }
 
         /// <summary>
         /// Gets or sets the products issued in this transaction.

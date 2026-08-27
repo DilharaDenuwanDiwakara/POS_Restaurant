@@ -11,5 +11,6 @@ namespace PointOfSale.Core.Models.System
         public const string LoyaltyPayable = "LOYALTY_PAYABLE";
         public const string LoyaltyExpense = "LOYALTY_EXPENSE";
         public const string FreeIssueExpense = "FREE_ISSUE_EXPENSE";
+        public const string WastageExpense = "WASTAGE_EXPENSE";
     }
 }
