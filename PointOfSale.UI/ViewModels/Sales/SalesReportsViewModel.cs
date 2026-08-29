@@ -258,6 +258,11 @@ namespace PointOfSale.UI.ViewModels.Sales
                 if (MessageBox.Show("Report saved. Open now?", "Success", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                     Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
             }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "Report Not Ready", MessageBoxButton.OK, MessageBoxImage.Information);
+                ErrorMessage = "Report template missing.";
+            }
             catch (Exception ex)
             {
                 Trace.TraceError($"Sales report print failed: {ex}");

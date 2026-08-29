@@ -258,6 +258,10 @@
                 <viewaccounts:ExpensesView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelaccounts:FundTransferViewModel}">
+                <viewaccounts:FundTransferView/>
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type viewmodelaccounts:ExpensesCategoryViewModel}">
                 <viewaccountsdialog:ExpensesCategoryWindow/>
             </DataTemplate>

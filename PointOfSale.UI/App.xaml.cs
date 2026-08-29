@@ -113,6 +113,7 @@ namespace PointOfSale.UI
             services.AddSingleton<IExpensesCategoryRepository, ExpensesCategoryRepository>();
             services.AddSingleton<IAccountingRepository, AccountingRepository>();
             services.AddSingleton<IOpeningBalanceRepository, OpeningBalanceRepository>();
+            services.AddSingleton<IFundTransferRepository, FundTransferRepository>();
             services.AddSingleton<IInventoryReportRepository, InventoryReportRepository>();
             services.AddSingleton<ILocationRepository, LocationRepository>();
             services.AddSingleton<IBranchRepository, BranchRepository>();
@@ -216,6 +217,7 @@ namespace PointOfSale.UI
 
             services.AddTransient<ExpensesViewModel>();
             services.AddTransient<ExpensesCategoryViewModel>();
+            services.AddTransient<FundTransferViewModel>();
 
             services.AddTransient<AccountRegisterViewModel>();
             services.AddTransient<AccountRegisterView>();

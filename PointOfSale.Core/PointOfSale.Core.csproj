@@ -116,6 +116,7 @@
     <Compile Include="Interfaces\Repositories\Accounts\ICustomerPaymentRepository.cs" />
     <Compile Include="Interfaces\Repositories\Accounts\IExpensesCategoryRepository.cs" />
     <Compile Include="Interfaces\Repositories\Accounts\IExpensesRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Accounts\IFundTransferRepository.cs" />
     <Compile Include="Interfaces\Repositories\Accounts\ISupplierAdvanceRepository.cs" />
     <Compile Include="Interfaces\Repositories\Accounts\ISupplierCreditRepository.cs" />
     <Compile Include="Interfaces\Repositories\Accounts\ISupplierPaymentRepository.cs" />
@@ -179,6 +180,7 @@
     <Compile Include="Models\Accounts\DTOs\SupplierPayable.cs" />
     <Compile Include="Models\Accounts\Entities\Expenses.cs" />
     <Compile Include="Models\Accounts\Entities\ExpensesCategory.cs" />
+    <Compile Include="Models\Accounts\Entities\FundTransfer.cs" />
     <Compile Include="Models\Accounts\Entities\OpeningBalanceLine.cs" />
     <Compile Include="Models\Accounts\Entities\SupplierPayment.cs" />
     <Compile Include="Models\Accounts\Entities\SupplierPaymentLine.cs" />

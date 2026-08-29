@@ -277,6 +277,12 @@
       <DependentUpon>ExpenseVoucher.rpt</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Reports\FundTransferVoucher.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FundTransferVoucher.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Reports\GoodsReceiveNote.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -411,6 +417,7 @@
     <Compile Include="ViewModels\Accounts\CustomerSettlementViewModel.cs" />
     <Compile Include="ViewModels\Accounts\ExpensesCategoryViewModel.cs" />
     <Compile Include="ViewModels\Accounts\ExpensesViewModel.cs" />
+    <Compile Include="ViewModels\Accounts\FundTransferViewModel.cs" />
     <Compile Include="ViewModels\Accounts\SupplierAdvanceViewModel.cs" />
     <Compile Include="ViewModels\Accounts\SupplierPaymentTabViewModel.cs" />
     <Compile Include="ViewModels\Accounts\SupplierPaymentViewModel.cs" />
@@ -489,6 +496,9 @@
     </Compile>
     <Compile Include="Views\Accounts\ExpensesView.xaml.cs">
       <DependentUpon>ExpensesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Accounts\FundTransferView.xaml.cs">
+      <DependentUpon>FundTransferView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Accounts\SupplierAdvanceView.xaml.cs">
       <DependentUpon>SupplierAdvanceView.xaml</DependentUpon>
@@ -755,6 +765,10 @@
     <Page Include="Views\Accounts\Dialogs\ExpensesCategoryWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Accounts\FundTransferView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Accounts\ExpensesView.xaml">
       <SubType>Designer</SubType>
@@ -1072,6 +1086,10 @@
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
       <LastGenOutput>ExpiryReport.cs</LastGenOutput>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\FundTransferVoucher.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>FundTransferVoucher.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Reports\GoodsReceiveNote.rpt">
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>

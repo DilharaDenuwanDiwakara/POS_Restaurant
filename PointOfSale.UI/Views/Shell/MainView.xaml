@@ -497,6 +497,14 @@
                                     </StackPanel>
                                 </RadioButton>
 
+                                <RadioButton Command="{Binding NavigateToFundTransferCommand}"
+                                             Style="{StaticResource Style.Nav.RadioButton}"
+                                             Visibility="{Binding CanNavFundTransfer, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Fund Transfer"/>
+                                    </StackPanel>
+                                </RadioButton>
+
                                 <RadioButton Command="{Binding NavigateToOpeningBalanceCommand}"
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="{Binding CanNavOpeningBalance, Converter={StaticResource BoolToVisibility}}">

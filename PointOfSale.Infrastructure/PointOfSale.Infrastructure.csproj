@@ -102,6 +102,7 @@
     <Compile Include="Repositories\Accounts\CustomerPaymentRepository.cs" />
     <Compile Include="Repositories\Accounts\ExpensesCategoryRepository.cs" />
     <Compile Include="Repositories\Accounts\ExpensesRepository.cs" />
+    <Compile Include="Repositories\Accounts\FundTransferRepository.cs" />
     <Compile Include="Repositories\Accounts\SupplierAdvanceRepository.cs" />
     <Compile Include="Repositories\Accounts\SupplierCreditRepository.cs" />
     <Compile Include="Repositories\Accounts\SupplierPaymentRepository.cs" />
