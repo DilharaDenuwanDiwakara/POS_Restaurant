@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.SqlClient;
 using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Sales;
 using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Services;
@@ -14,15 +15,18 @@ namespace PointOfSale.UI.Services
     public class CrystalReportService : IReportService
     {
         private readonly ISalesRepository _salesRepository;
+        private readonly ISalesReportService _salesReportService;
         private readonly IConfigurationService _configurationService;
         private readonly DatabaseConnection _databaseConnection;
 
         public CrystalReportService(
             ISalesRepository salesRepository,
+            ISalesReportService salesReportService,
             IConfigurationService configurationService,
             DatabaseConnection databaseConnection)
         {
             _salesRepository = salesRepository ?? throw new ArgumentNullException(nameof(salesRepository));
+            _salesReportService = salesReportService ?? throw new ArgumentNullException(nameof(salesReportService));
             _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
             _databaseConnection = databaseConnection ?? throw new ArgumentNullException(nameof(databaseConnection));
         }
@@ -78,9 +82,42 @@ namespace PointOfSale.UI.Services
 
             using (var report = ResolveSalesReport(reportTypeKey))
             {
+                // Apply credentials defensively in case the .rpt has a subreport that
+                // still needs a live DB connection (mirrors PrintSalesInvoice).
                 ApplyReportCredentials(report);
+
+                var request = new SalesReportRequestDto
+                {
+                    UserId = userId,
+                    BranchId = branchId,
+                    StartDate = startDate,
+                    EndDate = endDate
+                };
+
+                DataTable reportData = _salesReportService.GenerateReportAsync(reportTypeKey, request).GetAwaiter().GetResult();
+                if (reportData == null)
+                    throw new InvalidOperationException("No data was found for the selected sales report.");
+
+                reportData.TableName = GetSalesReportTableName(reportTypeKey);
+
+                report.SetDataSource(reportData);
                 SetSalesReportParameters(report, userId, branchId, startDate, endDate);
                 report.ExportToDisk(ExportFormatType.PortableDocFormat, outputPdfPath);
+            }
+        }
+
+        private static string GetSalesReportTableName(string reportTypeKey)
+        {
+            switch (reportTypeKey)
+            {
+                case SalesReportService.SalesSummaryKey:
+                    return "uspGetSalesSummaryReport";
+                case SalesReportService.SalesDetailKey:
+                    return "uspGetSalesDetailReport";
+                case SalesReportService.PaymentModeWiseKey:
+                    return "uspGetPaymentModeWiseSalesReport";
+                default:
+                    return reportTypeKey;
             }
         }
 
