@@ -101,4 +101,52 @@ namespace PointOfSale.Core.DTOs
         /// </summary>
         public decimal LineTotal { get; set; }
     }
+
+    /// <summary>
+    /// Carries a raw product ingredient returned from a menu recipe for internal issue explosion.
+    /// Quantities are returned in the product's stock/base unit so they can be passed directly
+    /// to Inventory.InternalIssueLineType.
+    /// </summary>
+    public class RecipeIngredientDto
+    {
+        /// <summary>
+        /// Gets or sets the finished menu item identifier, when available.
+        /// </summary>
+        public int MenuItemId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the finished menu variant identifier.
+        /// </summary>
+        public int VariantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the raw product ingredient identifier.
+        /// </summary>
+        public int ProductId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the raw product ingredient display name.
+        /// </summary>
+        public string ProductName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ingredient quantity per one menu item, converted to product stock/base unit.
+        /// </summary>
+        public decimal QuantityPerItem { get; set; }
+
+        /// <summary>
+        /// Gets or sets the current product stock/base unit cost.
+        /// </summary>
+        public decimal UnitCost { get; set; }
+
+        /// <summary>
+        /// Gets or sets the product stock/base unit identifier.
+        /// </summary>
+        public int UnitMeasureId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the product stock/base unit code or name.
+        /// </summary>
+        public string UnitMeasureName { get; set; }
+    }
 }

@@ -21,6 +21,8 @@ namespace PointOfSale.Core.Interfaces.Repositories.Sales
 
         DataTable GetInvoiceData(long salesId);
 
+        DataTable GetSettlementReceiptData(long salesId);
+
         Task<List<SalesListDto>> GetSalesListAsync(DateTime from, DateTime to, int? branchId, string paymentType);
 
         Task<List<SalesLineItemDto>> GetSalesLineItemsAsync(long salesId);

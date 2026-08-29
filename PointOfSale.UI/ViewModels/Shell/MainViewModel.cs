@@ -357,6 +357,9 @@ namespace PointOfSale.UI.ViewModels.Shell
             NavigateToInventoryReportCommand = new RelayCommand(_ =>
                 NavigateTo<InventoryReportViewModel>("Reports  →  Inventory Reports"));
 
+            NavigateToSalesReportCommand = new RelayCommand(_ =>
+                NavigateTo<SalesReportsViewModel>("Reports  →  Sales Reports"));
+
             // --- Security Module ---
             NavigateToUserCommand = new RelayCommand(_ =>
                 NavigateTo<UserViewModel>("Security  →  User Management"));

@@ -220,6 +220,10 @@
                 <viewsales:SalesListView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelsales:SalesReportsViewModel}">
+                <viewsales:SalesReportsView/>
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type viewmodelsales:ShiftManagementViewModel}">
                 <viewsales:ShiftManagementView/>
             </DataTemplate>

@@ -97,6 +97,8 @@
     <Compile Include="DTOs\MenuVariantDto.cs" />
     <Compile Include="DTOs\SalesLineItemDto.cs" />
     <Compile Include="DTOs\SalesListDto.cs" />
+    <Compile Include="DTOs\SalesReportRequestDto.cs" />
+    <Compile Include="DTOs\SalesReportTypeDto.cs" />
     <Compile Include="DTOs\SalesReturnLookupDto.cs" />
     <Compile Include="DTOs\ServedOrderDto.cs" />
     <Compile Include="DTOs\ShiftDto.cs" />
@@ -148,6 +150,7 @@
     <Compile Include="Interfaces\Repositories\Sales\IRegisterRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\IShiftRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\ISalesHoldRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\ISalesReportRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\ISalesRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\ISalesReturnRepository.cs" />
     <Compile Include="Interfaces\Repositories\Security\IUserRepository.cs" />
@@ -161,6 +164,7 @@
     <Compile Include="Interfaces\Services\IReportService.cs" />
     <Compile Include="Interfaces\Services\IUOMConversionService.cs" />
     <Compile Include="Interfaces\Services\ISalesInvoiceReportPreviewService.cs" />
+    <Compile Include="Interfaces\Services\ISalesReportService.cs" />
     <Compile Include="Models\Accounts\DTOs\CustomerAdvance.cs" />
     <Compile Include="Models\Accounts\DTOs\CustomerAdvanceList.cs" />
     <Compile Include="Models\Accounts\DTOs\SupplierCredit.cs" />
@@ -251,6 +255,7 @@
     <Compile Include="Interfaces\Services\IPasswordHasher.cs" />
     <Compile Include="Interfaces\Services\IUserSessionService.cs" />
     <Compile Include="Services\PasswordHasher.cs" />
+    <Compile Include="Services\SalesReportService.cs" />
     <Compile Include="Services\UserSessionService.cs" />
     <Compile Include="Services\TaxCalculator.cs" />
     <Compile Include="Services\UOMConversionService.cs" />

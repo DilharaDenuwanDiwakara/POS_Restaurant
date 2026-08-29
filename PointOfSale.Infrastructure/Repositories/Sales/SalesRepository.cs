@@ -192,6 +192,26 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             return SortByNumericItemCodeIfAvailable(dt);
         }
 
+        public DataTable GetSettlementReceiptData(long salesId)
+        {
+            const string storedProcedureName = "[Sales].[uspGetSettlementReceipt]";
+
+            var dataTable = new DataTable();
+            using (var connection = GetConnection())
+            using (var command = CreateCommand(connection, storedProcedureName))
+            {
+                command.Parameters.Add("@SalesId", SqlDbType.BigInt).Value = salesId;
+
+                using (var adapter = new SqlDataAdapter(command))
+                {
+                    adapter.Fill(dataTable);
+                }
+            }
+
+            dataTable.TableName = storedProcedureName;
+            return dataTable;
+        }
+
         public async Task<List<SalesListDto>> GetSalesListAsync(DateTime from, DateTime to, int? branchId, string paymentType)
         {
             var list = new List<SalesListDto>();

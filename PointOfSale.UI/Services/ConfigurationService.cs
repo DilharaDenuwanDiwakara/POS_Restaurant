@@ -27,5 +27,17 @@ namespace PointOfSale.UI.Services
         {
             return ConfigurationManager.AppSettings["LocalPrinterName"] ?? string.Empty;
         }
+
+        public string GetConnectionString()
+        {
+            var connection = ConfigurationManager.ConnectionStrings["ServerConnection"];
+
+            if (connection == null || string.IsNullOrWhiteSpace(connection.ConnectionString))
+            {
+                throw new InvalidOperationException("Connection string 'ServerConnection' is missing.");
+            }
+
+            return connection.ConnectionString;
+        }
     }
 }

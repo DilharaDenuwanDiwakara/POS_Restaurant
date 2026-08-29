@@ -4,5 +4,6 @@ namespace PointOfSale.Core.Interfaces.Services
     {
         int GetLocalPosRegisterId();
         string GetLocalPrinterName();
+        string GetConnectionString();
     }
 }

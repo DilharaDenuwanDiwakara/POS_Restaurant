@@ -47,6 +47,100 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             }
         }
 
+        /// <summary>
+        /// Gets the raw product ingredients for a menu item or variant, using current product cost
+        /// and converting recipe quantities to the product stock/base unit.
+        /// </summary>
+        public async Task<IEnumerable<RecipeIngredientDto>> GetRecipeIngredientsForInternalIssueAsync(int? menuItemId, int? variantId)
+        {
+            if ((!menuItemId.HasValue || menuItemId.Value <= 0) &&
+                (!variantId.HasValue || variantId.Value <= 0))
+            {
+                throw new ArgumentException("Either a menu item or variant is required to fetch recipe ingredients.");
+            }
+
+            var result = new List<RecipeIngredientDto>();
+
+            const string sql = @"
+DECLARE @ResolvedVariantId INT = @VariantId;
+
+IF (@ResolvedVariantId IS NULL AND @MenuItemId IS NOT NULL)
+BEGIN
+    SELECT TOP (1) @ResolvedVariantId = v.Id
+    FROM [Restaurant].[Variant] v
+    WHERE v.MenuItemId = @MenuItemId
+    ORDER BY
+        CASE WHEN UPPER(LTRIM(RTRIM(v.Name))) = 'STANDARD' THEN 0 ELSE 1 END,
+        v.Id;
+END;
+
+SELECT
+    v.MenuItemId,
+    r.VariantId,
+    r.ProductId,
+    p.Name AS ProductName,
+    CAST(
+        CASE
+            WHEN ISNULL(r.UnitMeasureId, p.UnitMeasureId) = p.UnitMeasureId THEN r.QuantityRequired
+            WHEN puc.Id IS NULL THEN NULL
+            WHEN puc.IsMultiply = 1 THEN r.QuantityRequired * puc.ConversionRate
+            ELSE r.QuantityRequired / NULLIF(puc.ConversionRate, 0)
+        END AS DECIMAL(18, 3)) AS QuantityPerItem,
+    p.StandardCost AS UnitCost,
+    p.UnitMeasureId,
+    COALESCE(um.Code, um.Name) AS UnitMeasureName
+FROM [Inventory].[Recipe] r
+INNER JOIN [Restaurant].[Variant] v ON v.Id = r.VariantId
+INNER JOIN [Inventory].[Product] p ON p.Id = r.ProductId
+LEFT JOIN [Inventory].[UnitMeasure] um ON um.Id = p.UnitMeasureId
+LEFT JOIN [Inventory].[ProductUnitConversion] puc
+    ON puc.ProductId = r.ProductId
+    AND puc.TargetUnitMeasureId = r.UnitMeasureId
+    AND puc.IsActive = 1
+WHERE
+    r.VariantId = @ResolvedVariantId
+    AND p.IsActive = 1
+ORDER BY r.Id;";
+
+            using (var connection = GetConnection())
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.Text;
+                command.CommandText = sql;
+                command.Parameters.Add("@MenuItemId", SqlDbType.Int).Value = (object)menuItemId ?? DBNull.Value;
+                command.Parameters.Add("@VariantId", SqlDbType.Int).Value = (object)variantId ?? DBNull.Value;
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var quantityPerItem = GetValue<decimal?>(reader, "QuantityPerItem");
+                        if (!quantityPerItem.HasValue)
+                        {
+                            throw new InvalidOperationException(
+                                $"No active unit conversion was found for recipe ingredient '{GetValue<string>(reader, "ProductName")}'.");
+                        }
+
+                        result.Add(new RecipeIngredientDto
+                        {
+                            MenuItemId = GetValue<int>(reader, "MenuItemId"),
+                            VariantId = GetValue<int>(reader, "VariantId"),
+                            ProductId = GetValue<int>(reader, "ProductId"),
+                            ProductName = GetValue<string>(reader, "ProductName"),
+                            QuantityPerItem = quantityPerItem.Value,
+                            UnitCost = GetValue<decimal>(reader, "UnitCost"),
+                            UnitMeasureId = GetValue<int>(reader, "UnitMeasureId"),
+                            UnitMeasureName = GetValue<string>(reader, "UnitMeasureName")
+                        });
+                    }
+                }
+            }
+
+            return result;
+        }
+
         private static void AddHeaderParameters(SqlCommand command, InternalIssueSaveDto dto)
         {
             command.Parameters.Add("@IssueDate", SqlDbType.DateTime).Value = dto.IssueDate;

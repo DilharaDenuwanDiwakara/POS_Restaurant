@@ -139,6 +139,7 @@
     <Compile Include="Repositories\Sales\RegisterRepository.cs" />
     <Compile Include="Repositories\Sales\ShiftRepository.cs" />
     <Compile Include="Repositories\Sales\SalesHoldRepository.cs" />
+    <Compile Include="Repositories\Sales\SalesReportRepository.cs" />
     <Compile Include="Repositories\Sales\SalesRepository.cs" />
     <Compile Include="Repositories\Sales\SalesReturnRepository.cs" />
     <Compile Include="Repositories\Security\UserRepository.cs" />

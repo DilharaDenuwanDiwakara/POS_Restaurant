@@ -284,11 +284,25 @@
       <SubType>Component</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
+    <Compile Include="Reports\SalesDetailReport.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SalesDetailReport.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\SalesSummaryReport.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SalesSummaryReport.rpt</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Reports\SettlementReceipt.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>SettlementReceipt.rpt</DependentUpon>
       <SubType>Component</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
     <Compile Include="Reports\StockMovementLedger.cs">
       <AutoGen>True</AutoGen>
@@ -445,6 +459,7 @@
     <Compile Include="ViewModels\Sales\InvoiceLineItemModel.cs" />
     <Compile Include="ViewModels\Sales\InvoiceSummaryModel.cs" />
     <Compile Include="ViewModels\Sales\SalesListViewModel.cs" />
+    <Compile Include="ViewModels\Sales\SalesReportsViewModel.cs" />
     <Compile Include="ViewModels\Sales\SalesReturnViewModel.cs" />
     <Compile Include="ViewModels\Sales\SalesViewModel.cs" />
     <Compile Include="ViewModels\Security\DeviceRegistrationViewModel.cs" />
@@ -636,6 +651,9 @@
     </Compile>
     <Compile Include="Views\Sales\SalesListView.xaml.cs">
       <DependentUpon>SalesListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Sales\SalesReportsView.xaml.cs">
+      <DependentUpon>SalesReportsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Sales\SalesView.xaml.cs">
       <DependentUpon>SalesView.xaml</DependentUpon>
@@ -958,6 +976,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Sales\SalesReportsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Sales\SalesView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -1076,14 +1098,24 @@
       <LastGenOutput>RoomBookingReport.cs</LastGenOutput>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Reports\SalesDetailReport.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>SalesDetailReport.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Reports\SalesInvoice.rpt">
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
       <LastGenOutput>SalesInvoice.cs</LastGenOutput>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Reports\SalesSummaryReport.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>SalesSummaryReport.cs</LastGenOutput>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Reports\SettlementReceipt.rpt">
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
       <LastGenOutput>SettlementReceipt.cs</LastGenOutput>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Reports\StockMovementLedger.rpt">
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
