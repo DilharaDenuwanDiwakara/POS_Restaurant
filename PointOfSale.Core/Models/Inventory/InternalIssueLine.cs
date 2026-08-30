@@ -16,9 +16,14 @@ namespace PointOfSale.Core.Models.Inventory
         public int InternalIssueId { get; set; }
 
         /// <summary>
-        /// Gets or sets the issued product identifier.
+        /// Gets or sets the issued product identifier. Null when the line is a Menu Item.
         /// </summary>
-        public int ProductId { get; set; }
+        public int? ProductId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the issued menu item variant identifier. Null when the line is a Consumable Product.
+        /// </summary>
+        public int? VariantId { get; set; }
 
         /// <summary>
         /// Gets or sets the issued quantity.

@@ -92,7 +92,7 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
             return dataSet;
         }
 
-        public async Task ProcessBulkPaymentAsync(int supplierId, string paymentMethod, DateTime paymentDate, decimal totalCash, int userId,
+        public async Task ProcessBulkPaymentAsync(int supplierId, string paymentMethod, DateTime paymentDate, decimal totalCash, int paymentAccountId, int userId,
                                           List<SupplierSettlement> settlements,
                                           List<SupplierPaymentLine> paymentLines)
         {
@@ -105,6 +105,7 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
                 cmd.Parameters.AddWithValue("@PaymentMethod", (object)paymentMethod ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@PaymentDate", paymentDate);
                 cmd.Parameters.AddWithValue("@TotalCashPaid", totalCash);
+                cmd.Parameters.AddWithValue("@PaymentAccountId", paymentAccountId);
                 cmd.Parameters.AddWithValue("@UserId", userId);
 
                 // 1. Convert Settlements to DataTable for TVP
@@ -165,6 +166,7 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
             command.Parameters.AddWithValue("@PaymentMethod", header.PaymentMethod);
             command.Parameters.AddWithValue("@ReferenceNumber",
                 string.IsNullOrWhiteSpace(header.ReferenceNumber) ? (object)DBNull.Value : header.ReferenceNumber);
+            command.Parameters.AddWithValue("@PaymentAccountId", header.PaymentAccountId);
             command.Parameters.AddWithValue("@TotalPaidAmount", header.PaidAmount);
             command.Parameters.AddWithValue("@CreatedBy", header.CreatedBy);
 

@@ -48,97 +48,37 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
         }
 
         /// <summary>
-        /// Gets the raw product ingredients for a menu item or variant, using current product cost
-        /// and converting recipe quantities to the product stock/base unit.
+        /// Gets the print-ready voucher data for a saved internal stock issue using
+        /// Inventory.uspGetInternalIssueVoucher.
         /// </summary>
-        public async Task<IEnumerable<RecipeIngredientDto>> GetRecipeIngredientsForInternalIssueAsync(int? menuItemId, int? variantId)
+        public async Task<DataTable> GetInternalIssueVoucherAsync(int internalIssueId)
         {
-            if ((!menuItemId.HasValue || menuItemId.Value <= 0) &&
-                (!variantId.HasValue || variantId.Value <= 0))
+            if (internalIssueId <= 0)
             {
-                throw new ArgumentException("Either a menu item or variant is required to fetch recipe ingredients.");
+                throw new ArgumentOutOfRangeException(nameof(internalIssueId), "A valid internal issue ID is required.");
             }
 
-            var result = new List<RecipeIngredientDto>();
+            var reportTable = new DataTable("rptGetInternalIssueVoucher");
 
-            const string sql = @"
-DECLARE @ResolvedVariantId INT = @VariantId;
-
-IF (@ResolvedVariantId IS NULL AND @MenuItemId IS NOT NULL)
-BEGIN
-    SELECT TOP (1) @ResolvedVariantId = v.Id
-    FROM [Restaurant].[Variant] v
-    WHERE v.MenuItemId = @MenuItemId
-    ORDER BY
-        CASE WHEN UPPER(LTRIM(RTRIM(v.Name))) = 'STANDARD' THEN 0 ELSE 1 END,
-        v.Id;
-END;
-
-SELECT
-    v.MenuItemId,
-    r.VariantId,
-    r.ProductId,
-    p.Name AS ProductName,
-    CAST(
-        CASE
-            WHEN ISNULL(r.UnitMeasureId, p.UnitMeasureId) = p.UnitMeasureId THEN r.QuantityRequired
-            WHEN puc.Id IS NULL THEN NULL
-            WHEN puc.IsMultiply = 1 THEN r.QuantityRequired * puc.ConversionRate
-            ELSE r.QuantityRequired / NULLIF(puc.ConversionRate, 0)
-        END AS DECIMAL(18, 3)) AS QuantityPerItem,
-    p.StandardCost AS UnitCost,
-    p.UnitMeasureId,
-    COALESCE(um.Code, um.Name) AS UnitMeasureName
-FROM [Inventory].[Recipe] r
-INNER JOIN [Restaurant].[Variant] v ON v.Id = r.VariantId
-INNER JOIN [Inventory].[Product] p ON p.Id = r.ProductId
-LEFT JOIN [Inventory].[UnitMeasure] um ON um.Id = p.UnitMeasureId
-LEFT JOIN [Inventory].[ProductUnitConversion] puc
-    ON puc.ProductId = r.ProductId
-    AND puc.TargetUnitMeasureId = r.UnitMeasureId
-    AND puc.IsActive = 1
-WHERE
-    r.VariantId = @ResolvedVariantId
-    AND p.IsActive = 1
-ORDER BY r.Id;";
-
-            using (var connection = GetConnection())
-            using (var command = connection.CreateCommand())
+            try
             {
-                command.CommandType = CommandType.Text;
-                command.CommandText = sql;
-                command.Parameters.Add("@MenuItemId", SqlDbType.Int).Value = (object)menuItemId ?? DBNull.Value;
-                command.Parameters.Add("@VariantId", SqlDbType.Int).Value = (object)variantId ?? DBNull.Value;
-
-                await connection.OpenAsync();
-
-                using (var reader = await command.ExecuteReaderAsync())
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[uspGetInternalIssueNote]"))
+                using (var adapter = new SqlDataAdapter(command))
                 {
-                    while (await reader.ReadAsync())
-                    {
-                        var quantityPerItem = GetValue<decimal?>(reader, "QuantityPerItem");
-                        if (!quantityPerItem.HasValue)
-                        {
-                            throw new InvalidOperationException(
-                                $"No active unit conversion was found for recipe ingredient '{GetValue<string>(reader, "ProductName")}'.");
-                        }
+                    command.Parameters.Add("@InternalIssueId", SqlDbType.Int).Value = internalIssueId;
 
-                        result.Add(new RecipeIngredientDto
-                        {
-                            MenuItemId = GetValue<int>(reader, "MenuItemId"),
-                            VariantId = GetValue<int>(reader, "VariantId"),
-                            ProductId = GetValue<int>(reader, "ProductId"),
-                            ProductName = GetValue<string>(reader, "ProductName"),
-                            QuantityPerItem = quantityPerItem.Value,
-                            UnitCost = GetValue<decimal>(reader, "UnitCost"),
-                            UnitMeasureId = GetValue<int>(reader, "UnitMeasureId"),
-                            UnitMeasureName = GetValue<string>(reader, "UnitMeasureName")
-                        });
-                    }
+                    await connection.OpenAsync();
+                    adapter.Fill(reportTable);
                 }
             }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(
+                    $"A database error occurred while loading Internal Issue Voucher data for InternalIssueId {internalIssueId}.", ex);
+            }
 
-            return result;
+            return reportTable;
         }
 
         private static void AddHeaderParameters(SqlCommand command, InternalIssueSaveDto dto)
@@ -153,13 +93,14 @@ ORDER BY r.Id;";
             command.Parameters.Add("@Remarks", SqlDbType.NVarChar, 255).Value =
                 string.IsNullOrWhiteSpace(dto.Remarks) ? (object)DBNull.Value : dto.Remarks.Trim();
             command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = dto.CreatedBy;
-            command.Parameters.Add("@WastageAccountId", SqlDbType.Int).Value = (object)dto.WastageAccountId ?? DBNull.Value;
+            command.Parameters.Add("@TargetAccountId", SqlDbType.Int).Value = (object)dto.TargetAccountId ?? DBNull.Value;
         }
 
         private static void AddLinesParameter(SqlCommand command, IEnumerable<InternalIssueLineDto> lines)
         {
             var table = new DataTable();
             table.Columns.Add("ProductId", typeof(int));
+            table.Columns.Add("VariantId", typeof(int));
             table.Columns.Add("Qty", typeof(decimal));
             table.Columns.Add("UnitCost", typeof(decimal));
             table.Columns.Add("LineTotal", typeof(decimal));
@@ -168,7 +109,12 @@ ORDER BY r.Id;";
             {
                 foreach (var line in lines)
                 {
-                    table.Rows.Add(line.ProductId, line.Qty, line.UnitCost, line.LineTotal);
+                    table.Rows.Add(
+                        (object)line.ProductId ?? DBNull.Value,
+                        (object)line.VariantId ?? DBNull.Value,
+                        line.Qty,
+                        line.UnitCost,
+                        line.LineTotal);
                 }
             }
 

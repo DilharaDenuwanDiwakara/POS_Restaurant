@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Enums;
+using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Accounts;
 using PointOfSale.Core.Models.Accounts;
@@ -19,16 +21,20 @@ namespace PointOfSale.UI.ViewModels.Accounts
         private readonly ISupplierRepository _supplierRepository;
         private readonly ISupplierAdvanceRepository _supplierAdvanceRepository;
         private readonly IUserSessionService _userSessionService;
+        private readonly IAccountingRepository _accountingRepository;
 
         public SupplierAdvanceViewModel(ISupplierRepository supplierRepository,
                                         ISupplierAdvanceRepository supplierAdvanceRepository,
-                                        IUserSessionService userSessionService)
+                                        IUserSessionService userSessionService,
+                                        IAccountingRepository accountingRepository)
         {
             _supplierRepository = supplierRepository;
             _supplierAdvanceRepository = supplierAdvanceRepository;
             _userSessionService = userSessionService;
+            _accountingRepository = accountingRepository ?? throw new ArgumentNullException(nameof(accountingRepository));
 
             Suppliers = new ObservableCollection<Supplier>();
+            PaymentAccounts = new ObservableCollection<AccountDto>();
             PaymentMethods = new ObservableCollection<AccountsPaymentMethod>(
                 (AccountsPaymentMethod[])Enum.GetValues(typeof(AccountsPaymentMethod)));
             UnappliedAdvances = new ObservableCollection<SupplierAdvanceList>();
@@ -43,6 +49,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
         #region Collections
         public ObservableCollection<Supplier> Suppliers { get; }
+        public ObservableCollection<AccountDto> PaymentAccounts { get; }
         public ObservableCollection<AccountsPaymentMethod> PaymentMethods { get; }
         public ObservableCollection<SupplierAdvanceList> UnappliedAdvances { get; }
         #endregion
@@ -83,6 +90,19 @@ namespace PointOfSale.UI.ViewModels.Accounts
             set
             {
                 if (SetProperty(ref _selectedPaymentMethod, value))
+                {
+                    RefreshCommands();
+                }
+            }
+        }
+
+        private int _selectedPaymentAccountId;
+        public int SelectedPaymentAccountId
+        {
+            get => _selectedPaymentAccountId;
+            set
+            {
+                if (SetProperty(ref _selectedPaymentAccountId, value))
                 {
                     RefreshCommands();
                 }
@@ -149,6 +169,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
         private async Task InitializeAsync()
         {
             await LoadSuppliersAsync();
+            await LoadPaymentAccountsAsync();
         }
         #endregion
 
@@ -167,6 +188,9 @@ namespace PointOfSale.UI.ViewModels.Accounts
             if (!decimal.TryParse(PaymentAmount, out var amount) || amount <= 0)
                 return false;
 
+            if (SelectedPaymentAccountId <= 0)
+                return false;
+
             return !HasErrors;
         }
         private bool CanClear(object parameter) => !IsBusy;
@@ -183,6 +207,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
         {
             SelectedSupplier = null;
             SelectedPaymentMethod = PaymentMethods.FirstOrDefault();
+            SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault()?.Id ?? 0;
             PaymentDate = DateTime.Today;
             ReferenceNumber = string.Empty;
             PaymentAmount = string.Empty;
@@ -206,6 +231,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
                     PaymentDate = PaymentDate,
                     PaymentMethod = SelectedPaymentMethod.ToString(),
                     ReferenceNumber = ReferenceNumber?.Trim(),
+                    PaymentAccountId = SelectedPaymentAccountId,
                     Amount = decimal.Parse(PaymentAmount),
                     CreatedBy = _userSessionService.UserId
                 };
@@ -297,6 +323,24 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 ShowErrorMessage($"Failed to load suppliers: {ex.Message}");
             }
         }
+        private async Task LoadPaymentAccountsAsync()
+        {
+            try
+            {
+                var accounts = await _accountingRepository.GetPaymentAccountsAsync();
+                PaymentAccounts.Clear();
+                foreach (var account in accounts)
+                {
+                    PaymentAccounts.Add(account);
+                }
+
+                SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault()?.Id ?? 0;
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage($"Failed to load payment accounts: {ex.Message}");
+            }
+        }
         private void ShowSuccessMessage(string message)
             => MessageBox.Show(message, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         private void ShowErrorMessage(string message)
@@ -309,6 +353,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             ValidateSupplier();
             ValidatePaymentDate();
             ValidatePaymentAmount();
+            ValidatePaymentAccount();
             return !HasErrors;
         }
 
@@ -344,6 +389,13 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
             if (amount <= 0)
                 AddError(nameof(PaymentAmount), "Amount must be greater than zero.");
+        }
+
+        private void ValidatePaymentAccount()
+        {
+            ClearErrors(nameof(SelectedPaymentAccountId));
+            if (SelectedPaymentAccountId <= 0)
+                AddError(nameof(SelectedPaymentAccountId), "Please select the account to pay from.");
         }
 
         private bool IsValidDecimal(string value)

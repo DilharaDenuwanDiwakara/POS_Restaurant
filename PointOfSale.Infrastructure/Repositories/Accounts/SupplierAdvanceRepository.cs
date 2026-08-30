@@ -106,6 +106,7 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
             command.Parameters.Add("@ReferenceNumber", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(advance.ReferenceNumber)
                 ? (object)DBNull.Value
                 : advance.ReferenceNumber;
+            command.Parameters.Add("@PaymentAccountId", SqlDbType.Int).Value = advance.PaymentAccountId;
             command.Parameters.Add("@Amount", SqlDbType.Decimal).Value = advance.Amount;
             command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = advance.CreatedBy;
         }

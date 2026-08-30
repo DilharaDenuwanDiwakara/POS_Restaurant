@@ -13,7 +13,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Accounts
 
         Task<long> CreateAsync(SupplierPayment supplierPayment);
         Task<DataSet> GetSupplierPaymentVoucherDataSetAsync(long supplierPaymentId);
-        Task ProcessBulkPaymentAsync(int supplierId, string paymentMethod, DateTime paymentDate, decimal totalCash, int userId,
+        Task ProcessBulkPaymentAsync(int supplierId, string paymentMethod, DateTime paymentDate, decimal totalCash, int paymentAccountId, int userId,
                                  List<SupplierSettlement> settlements, // <--- Used your Model
                                  List<SupplierPaymentLine> paymentLines);
     }

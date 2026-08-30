@@ -350,6 +350,8 @@ namespace PointOfSale.UI.DataSets {
             
             private global::System.Data.DataColumn columnPaymentId;
             
+            private global::System.Data.DataColumn columnPayFromAccount;
+            
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public rptGetSupplierPaymentVoucherHeaderDataTable() {
@@ -529,6 +531,14 @@ namespace PointOfSale.UI.DataSets {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn PayFromAccountColumn {
+                get {
+                    return this.columnPayFromAccount;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             [global::System.ComponentModel.Browsable(false)]
             public int Count {
                 get {
@@ -582,7 +592,8 @@ namespace PointOfSale.UI.DataSets {
                         string SupplierAddress, 
                         string SupplierContactPerson, 
                         string SupplierContact, 
-                        long PaymentId) {
+                        long PaymentId, 
+                        string PayFromAccount) {
                 rptGetSupplierPaymentVoucherHeaderRow rowrptGetSupplierPaymentVoucherHeaderRow = ((rptGetSupplierPaymentVoucherHeaderRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         CompanyName,
@@ -602,7 +613,8 @@ namespace PointOfSale.UI.DataSets {
                         SupplierAddress,
                         SupplierContactPerson,
                         SupplierContact,
-                        PaymentId};
+                        PaymentId,
+                        PayFromAccount};
                 rowrptGetSupplierPaymentVoucherHeaderRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowrptGetSupplierPaymentVoucherHeaderRow);
                 return rowrptGetSupplierPaymentVoucherHeaderRow;
@@ -643,6 +655,7 @@ namespace PointOfSale.UI.DataSets {
                 this.columnSupplierContactPerson = base.Columns["SupplierContactPerson"];
                 this.columnSupplierContact = base.Columns["SupplierContact"];
                 this.columnPaymentId = base.Columns["PaymentId"];
+                this.columnPayFromAccount = base.Columns["PayFromAccount"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -684,6 +697,8 @@ namespace PointOfSale.UI.DataSets {
                 base.Columns.Add(this.columnSupplierContact);
                 this.columnPaymentId = new global::System.Data.DataColumn("PaymentId", typeof(long), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnPaymentId);
+                this.columnPayFromAccount = new global::System.Data.DataColumn("PayFromAccount", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnPayFromAccount);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1435,6 +1450,23 @@ namespace PointOfSale.UI.DataSets {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string PayFromAccount {
+                get {
+                    try {
+                        return ((string)(this[this.tablerptGetSupplierPaymentVoucherHeader.PayFromAccountColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'PayFromAccount\' in table \'rptGetSupplierPaymentVoucherHeade" +
+                                "r\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tablerptGetSupplierPaymentVoucherHeader.PayFromAccountColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public bool IsCompanyNameNull() {
                 return this.IsNull(this.tablerptGetSupplierPaymentVoucherHeader.CompanyNameColumn);
             }
@@ -1647,6 +1679,18 @@ namespace PointOfSale.UI.DataSets {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public void SetPaymentIdNull() {
                 this[this.tablerptGetSupplierPaymentVoucherHeader.PaymentIdColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IsPayFromAccountNull() {
+                return this.IsNull(this.tablerptGetSupplierPaymentVoucherHeader.PayFromAccountColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SetPayFromAccountNull() {
+                this[this.tablerptGetSupplierPaymentVoucherHeader.PayFromAccountColumn] = global::System.Convert.DBNull;
             }
         }
         

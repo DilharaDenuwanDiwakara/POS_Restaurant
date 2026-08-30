@@ -52,6 +52,18 @@
                             ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
                             KeyDown="PaymentMethodComboBox_KeyDown"/>
 
+                    <!-- Pay From Account -->
+                    <TextBlock Text="Pay From Account *" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding PaymentAccounts}"
+                            SelectedValue="{Binding SelectedPaymentAccountId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                            SelectedValuePath="Id"
+                            DisplayMemberPath="Name"
+                            TextSearch.TextPath="Name"
+                            Style="{StaticResource ComboBoxStyle}"
+                            ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                            Tag="Select account"
+                            Margin="0,0,0,8"/>
+
                     <!-- Reference Number -->
                     <TextBlock Text="Reference Number" Style="{StaticResource LabelStyle}"/>
                     <TextBox x:Name="ReferenceNumberTextBox"

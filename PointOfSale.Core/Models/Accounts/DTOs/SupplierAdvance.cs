@@ -10,6 +10,7 @@ namespace PointOfSale.Core.Models.Accounts
         public DateTime PaymentDate { get; set; }
         public string PaymentMethod { get; set; }
         public string ReferenceNumber { get; set; }
+        public int PaymentAccountId { get; set; }
         public decimal Amount { get; set; }
         public int CreatedBy { get; set; }
 

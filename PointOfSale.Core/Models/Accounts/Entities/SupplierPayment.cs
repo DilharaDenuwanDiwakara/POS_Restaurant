@@ -13,6 +13,7 @@ namespace PointOfSale.Core.Models.Accounts
         public string AccountNumber { get; set; }
         public string AccountName { get; set; }
         public string ReferenceNumber { get; set; }
+        public int PaymentAccountId { get; set; }
         public decimal PaidAmount { get; set; }
         public int CreatedBy { get; set; }
 

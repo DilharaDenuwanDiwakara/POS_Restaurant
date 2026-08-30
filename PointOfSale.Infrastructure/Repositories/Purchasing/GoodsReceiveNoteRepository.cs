@@ -61,9 +61,9 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 AddLineItemsParameter(command, goodsReceiveNote.Lines);
 
                 await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
 
-                var result = await command.ExecuteScalarAsync();
-                return Convert.ToInt64(result);
+                return Convert.ToInt64(command.Parameters["@GoodsReceiveNoteId"].Value);
             }
         }
 
@@ -344,36 +344,53 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
 
         private void AddDraftParameters(SqlCommand command, GoodsReceiveNote note)
         {
-            command.Parameters.Add("@Id", SqlDbType.BigInt).Value = note.GoodsReceiveNoteId;
+            var idParam = new SqlParameter("@GoodsReceiveNoteId", SqlDbType.BigInt)
+            {
+                Direction = ParameterDirection.InputOutput,
+                Value = note.GoodsReceiveNoteId > 0 ? (object)note.GoodsReceiveNoteId : DBNull.Value
+            };
+            command.Parameters.Add(idParam);
+
             command.Parameters.Add("@BranchId", SqlDbType.Int).Value = note.BranchId;
+
             command.Parameters.Add("@SupplierId", SqlDbType.Int).Value =
                 note.SupplierId > 0 ? (object)note.SupplierId : DBNull.Value;
+
             command.Parameters.Add("@PurchaseOrderId", SqlDbType.BigInt).Value =
                 note.PurchaseOrderId > 0 ? (object)note.PurchaseOrderId : DBNull.Value;
-            command.Parameters.Add("@GoodsReceiveNoteNumber", SqlDbType.VarChar, 50).Value =
-                string.IsNullOrWhiteSpace(note.GoodsReceiveNoteNumber) ? (object)DBNull.Value : note.GoodsReceiveNoteNumber.Trim();
+
             command.Parameters.Add("@InvoiceNumber", SqlDbType.NVarChar, 100).Value =
                 string.IsNullOrWhiteSpace(note.InvoiceNumber) ? (object)DBNull.Value : note.InvoiceNumber.Trim();
+
             command.Parameters.Add("@DiscountAmount", SqlDbType.Decimal).Value = note.DiscountAmount;
             command.Parameters["@DiscountAmount"].Precision = 18;
             command.Parameters["@DiscountAmount"].Scale = 2;
+
             command.Parameters.Add("@TaxAmount", SqlDbType.Decimal).Value = note.TaxAmount;
             command.Parameters["@TaxAmount"].Precision = 18;
             command.Parameters["@TaxAmount"].Scale = 2;
+
             command.Parameters.Add("@SubTotal", SqlDbType.Decimal).Value = note.SubTotal;
             command.Parameters["@SubTotal"].Precision = 18;
             command.Parameters["@SubTotal"].Scale = 2;
+
             command.Parameters.Add("@ReceivedBy", SqlDbType.NVarChar, 100).Value =
                 string.IsNullOrWhiteSpace(note.ReceivedBy) ? (object)DBNull.Value : note.ReceivedBy.Trim();
+
             command.Parameters.Add("@Notes", SqlDbType.NVarChar, 500).Value =
                 string.IsNullOrWhiteSpace(note.Notes) ? (object)DBNull.Value : note.Notes.Trim();
-            command.Parameters.Add("@ReceivedDate", SqlDbType.Date).Value = note.GoodsReceiveNoteDate.Date;
+
+            command.Parameters.Add("@ReceivedDate", SqlDbType.DateTime).Value = note.GoodsReceiveNoteDate;
             command.Parameters.Add("@CreditDays", SqlDbType.Int).Value = note.CreditDays;
-            command.Parameters.Add("@DueDate", SqlDbType.DateTime).Value = note.DueDate;
+            command.Parameters.Add("@DueDate", SqlDbType.DateTime).Value = (object)note.DueDate ?? DBNull.Value;
+
+            // Status Parameter එක pass කිරීම (Draft auto-save එකේදී 'DRAFT', Final Save එකේදී 'PENDING_APPROVAL' ලෙස pass වේ)
             command.Parameters.Add("@Status", SqlDbType.NVarChar, 50).Value =
                 string.IsNullOrWhiteSpace(note.Status) ? GoodsReceiveNoteStatus.DRAFT.ToString() : note.Status.Trim();
+
             command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = note.CreatedBy;
         }
+
         private void AddLineItemsParameter(SqlCommand command, IEnumerable<GoodsReceiveNoteLine> lines)
         {
             var table = new DataTable();

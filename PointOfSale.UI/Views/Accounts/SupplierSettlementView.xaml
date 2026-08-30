@@ -271,9 +271,26 @@
                               Style="{StaticResource ComboBoxStyle}"
                               ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
                               Width="150"
-                              Margin="0"
+                              Margin="0,0,12,0"
                               VerticalAlignment="Center"
                               Tag="Select Method"/>
+
+                    <TextBlock Text="Pay From Account:" 
+                               Style="{StaticResource LabelStyle}" 
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+
+                    <ComboBox ItemsSource="{Binding PaymentAccounts}"
+                              SelectedValue="{Binding SelectedPaymentAccountId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                              SelectedValuePath="Id"
+                              DisplayMemberPath="Name"
+                              TextSearch.TextPath="Name"
+                              Style="{StaticResource ComboBoxStyle}"
+                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                              Width="200"
+                              Margin="0"
+                              VerticalAlignment="Center"
+                              Tag="Select Account"/>
                 </StackPanel>
 
                 <!-- Right Side - Summary and Actions -->

@@ -9,6 +9,7 @@ namespace PointOfSale.Core.Models.Accounts.Entities
         public long PayableId { get; set; }
         public long CreditId { get; set; }
         public int PaymentId { get; set; }
+        public int PaymentAccountId { get; set; }
         public decimal SettlementAmount { get; set; }
         public DateTime SettlementDate { get; set; }
         public int CreatedBy { get; set; }

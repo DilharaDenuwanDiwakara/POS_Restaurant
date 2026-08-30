@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces;
@@ -36,6 +37,12 @@ namespace PointOfSale.Infrastructure.Repositories
             {
                 throw new InvalidOperationException("A database error occurred while retrieving chart of accounts.", ex);
             }
+        }
+
+        public async Task<IEnumerable<AccountDto>> GetPaymentAccountsAsync()
+        {
+            var accounts = await GetAccountsAsync();
+            return accounts.Where(a => a.AccountTypeId == 1 && !a.IsHeader && a.IsActive);
         }
 
         public async Task<int> CreateAccountAsync(AccountDto account)

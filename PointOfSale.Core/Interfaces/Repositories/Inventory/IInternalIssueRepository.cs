@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 using PointOfSale.Core.DTOs;
 
@@ -10,19 +10,18 @@ namespace PointOfSale.Core.Interfaces.Repositories.Inventory
     public interface IInternalIssueRepository
     {
         /// <summary>
-        /// Creates a new internal stock issue and returns the generated issue details.
+        /// Creates a new internal stock issue and returns the generated issue details. The stored
+        /// procedure performs recipe explosion for Menu Item lines internally when a VariantId is supplied.
         /// </summary>
         /// <param name="dto">The internal issue data to save.</param>
         /// <returns>The generated internal issue identifier and issue number.</returns>
         Task<InternalIssueSaveResultDto> CreateInternalIssueAsync(InternalIssueSaveDto dto);
 
         /// <summary>
-        /// Gets raw product ingredients for a finished menu item or variant so internal issue lines
-        /// can be exploded before calling Inventory.uspInsertInternalIssue.
+        /// Gets the print-ready voucher data for a saved internal stock issue.
         /// </summary>
-        /// <param name="menuItemId">The menu item identifier. Used when a variant is not supplied.</param>
-        /// <param name="variantId">The variant identifier. Preferred for exact recipe selection.</param>
-        /// <returns>Recipe ingredients in product stock/base units with current unit cost.</returns>
-        Task<IEnumerable<RecipeIngredientDto>> GetRecipeIngredientsForInternalIssueAsync(int? menuItemId, int? variantId);
+        /// <param name="internalIssueId">The internal issue identifier returned by <see cref="CreateInternalIssueAsync"/>.</param>
+        /// <returns>A data table matching the Internal Issue Voucher report's data source.</returns>
+        Task<DataTable> GetInternalIssueVoucherAsync(int internalIssueId);
     }
 }

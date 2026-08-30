@@ -3,165 +3,337 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:PointOfSale.UI.Views.Inventory"
              mc:Ignorable="d"
-             d:DesignHeight="650"
-             d:DesignWidth="1050">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+             d:DesignHeight="650" d:DesignWidth="1050">
+    <UserControl.Resources>
+        <Style x:Key="ItemCategoryRadioStyle" TargetType="RadioButton">
+            <Setter Property="MinWidth" Value="132"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Foreground" Value="#334155"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="SegmentBorder"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SegmentBorder" Property="Background" Value="#EEF2F7"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="SegmentBorder" Property="Background" Value="#FFFFFF"/>
+                                <Setter TargetName="SegmentBorder" Property="BorderBrush" Value="#C9D8E8"/>
+                                <Setter Property="Foreground" Value="#0F4C81"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
 
-        <TextBlock Text="Internal Stock Issue" Style="{StaticResource HeaderTextStyle}"/>
+    <Grid Margin="0,4,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="285"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}" Margin="0,0,0,8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.1*"/>
-                    <ColumnDefinition Width="1.1*"/>
-                    <ColumnDefinition Width="1.1*"/>
-                    <ColumnDefinition Width="1.1*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <!-- ================================================================ -->
+        <!-- LEFT : Issue Details                                             -->
+        <!-- ================================================================ -->
+        <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <TextBlock Text="Issue Details" Style="{StaticResource SubHeaderTextStyle}"/>
 
-                <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                    <TextBlock Text="Station" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding Stations}"
-                              SelectedItem="{Binding SelectedStation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              DisplayMemberPath="Name"
-                              IsEditable="True"
-                              IsTextSearchEnabled="True"
+                    <TextBlock Text="Issue Type:" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding IssueTypes}"
+                              SelectedItem="{Binding IssueType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               Style="{StaticResource ComboBoxStyle}"
-                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
-                </StackPanel>
+                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                              PreviewKeyDown="MoveFocusOnEnter"/>
 
-                <StackPanel Grid.Column="1" Margin="0,0,10,0">
-                    <TextBlock Text="Location" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="From (Location):" Style="{StaticResource LabelStyle}"/>
                     <ComboBox ItemsSource="{Binding Locations}"
                               SelectedItem="{Binding SelectedLocation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               DisplayMemberPath="Name"
                               IsEditable="True"
                               IsTextSearchEnabled="True"
                               Style="{StaticResource ComboBoxStyle}"
-                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
-                </StackPanel>
+                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                              PreviewKeyDown="MoveFocusOnEnter"/>
 
-                <StackPanel Grid.Column="2" Margin="0,0,10,0">
-                    <TextBlock Text="Issue Type" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding IssueTypes}"
-                              SelectedItem="{Binding IssueType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              Style="{StaticResource ComboBoxStyle}"
-                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
-                </StackPanel>
+                    <StackPanel Visibility="{Binding IsConsumableIssue, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="To (Station):" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding Stations}"
+                                  SelectedItem="{Binding SelectedStation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  DisplayMemberPath="Name"
+                                  IsEditable="True"
+                                  IsTextSearchEnabled="True"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  PreviewKeyDown="MoveFocusOnEnter"/>
+                    </StackPanel>
 
-                <StackPanel Grid.Column="3">
-                    <TextBlock Text="Issue Date" Style="{StaticResource LabelStyle}"/>
+                    <StackPanel Visibility="{Binding IsTargetAccountRequired, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="To (Account):" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding TargetAccounts}"
+                                  SelectedItem="{Binding SelectedTargetAccount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  DisplayMemberPath="DisplayText"
+                                  IsEditable="True"
+                                  IsTextSearchEnabled="True"
+                                  Style="{StaticResource ComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                  PreviewKeyDown="MoveFocusOnEnter"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Issue Date:" Style="{StaticResource LabelStyle}"/>
                     <DatePicker SelectedDate="{Binding IssueDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 IsTodayHighlighted="True"
-                                Style="{StaticResource DatePickerStyle}"/>
-                </StackPanel>
+                                Style="{StaticResource DatePickerStyle}"
+                                PreviewKeyDown="MoveFocusOnEnter"/>
 
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,12,0,0">
-                    <TextBlock Text="Remarks" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="Remarks:" Style="{StaticResource LabelStyle}"/>
                     <TextBox Text="{Binding Remarks, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              MaxLength="255"
-                             Height="72"
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"
+                             Height="72"
                              VerticalContentAlignment="Top"
-                             Style="{StaticResource TextBoxStyle}"/>
+                             Style="{StaticResource TextBoxStyle}"
+                             PreviewKeyDown="MoveFocusOnEnter"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,20,0,0" HorizontalAlignment="Center">
+                        <Button Content="Process Issue"
+                                Command="{Binding ProcessIssueCommand}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Width="140"
+                                Margin="0,0,10,0"/>
+
+                        <Button Content="Clear"
+                                Command="{Binding ClearCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Width="100"
+                                Focusable="False"/>
+                    </StackPanel>
                 </StackPanel>
-            </Grid>
+            </ScrollViewer>
         </Border>
 
-        <Border Grid.Row="2" Style="{StaticResource PanelCardStyle}">
+        <!-- ================================================================ -->
+        <!-- RIGHT : Add Items + Issue Lines                                  -->
+        <!-- ================================================================ -->
+        <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Border Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,6">
+                <Border Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1"
+                        CornerRadius="6" Padding="8" Margin="0,0,0,4">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Add Items" Style="{StaticResource SubHeaderTextStyle}" VerticalAlignment="Center"/>
+
+                            <Border Grid.Column="1"
+                                    Background="#E8EEF5"
+                                    BorderBrush="#D5E0EA"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="2">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Content="Consumable Product"
+                                                 GroupName="InternalIssueItemCategory"
+                                                 IsChecked="{Binding IsConsumableProductCategorySelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource ItemCategoryRadioStyle}"/>
+                                    <RadioButton Content="Menu Item"
+                                                 GroupName="InternalIssueItemCategory"
+                                                 IsChecked="{Binding IsMenuItemCategorySelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource ItemCategoryRadioStyle}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="1" Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Margin="0 0 8 0">
+                                <TextBlock Text="Code / Barcode:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="BarcodeTextBox"
+                                         Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                         Style="{StaticResource TextBoxStyle}"
+                                         PreviewKeyDown="MoveFocusOnEnter"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="0 0 8 0">
+                                <TextBlock Text="{Binding SearchItemLabel}" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox x:Name="SearchItemCombobox"
+                                          ItemsSource="{Binding FilteredSearchItems}"
+                                          SelectedItem="{Binding SelectedSearchItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          DisplayMemberPath="DisplayName"
+                                          TextSearch.TextPath="DisplayName"
+                                          IsEditable="True"
+                                          IsTextSearchEnabled="True"
+                                          IsTabStop="False"
+                                          PreviewKeyDown="MoveFocusOnEnter"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          Validation.ErrorTemplate="{StaticResource ErrorTemplate}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Margin="0 0 8 0">
+                                <TextBlock Text="UOM:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding SelectedSearchItem.UnitMeasureName, Mode=OneWay, FallbackValue='-'}"
+                                         Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                         IsReadOnly="True"
+                                         TextAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="3" Margin="0 0 8 0">
+                                <TextBlock Text="Available:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding AvailableQtyDisplay, Mode=OneWay, FallbackValue='-'}"
+                                         Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                         IsReadOnly="True"
+                                         FontWeight="Bold"
+                                         Foreground="{StaticResource SuccessBrush}"
+                                         TextAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4" Margin="0 0 8 0">
+                                <TextBlock Text="Issue Qty:" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="QtyTextBox"
+                                         Text="{Binding IssueQty, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource TextBoxStyle}"
+                                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                                         GotKeyboardFocus="SelectAllText_GotFocus"
+                                         PreviewKeyDown="MoveFocusOnEnter"
+                                         TextAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="5">
+                                <Button x:Name="AddButton"
+                                        Content="Add"
+                                        Command="{Binding AddLineCommand}"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Click="AddButton_Click"
+                                        Width="100" Height="32"
+                                        Margin="0 20 0 0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding IssueLines}"
+                          SelectedItem="{Binding SelectedLine}"
+                          Style="{StaticResource DataGridStyle}"
+                          Margin="0,4,0,0"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True">
+
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="120"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTextColumn Header="UOM" Binding="{Binding UnitMeasureName}" Width="90"/>
+
+                        <DataGridTextColumn Header="Qty" Binding="{Binding Qty, StringFormat=N3}" Width="100" FontWeight="Bold">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}" Width="110" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTemplateColumn Width="80" Header="Action">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource DeleteButtonStyle}"
+                                            ToolTip="Remove line"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <Border Grid.Row="2" Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1"
+                        CornerRadius="6" Padding="8" Margin="0,4,0,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="Issue Lines" Style="{StaticResource SubHeaderTextStyle}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding TotalValue, StringFormat={}{0:N2}}"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Total Items:" Style="{StaticResource LabelStyle}" Margin="0,0,5,0"/>
+                            <TextBlock Text="{Binding IssueLines.Count}" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Total Value:" Style="{StaticResource LabelStyle}" Margin="0,0,5,0"/>
+                            <TextBlock Text="{Binding TotalValue, StringFormat='Rs. {0:N2}'}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Grid>
                 </Border>
 
-                <DataGrid Grid.Row="1"
-                          ItemsSource="{Binding IssueLines}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="True"
-                          CanUserDeleteRows="True"
-                          SelectionMode="Single"
-                          Style="{StaticResource DataGridStyle}">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Product" Width="2.5*">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding ProductName}" VerticalAlignment="Center"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                            <DataGridTemplateColumn.CellEditingTemplate>
-                                <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding DataContext.Products, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                              SelectedItem="{Binding SelectedProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                              DisplayMemberPath="ProductName"
-                                              TextSearch.TextPath="ProductName"
-                                              IsEditable="True"
-                                              IsTextSearchEnabled="True"
-                                              Style="{StaticResource ComboBoxStyle}"
-                                              ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellEditingTemplate>
-                        </DataGridTemplateColumn>
-
-                        <DataGridTextColumn Header="Code" Binding="{Binding SelectedProduct.ProductCode}" Width="120" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Issue Qty" Binding="{Binding Qty, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N3}" Width="120"/>
-                        <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitCost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="120"/>
-                        <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, StringFormat=N2}" Width="140" IsReadOnly="True"/>
-                    </DataGrid.Columns>
-                </DataGrid>
             </Grid>
         </Border>
 
-        <Border Grid.Row="3" Style="{StaticResource PanelCardStyle}" Margin="0,8,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" VerticalAlignment="Center"/>
-
-                <Button Grid.Column="1"
-                        Content="Clear"
-                        Command="{Binding ClearCommand}"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        Margin="0,0,8,0"/>
-
-                <Button Grid.Column="2"
-                        Content="Save Issue"
-                        Command="{Binding SaveCommand}"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        MinWidth="120"/>
-            </Grid>
-        </Border>
     </Grid>
 </UserControl>

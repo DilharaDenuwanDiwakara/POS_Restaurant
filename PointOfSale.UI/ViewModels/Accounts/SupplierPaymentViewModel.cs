@@ -9,7 +9,9 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using CrystalDecisions.CrystalReports.Engine;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Enums;
+using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Accounts;
 using PointOfSale.Core.Interfaces.Repositories.System;
@@ -30,13 +32,15 @@ namespace PointOfSale.UI.ViewModels.Accounts
         private readonly IServiceProvider _serviceProvider;
         private readonly IBankRepository _bankRepository;
         private readonly IBankBranchRepository _bankBranchRepository;
+        private readonly IAccountingRepository _accountingRepository;
 
         public SupplierPaymentViewModel(ISupplierRepository supplierRepository,
                                         ISupplierPaymentRepository supplierPaymentRepository,
                                         IUserSessionService userSessionService,
                                         IServiceProvider serviceProvider,
                                         IBankRepository bankRepository,
-                                        IBankBranchRepository bankBranchRepository)
+                                        IBankBranchRepository bankBranchRepository,
+                                        IAccountingRepository accountingRepository)
         {
             _supplierRepository = supplierRepository;
             _supplierPaymentRepository = supplierPaymentRepository;
@@ -44,9 +48,11 @@ namespace PointOfSale.UI.ViewModels.Accounts
             _serviceProvider = serviceProvider;
             _bankRepository = bankRepository ?? throw new ArgumentNullException(nameof(bankRepository));
             _bankBranchRepository = bankBranchRepository ?? throw new ArgumentNullException(nameof(bankBranchRepository));
+            _accountingRepository = accountingRepository ?? throw new ArgumentNullException(nameof(accountingRepository));
 
             Suppliers = new ObservableCollection<Supplier>();
             PayableItems = new ObservableCollection<SupplierPayableItem>();
+            PaymentAccounts = new ObservableCollection<AccountDto>();
             PaymentMethods = new ObservableCollection<AccountsPaymentMethod>((AccountsPaymentMethod[])Enum.GetValues(typeof(AccountsPaymentMethod)));
 
             LoadPayablesCommand = new AsyncRelayCommand(_ => LoadPayablesAsync(), _ => CanLoadPayables());
@@ -54,6 +60,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
             _ = LoadSuppliersAsync();
             _ = LoadBanksAsync();
+            _ = LoadPaymentAccountsAsync();
         }
         public List<AccountsPaymentMethod> AvailablePaymentMethods { get; } =
             Enum.GetValues(typeof(AccountsPaymentMethod))
@@ -62,6 +69,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
         public ObservableCollection<Supplier> Suppliers { get; }
         public ObservableCollection<AccountsPaymentMethod> PaymentMethods { get; }
         public ObservableCollection<SupplierPayableItem> PayableItems { get; }
+        public ObservableCollection<AccountDto> PaymentAccounts { get; }
         public SupplierPayment Payment { get; set; } = new SupplierPayment();
 
         public ObservableCollection<Bank> AvailableBanks { get; } = new ObservableCollection<Bank>();
@@ -211,6 +219,19 @@ namespace PointOfSale.UI.ViewModels.Accounts
             }
         }
 
+        private int _selectedPaymentAccountId;
+        public int SelectedPaymentAccountId
+        {
+            get => _selectedPaymentAccountId;
+            set
+            {
+                if (SetProperty(ref _selectedPaymentAccountId, value))
+                {
+                    SavePaymentCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
         private decimal _totalSelectedPayableAmount;
         public decimal TotalSelectedPayableAmount
         {
@@ -276,9 +297,29 @@ namespace PointOfSale.UI.ViewModels.Accounts
             }
         }
 
+        private async Task LoadPaymentAccountsAsync()
+        {
+            try
+            {
+                PaymentAccounts.Clear();
+                var accounts = await _accountingRepository.GetPaymentAccountsAsync();
+                foreach (var account in accounts)
+                {
+                    PaymentAccounts.Add(account);
+                }
+
+                SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault()?.Id ?? 0;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load payment accounts: {ex.Message}";
+            }
+        }
+
         private void ClearForm()
         {
             Payment = new SupplierPayment();
+            SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault()?.Id ?? 0;
             foreach (var r in PayableItems)
             {
                 r.IsSelected = false;
@@ -383,6 +424,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             // Must have selected a supplier, a payment method, and at least one item must have a payment amount entered
             return SelectedSupplier != null &&
                    SelectedPaymentMethod.HasValue &&
+                   SelectedPaymentAccountId > 0 &&
                    PayableItems.Any(p => p.IsSelected && p.PaymentAmount > 0);
         }
         private async Task SavePaymentAsync()
@@ -396,6 +438,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 Payment.PaymentDate = PaymentDate;
                 Payment.PaymentMethod = SelectedPaymentMethod?.ToString();
                 Payment.ReferenceNumber = null;
+                Payment.PaymentAccountId = SelectedPaymentAccountId;
                 Payment.PaidAmount = TotalSelectedPayableAmount;
                 Payment.CreatedBy = _userSessionService.UserId;
 

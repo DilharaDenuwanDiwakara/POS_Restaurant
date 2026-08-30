@@ -1,14 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
+using System.Data;
+using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CrystalDecisions.CrystalReports.Engine;
 using PointOfSale.Core.DTOs;
+using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Interfaces.Repositories.Restaurant;
 using PointOfSale.Core.Interfaces.Repositories.System;
@@ -17,14 +18,17 @@ using PointOfSale.Core.Models.Restaurant;
 using PointOfSale.Core.Models.System;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.Views.Sales;
 
 namespace PointOfSale.UI.ViewModels.Inventory
 {
     public class InternalIssueViewModel : BaseViewModel
     {
-        private const string WastageIssueType = "Damage / Wastage";
         internal const string ProductItemType = "PRODUCT";
         internal const string MenuItemItemType = "MENU_ITEM";
+
+        private const string WastageIssueType = "Wastage";
+        private const string StaffRecoveryIssueType = "Staff Recovery";
 
         private readonly IInternalIssueRepository _internalIssueRepository;
         private readonly IStationRepository _stationRepository;
@@ -32,16 +36,9 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private readonly IAccountMappingRepository _accountMappingRepository;
         private readonly IProductRepository _productRepository;
         private readonly IInventoryRepository _inventoryRepository;
+        private readonly IProductBatchRepository _productBatchRepository;
+        private readonly IAccountingRepository _accountingRepository;
         private readonly IUserSessionService _userSessionService;
-
-        private Station _selectedStation;
-        private Location _selectedLocation;
-        private DateTime _issueDate = DateTime.Today;
-        private string _issueType = "Consumable";
-        private string _remarks;
-        private decimal _totalValue;
-        private int _defaultWastageAccountId;
-        private bool _isBusy;
 
         public InternalIssueViewModel(
             IInternalIssueRepository internalIssueRepository,
@@ -50,6 +47,8 @@ namespace PointOfSale.UI.ViewModels.Inventory
             IAccountMappingRepository accountMappingRepository,
             IProductRepository productRepository,
             IInventoryRepository inventoryRepository,
+            IProductBatchRepository productBatchRepository,
+            IAccountingRepository accountingRepository,
             IUserSessionService userSessionService)
         {
             _internalIssueRepository = internalIssueRepository ?? throw new ArgumentNullException(nameof(internalIssueRepository));
@@ -58,29 +57,44 @@ namespace PointOfSale.UI.ViewModels.Inventory
             _accountMappingRepository = accountMappingRepository ?? throw new ArgumentNullException(nameof(accountMappingRepository));
             _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
             _inventoryRepository = inventoryRepository ?? throw new ArgumentNullException(nameof(inventoryRepository));
+            _productBatchRepository = productBatchRepository ?? throw new ArgumentNullException(nameof(productBatchRepository));
+            _accountingRepository = accountingRepository ?? throw new ArgumentNullException(nameof(accountingRepository));
             _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
 
             Stations = new ObservableCollection<Station>();
             Locations = new ObservableCollection<Location>();
-            Products = new ObservableCollection<Product>();
-            MenuItems = new ObservableCollection<MenuVariantDto>();
-            IssueTypes = new ObservableCollection<string> { "Consumable", WastageIssueType };
+            TargetAccounts = new ObservableCollection<AccountDto>();
+            SearchItems = new ObservableCollection<InternalIssueSearchItem>();
+            FilteredSearchItems = new ObservableCollection<InternalIssueSearchItem>();
+            IssueTypes = new ObservableCollection<string> { "Consumable", WastageIssueType, StaffRecoveryIssueType };
             IssueLines = new ObservableCollection<InternalIssueLineEntry>();
-            IssueLines.CollectionChanged += IssueLines_CollectionChanged;
+            IssueLines.CollectionChanged += (s, e) => RecalculateTotal();
 
-            SaveCommand = new AsyncRelayCommand(async _ => await SaveAsync(), _ => CanSave());
-            ClearCommand = new RelayCommand(_ => ClearForm());
+            AddLineCommand = new AsyncRelayCommand(async _ => await AddLineAsync(), _ => CanAddLine);
+            RemoveLineCommand = new RelayCommand<InternalIssueLineEntry>(RemoveLine);
+            ProcessIssueCommand = new AsyncRelayCommand(async _ => await ProcessIssueAsync(), _ => CanProcessIssue);
+            ClearCommand = new RelayCommand(_ => ClearAll());
 
             _ = LoadLookupsAsync();
         }
 
+        #region Lookups
+
         public ObservableCollection<Station> Stations { get; }
         public ObservableCollection<Location> Locations { get; }
-        public ObservableCollection<Product> Products { get; }
-        public ObservableCollection<MenuVariantDto> MenuItems { get; }
+        public ObservableCollection<AccountDto> TargetAccounts { get; }
+        public ObservableCollection<InternalIssueSearchItem> SearchItems { get; }
+        public ObservableCollection<InternalIssueSearchItem> FilteredSearchItems { get; }
         public ObservableCollection<string> IssueTypes { get; }
         public ObservableCollection<InternalIssueLineEntry> IssueLines { get; }
 
+        private int _defaultWastageAccountId;
+
+        #endregion
+
+        #region Header Properties
+
+        private Station _selectedStation;
         public Station SelectedStation
         {
             get => _selectedStation;
@@ -88,11 +102,12 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _selectedStation, value))
                 {
-                    RefreshSaveCommand();
+                    RefreshProcessIssueCommand();
                 }
             }
         }
 
+        private Location _selectedLocation;
         public Location SelectedLocation
         {
             get => _selectedLocation;
@@ -100,17 +115,20 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _selectedLocation, value))
                 {
-                    RefreshSaveCommand();
+                    _ = RefreshAvailableQtyAsync();
+                    RefreshProcessIssueCommand();
                 }
             }
         }
 
+        private DateTime _issueDate = DateTime.Today;
         public DateTime IssueDate
         {
             get => _issueDate;
             set => SetProperty(ref _issueDate, value);
         }
 
+        private string _issueType = "Consumable";
         public string IssueType
         {
             get => _issueType;
@@ -118,29 +136,68 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _issueType, value))
                 {
-                    RefreshSaveCommand();
+                    OnPropertyChanged(nameof(IsTargetAccountRequired));
+                    OnPropertyChanged(nameof(IsConsumableIssue));
+
+                    if (IsConsumableIssue)
+                    {
+                        SelectedTargetAccount = null;
+
+                        if (SelectedStation == null)
+                        {
+                            SelectedStation = Stations.FirstOrDefault();
+                        }
+                    }
+                    else
+                    {
+                        SelectedStation = null;
+
+                        if (string.Equals(IssueType, WastageIssueType, StringComparison.OrdinalIgnoreCase) && SelectedTargetAccount == null)
+                        {
+                            SelectedTargetAccount = TargetAccounts.FirstOrDefault(a => a.Id == _defaultWastageAccountId);
+                        }
+                    }
+
+                    RefreshProcessIssueCommand();
                 }
             }
         }
 
+        public bool IsConsumableIssue =>
+            string.Equals(IssueType, "Consumable", StringComparison.OrdinalIgnoreCase);
+
+        public bool IsTargetAccountRequired =>
+            string.Equals(IssueType, WastageIssueType, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(IssueType, StaffRecoveryIssueType, StringComparison.OrdinalIgnoreCase);
+
+        private AccountDto _selectedTargetAccount;
+        public AccountDto SelectedTargetAccount
+        {
+            get => _selectedTargetAccount;
+            set
+            {
+                if (SetProperty(ref _selectedTargetAccount, value))
+                {
+                    RefreshProcessIssueCommand();
+                }
+            }
+        }
+
+        private string _remarks;
         public string Remarks
         {
             get => _remarks;
             set => SetProperty(ref _remarks, value);
         }
 
+        private decimal _totalValue;
         public decimal TotalValue
         {
             get => _totalValue;
             private set => SetProperty(ref _totalValue, value);
         }
 
-        public int DefaultWastageAccountId
-        {
-            get => _defaultWastageAccountId;
-            private set => SetProperty(ref _defaultWastageAccountId, value);
-        }
-
+        private bool _isBusy;
         public bool IsBusy
         {
             get => _isBusy;
@@ -148,13 +205,167 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _isBusy, value))
                 {
-                    RefreshSaveCommand();
+                    RefreshProcessIssueCommand();
                 }
             }
         }
 
-        public ICommand SaveCommand { get; }
+        #endregion
+
+        #region Add Item Properties
+
+        private string _barcode;
+        public string Barcode
+        {
+            get => _barcode;
+            set => SetProperty(ref _barcode, value);
+        }
+
+        private string _searchText;
+        public string SearchText
+        {
+            get => _searchText;
+            set => SetProperty(ref _searchText, value);
+        }
+
+        private string _selectedItemCategory = ProductItemType;
+        public string SelectedItemCategory
+        {
+            get => _selectedItemCategory;
+            set
+            {
+                if (SetProperty(ref _selectedItemCategory, value))
+                {
+                    OnPropertyChanged(nameof(IsConsumableProductCategorySelected));
+                    OnPropertyChanged(nameof(IsMenuItemCategorySelected));
+                    OnPropertyChanged(nameof(SearchItemLabel));
+                    ClearItemEntry();
+                    RefreshFilteredSearchItems();
+                    FocusBarcode();
+                }
+            }
+        }
+
+        public bool IsConsumableProductCategorySelected
+        {
+            get => string.Equals(SelectedItemCategory, ProductItemType, StringComparison.OrdinalIgnoreCase);
+            set
+            {
+                if (value)
+                {
+                    SelectedItemCategory = ProductItemType;
+                }
+            }
+        }
+
+        public bool IsMenuItemCategorySelected
+        {
+            get => string.Equals(SelectedItemCategory, MenuItemItemType, StringComparison.OrdinalIgnoreCase);
+            set
+            {
+                if (value)
+                {
+                    SelectedItemCategory = MenuItemItemType;
+                }
+            }
+        }
+
+        public string SearchItemLabel =>
+            IsMenuItemCategorySelected ? "Select Menu Item:" : "Select Product:";
+
+        private InternalIssueSearchItem _selectedSearchItem;
+        public InternalIssueSearchItem SelectedSearchItem
+        {
+            get => _selectedSearchItem;
+            set
+            {
+                if (SetProperty(ref _selectedSearchItem, value))
+                {
+                    UnitCost = value?.DefaultUnitCost ?? 0;
+                    AvailableQty = null;
+                    OnPropertyChanged(nameof(IsItemSelected));
+                    _ = RefreshAvailableQtyAsync();
+                    RefreshAddLineCommand();
+                }
+            }
+        }
+
+        public bool IsItemSelected => SelectedSearchItem != null;
+
+        private decimal? _availableQty;
+        public decimal? AvailableQty
+        {
+            get => _availableQty;
+            private set
+            {
+                if (SetProperty(ref _availableQty, value))
+                {
+                    OnPropertyChanged(nameof(AvailableQtyDisplay));
+                }
+            }
+        }
+
+        public string AvailableQtyDisplay =>
+            SelectedSearchItem?.ItemType == MenuItemItemType
+                ? "N/A"
+                : AvailableQty.HasValue ? AvailableQty.Value.ToString("N3") : "-";
+
+        private decimal _unitCost;
+        public decimal UnitCost
+        {
+            get => _unitCost;
+            set => SetProperty(ref _unitCost, value);
+        }
+
+        private string _issueQty;
+        public string IssueQty
+        {
+            get => _issueQty;
+            set
+            {
+                if (SetProperty(ref _issueQty, value))
+                {
+                    ValidateQuantity();
+                    RefreshAddLineCommand();
+                }
+            }
+        }
+
+        #endregion
+
+        #region Grid Selection
+
+        private InternalIssueLineEntry _selectedLine;
+        public InternalIssueLineEntry SelectedLine
+        {
+            get => _selectedLine;
+            set => SetProperty(ref _selectedLine, value);
+        }
+
+        #endregion
+
+        #region Commands
+
+        public ICommand AddLineCommand { get; }
+        public ICommand RemoveLineCommand { get; }
+        public ICommand ProcessIssueCommand { get; }
         public ICommand ClearCommand { get; }
+
+        public bool CanAddLine => SelectedSearchItem != null && !string.IsNullOrWhiteSpace(IssueQty) && !HasErrors;
+
+        public bool CanProcessIssue =>
+            !IsBusy &&
+            SelectedLocation != null &&
+            (!IsConsumableIssue || SelectedStation != null) &&
+            IssueLines.Any() &&
+            (!IsTargetAccountRequired || SelectedTargetAccount != null);
+
+        private void RefreshAddLineCommand() => (AddLineCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+        private void RefreshProcessIssueCommand() => (ProcessIssueCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+
+        #endregion
+
+        #region Load Lookups
 
         private async Task LoadLookupsAsync()
         {
@@ -162,10 +373,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 IsBusy = true;
 
-                var stations = await _stationRepository.GetAllAsync(_userSessionService.BranchId);
-                var locations = await _inventoryRepository.GetLocationsByBranchAsync(_userSessionService.BranchId);
+                var branchId = _userSessionService.BranchId;
+
+                var stations = await _stationRepository.GetAllAsync(branchId);
+                var locations = await _inventoryRepository.GetLocationsByBranchAsync(branchId);
                 var products = await _productRepository.GetAllAsync();
                 var menuItems = await _menuItemRepository.GetAllVariantsForSalesAsync();
+                var accounts = await _accountingRepository.GetAccountsAsync();
                 var accountMappings = await _accountMappingRepository.GetSystemAccountMappingsAsync();
 
                 Stations.Clear();
@@ -180,19 +394,44 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     Locations.Add(location);
                 }
 
-                Products.Clear();
+                TargetAccounts.Clear();
+                foreach (var account in accounts.Where(a => a != null && a.IsActive && !a.IsHeader)
+                                                  .OrderBy(a => a.Code))
+                {
+                    TargetAccounts.Add(account);
+                }
+
+                SearchItems.Clear();
                 foreach (var product in products.Where(p => p != null && p.IsActive))
                 {
-                    Products.Add(product);
+                    SearchItems.Add(new InternalIssueSearchItem
+                    {
+                        ItemType = ProductItemType,
+                        ProductId = product.ProductId,
+                        Code = product.ProductCode,
+                        Barcode = product.Barcode,
+                        DisplayName = product.ProductName,
+                        UnitMeasureName = product.UnitMeasureName,
+                        DefaultUnitCost = product.StandardCost
+                    });
                 }
 
-                MenuItems.Clear();
                 foreach (var menuItem in menuItems.Where(m => m != null))
                 {
-                    MenuItems.Add(menuItem);
+                    SearchItems.Add(new InternalIssueSearchItem
+                    {
+                        ItemType = MenuItemItemType,
+                        VariantId = menuItem.VariantId,
+                        Code = menuItem.ItemCode,
+                        Barcode = menuItem.Barcode,
+                        DisplayName = menuItem.DisplayName,
+                        UnitMeasureName = "Unit",
+                        DefaultUnitCost = 0
+                    });
                 }
+                RefreshFilteredSearchItems();
 
-                DefaultWastageAccountId = accountMappings.TryGetValue(AccountMappingKeys.WastageExpense, out var wastageAccountId)
+                _defaultWastageAccountId = accountMappings.TryGetValue(AccountMappingKeys.WastageExpense, out var wastageAccountId)
                     ? wastageAccountId ?? 0
                     : 0;
 
@@ -209,49 +448,215 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
-        private bool CanSave()
+        #endregion
+
+        #region Item Search / Add Line
+
+        public void SearchAndSelectItem(string code)
         {
-            return !IsBusy
-                && SelectedStation != null
-                && SelectedLocation != null
-                && !string.IsNullOrWhiteSpace(IssueType)
-                && GetValidLines().Any();
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                FocusSearchItem();
+                return;
+            }
+
+            var trimmedCode = code.Trim();
+
+            var found = FilteredSearchItems.FirstOrDefault(i =>
+                string.Equals(i.Barcode, trimmedCode, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(i.Code, trimmedCode, StringComparison.OrdinalIgnoreCase));
+
+            if (found != null)
+            {
+                SelectedSearchItem = found;
+                FocusQuantity();
+            }
         }
 
-        private async Task SaveAsync()
+        private async Task RefreshAvailableQtyAsync()
+        {
+            if (SelectedSearchItem == null || SelectedLocation == null)
+            {
+                AvailableQty = null;
+                return;
+            }
+
+            if (SelectedSearchItem.ItemType == MenuItemItemType)
+            {
+                // Menu Items have no direct physical stock — the backend SP explodes the recipe
+                // and deducts raw ingredients dynamically, so there is nothing meaningful to show here.
+                AvailableQty = null;
+                return;
+            }
+
+            try
+            {
+                if (SelectedSearchItem.ItemType == ProductItemType && SelectedSearchItem.ProductId.HasValue)
+                {
+                    var batches = await _productBatchRepository.GetAvailableBatchesAsync(SelectedSearchItem.ProductId.Value, SelectedLocation.Id);
+                    AvailableQty = batches?.Sum(b => b.AvailableQuantity) ?? 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                AvailableQty = null;
+                MessageBox.Show($"Failed to load available stock: {ex.Message}", "Internal Issue", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private Task AddLineAsync()
+        {
+            ValidateLine();
+            if (HasErrors) return Task.CompletedTask;
+
+            var qty = decimal.Parse(IssueQty);
+
+            var existing = IssueLines.FirstOrDefault(l =>
+                l.ItemType == SelectedSearchItem.ItemType &&
+                l.ProductId == SelectedSearchItem.ProductId &&
+                l.VariantId == SelectedSearchItem.VariantId);
+
+            if (existing != null)
+            {
+                var mergedQty = existing.Qty + qty;
+                if (AvailableQty.HasValue && mergedQty > AvailableQty.Value)
+                {
+                    MessageBox.Show($"Cannot merge. Total quantity would exceed available stock ({AvailableQty.Value:N3}).", "Internal Issue", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return Task.CompletedTask;
+                }
+
+                IssueLines.Remove(existing);
+                IssueLines.Add(new InternalIssueLineEntry
+                {
+                    ItemType = existing.ItemType,
+                    ProductId = existing.ProductId,
+                    VariantId = existing.VariantId,
+                    Code = existing.Code,
+                    Name = existing.Name,
+                    UnitMeasureName = existing.UnitMeasureName,
+                    Qty = mergedQty,
+                    UnitCost = existing.UnitCost
+                });
+            }
+            else
+            {
+                IssueLines.Add(new InternalIssueLineEntry
+                {
+                    ItemType = SelectedSearchItem.ItemType,
+                    ProductId = SelectedSearchItem.ProductId,
+                    VariantId = SelectedSearchItem.VariantId,
+                    Code = SelectedSearchItem.Code,
+                    Name = SelectedSearchItem.DisplayName,
+                    UnitMeasureName = SelectedSearchItem.UnitMeasureName,
+                    Qty = qty,
+                    UnitCost = UnitCost
+                });
+            }
+
+            ClearItemEntry();
+            FocusBarcode();
+            return Task.CompletedTask;
+        }
+
+        private void RemoveLine(InternalIssueLineEntry line)
+        {
+            if (line != null)
+            {
+                IssueLines.Remove(line);
+            }
+        }
+
+        private void ClearItemEntry()
+        {
+            Barcode = string.Empty;
+            SearchText = string.Empty;
+            SelectedSearchItem = null;
+            UnitCost = 0;
+            IssueQty = string.Empty;
+            AvailableQty = null;
+            ClearAllErrors();
+        }
+
+        private void RefreshFilteredSearchItems()
+        {
+            var selectedItemType = IsMenuItemCategorySelected ? MenuItemItemType : ProductItemType;
+
+            FilteredSearchItems.Clear();
+            foreach (var item in SearchItems.Where(i => i != null &&
+                                                        string.Equals(i.ItemType, selectedItemType, StringComparison.OrdinalIgnoreCase))
+                                            .OrderBy(i => i.DisplayName))
+            {
+                FilteredSearchItems.Add(item);
+            }
+        }
+
+        private void RecalculateTotal()
+        {
+            TotalValue = IssueLines.Where(l => l != null).Sum(l => l.LineTotal);
+            RefreshProcessIssueCommand();
+        }
+
+        #endregion
+
+        #region Save / Print
+
+        private async Task ProcessIssueAsync()
         {
             try
             {
-                var validLines = GetValidLines().ToList();
-                if (!validLines.Any())
+                if (!IssueLines.Any())
                 {
-                    MessageBox.Show("Add at least one product with an issue quantity greater than zero.", "Internal Issue", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Add at least one item with an issue quantity greater than zero.", "Internal Issue", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                TotalValue = validLines.Sum(line => line.LineTotal);
-                var explodedLines = await BuildExplodedIssueLinesAsync(validLines);
-                TotalValue = explodedLines.Sum(line => line.LineTotal);
+                if (IsConsumableIssue && SelectedStation == null)
+                {
+                    MessageBox.Show("Select a destination station for this issue type.", "Internal Issue", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (IsTargetAccountRequired && SelectedTargetAccount == null)
+                {
+                    MessageBox.Show("Select a target account for this issue type.", "Internal Issue", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 var dto = new InternalIssueSaveDto
                 {
                     IssueDate = IssueDate,
                     IssueType = IssueType,
-                    StationId = SelectedStation.Id,
+                    StationId = IsConsumableIssue ? SelectedStation.Id : 0,
                     BranchId = _userSessionService.BranchId,
                     LocationId = SelectedLocation.Id,
                     TotalValue = TotalValue,
                     Remarks = string.IsNullOrWhiteSpace(Remarks) ? null : Remarks.Trim(),
                     CreatedBy = _userSessionService.UserId,
-                    WastageAccountId = IssueType == WastageIssueType ? DefaultWastageAccountId : (int?)null,
-                    Lines = explodedLines
+                    TargetAccountId = IsTargetAccountRequired ? SelectedTargetAccount?.Id : null,
+                    Lines = IssueLines.Select(l => new InternalIssueLineDto
+                    {
+                        ProductId = l.ItemType == ProductItemType ? l.ProductId : null,
+                        VariantId = l.ItemType == MenuItemItemType ? l.VariantId : null,
+                        Qty = l.Qty,
+                        UnitCost = l.UnitCost,
+                        LineTotal = l.LineTotal
+                    }).ToList()
                 };
 
                 IsBusy = true;
                 var result = await _internalIssueRepository.CreateInternalIssueAsync(dto);
 
                 MessageBox.Show($"Internal issue saved successfully. Issue No: {result.IssueNumber}", "Internal Issue", MessageBoxButton.OK, MessageBoxImage.Information);
-                ClearForm();
+                ClearAll();
+
+                try
+                {
+                    await OpenInternalIssueVoucherAsync(result.InternalIssueId);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Issue saved, but the voucher could not be opened: {ex.Message}", "Internal Issue Voucher", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
             catch (Exception ex)
             {
@@ -263,274 +668,192 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
-        private void ClearForm()
+        private async Task OpenInternalIssueVoucherAsync(int internalIssueId)
+        {
+            if (internalIssueId <= 0)
+            {
+                throw new InvalidOperationException($"Invalid InternalIssueId returned from save operation: {internalIssueId}.");
+            }
+
+            var reportData = await _internalIssueRepository.GetInternalIssueVoucherAsync(internalIssueId);
+            if (reportData == null || reportData.Rows.Count == 0)
+            {
+                throw new Exception("The voucher query returned 0 rows. Check the InternalIssueId parameter.");
+            }
+
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                ReportDocument reportDocument = null;
+
+                try
+                {
+                    reportDocument = new ReportDocument();
+                    reportDocument.Load(ResolveInternalIssueVoucherReportPath());
+                    reportDocument.SetDataSource(reportData);
+
+                    var previewWindow = new ZReportViewerWindow(reportDocument, disposeReportOnClose: true)
+                    {
+                        Title = "Internal Issue Note"
+                    };
+
+                    var owner = Application.Current.MainWindow;
+                    if (owner != null && owner != previewWindow)
+                    {
+                        previewWindow.Owner = owner;
+                        previewWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                    }
+                    else
+                    {
+                        previewWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    }
+
+                    previewWindow.ShowDialog();
+                    reportDocument = null;
+                }
+                finally
+                {
+                    if (reportDocument != null)
+                    {
+                        reportDocument.Close();
+                        reportDocument.Dispose();
+                    }
+                }
+            });
+        }
+
+        private static string ResolveInternalIssueVoucherReportPath()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var candidatePaths = new[]
+            {
+                Path.Combine(baseDirectory, "Reports", "InternalIssueNote.rpt"),
+                Path.Combine(baseDirectory, "InternalIssueNote.rpt"),
+                Path.GetFullPath(Path.Combine(baseDirectory, @"..\..\Reports\InternalIssueNote.rpt"))
+            };
+
+            foreach (var candidatePath in candidatePaths)
+            {
+                if (File.Exists(candidatePath))
+                {
+                    return candidatePath;
+                }
+            }
+
+            throw new FileNotFoundException(
+                "Crystal report file not found. Expected InternalIssueVoucher.rpt under the application Reports folder.",
+                candidatePaths[0]);
+        }
+
+        private void ClearAll()
         {
             IssueDate = DateTime.Today;
             IssueType = IssueTypes.FirstOrDefault() ?? "Consumable";
+            SelectedItemCategory = ProductItemType;
+            SelectedTargetAccount = null;
             Remarks = string.Empty;
             IssueLines.Clear();
+            ClearItemEntry();
             TotalValue = 0;
-            RefreshSaveCommand();
+            RefreshProcessIssueCommand();
         }
 
-        private IQueryable<InternalIssueLineEntry> GetValidLines()
-        {
-            return IssueLines
-                .Where(line => line != null && line.Qty > 0 && (line.ProductId > 0 || line.VariantId > 0 || line.MenuItemId > 0))
-                .AsQueryable();
-        }
+        #endregion
 
-        private async Task<List<InternalIssueLineDto>> BuildExplodedIssueLinesAsync(IEnumerable<InternalIssueLineEntry> validLines)
-        {
-            var masterLines = new List<InternalIssueLineDto>();
+        #region Validation
 
-            foreach (var line in validLines)
+        private void ValidateLine()
+        {
+            ClearAllErrors();
+
+            if (SelectedSearchItem == null)
             {
-                if (IsMenuItemLine(line))
-                {
-                    var ingredients = (await _internalIssueRepository
-                        .GetRecipeIngredientsForInternalIssueAsync(line.MenuItemId > 0 ? (int?)line.MenuItemId : null,
-                            line.VariantId > 0 ? (int?)line.VariantId : null))
-                        .ToList();
-
-                    if (!ingredients.Any())
-                    {
-                        var itemName = string.IsNullOrWhiteSpace(line.MenuItemName) ? "selected menu item" : line.MenuItemName;
-                        throw new InvalidOperationException($"Recipe is not configured for {itemName}. Please configure its ingredients before recording wastage.");
-                    }
-
-                    foreach (var ingredient in ingredients)
-                    {
-                        var issueQty = ingredient.QuantityPerItem * line.Qty;
-                        if (issueQty <= 0)
-                        {
-                            throw new InvalidOperationException($"Recipe ingredient '{ingredient.ProductName}' has an invalid quantity.");
-                        }
-
-                        masterLines.Add(new InternalIssueLineDto
-                        {
-                            ProductId = ingredient.ProductId,
-                            Qty = issueQty,
-                            UnitCost = ingredient.UnitCost,
-                            LineTotal = issueQty * ingredient.UnitCost
-                        });
-                    }
-
-                    continue;
-                }
-
-                masterLines.Add(new InternalIssueLineDto
-                {
-                    ProductId = line.ProductId,
-                    Qty = line.Qty,
-                    UnitCost = line.UnitCost,
-                    LineTotal = line.Qty * line.UnitCost
-                });
+                AddError(nameof(SelectedSearchItem), "Select a product or menu item.");
+                return;
             }
 
-            return masterLines
-                .GroupBy(line => line.ProductId)
-                .Select(group =>
-                {
-                    var qty = group.Sum(line => line.Qty);
-                    var unitCost = group.First().UnitCost;
-                    return new InternalIssueLineDto
-                    {
-                        ProductId = group.Key,
-                        Qty = qty,
-                        UnitCost = unitCost,
-                        LineTotal = group.Sum(line => line.LineTotal)
-                    };
-                })
-                .ToList();
-        }
+            ValidateQuantity();
+            if (HasErrors) return;
 
-        private static bool IsMenuItemLine(InternalIssueLineEntry line)
-        {
-            return string.Equals(line.ItemType, MenuItemItemType, StringComparison.OrdinalIgnoreCase)
-                || line.SelectedMenuItem != null
-                || line.VariantId > 0;
-        }
-
-        private void IssueLines_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.OldItems != null)
+            if (SelectedSearchItem.ItemType == MenuItemItemType)
             {
-                foreach (InternalIssueLineEntry line in e.OldItems)
+                // Menu Items have no direct physical stock — the backend SP explodes the recipe and
+                // deducts raw ingredients dynamically, so there is nothing to check against here.
+                return;
+            }
+
+            var qty = decimal.Parse(IssueQty);
+            if (AvailableQty.HasValue && qty > AvailableQty.Value)
+            {
+                AddError(nameof(IssueQty), $"Insufficient Stock (Requested: {qty:N3}, Available: {AvailableQty.Value:N3})");
+            }
+        }
+
+        private void ValidateQuantity()
+        {
+            ClearErrors(nameof(IssueQty));
+
+            if (string.IsNullOrWhiteSpace(IssueQty))
+            {
+                AddError(nameof(IssueQty), "Quantity is required");
+                return;
+            }
+
+            if (!Regex.IsMatch(IssueQty, @"^\d*\.?\d{0,3}$"))
+            {
+                AddError(nameof(IssueQty), "Invalid format (max 3 decimals)");
+                return;
+            }
+
+            if (decimal.TryParse(IssueQty, out decimal currentQty))
+            {
+                if (currentQty <= 0)
                 {
-                    line.PropertyChanged -= IssueLine_PropertyChanged;
+                    AddError(nameof(IssueQty), "Must be > 0");
                 }
             }
-
-            if (e.NewItems != null)
+            else
             {
-                foreach (InternalIssueLineEntry line in e.NewItems)
-                {
-                    line.PropertyChanged += IssueLine_PropertyChanged;
-                }
-            }
-
-            RecalculateTotal();
-        }
-
-        private void IssueLine_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(InternalIssueLineEntry.Qty)
-                || e.PropertyName == nameof(InternalIssueLineEntry.UnitCost)
-                || e.PropertyName == nameof(InternalIssueLineEntry.LineTotal)
-                || e.PropertyName == nameof(InternalIssueLineEntry.SelectedProduct)
-                || e.PropertyName == nameof(InternalIssueLineEntry.SelectedMenuItem)
-                || e.PropertyName == nameof(InternalIssueLineEntry.ItemType))
-            {
-                RecalculateTotal();
+                AddError(nameof(IssueQty), "Invalid number");
             }
         }
 
-        private void RecalculateTotal()
-        {
-            TotalValue = IssueLines.Where(line => line != null).Sum(line => line.LineTotal);
-            RefreshSaveCommand();
-        }
+        #endregion
 
-        private void RefreshSaveCommand()
-        {
-            (SaveCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
-        }
+        #region Focus Events
 
+        public event Action RequestQuantityFocus;
+        public event Action RequestSearchItemFocus;
+        public event Action RequestBarcodeFocus;
+
+        private void FocusQuantity() => RequestQuantityFocus?.Invoke();
+        private void FocusSearchItem() => RequestSearchItemFocus?.Invoke();
+        private void FocusBarcode() => RequestBarcodeFocus?.Invoke();
+
+        #endregion
     }
 
-    public class InternalIssueLineEntry : INotifyPropertyChanged
+    public class InternalIssueSearchItem
     {
-        private Product _selectedProduct;
-        private MenuVariantDto _selectedMenuItem;
-        private string _itemType = InternalIssueViewModel.ProductItemType;
-        private int _productId;
-        private int _menuItemId;
-        private int _variantId;
-        private string _productName;
-        private string _menuItemName;
-        private decimal _qty;
-        private decimal _unitCost;
+        public string ItemType { get; set; }
+        public int? ProductId { get; set; }
+        public int? VariantId { get; set; }
+        public string Code { get; set; }
+        public string Barcode { get; set; }
+        public string DisplayName { get; set; }
+        public string UnitMeasureName { get; set; }
+        public decimal DefaultUnitCost { get; set; }
+    }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public Product SelectedProduct
-        {
-            get => _selectedProduct;
-            set
-            {
-                if (Equals(_selectedProduct, value))
-                {
-                    return;
-                }
-
-                _selectedProduct = value;
-                ItemType = InternalIssueViewModel.ProductItemType;
-                ProductId = value?.ProductId ?? 0;
-                ProductName = value?.ProductName;
-                UnitCost = value?.StandardCost ?? 0;
-                OnPropertyChanged(nameof(SelectedProduct));
-            }
-        }
-
-        public MenuVariantDto SelectedMenuItem
-        {
-            get => _selectedMenuItem;
-            set
-            {
-                if (Equals(_selectedMenuItem, value))
-                {
-                    return;
-                }
-
-                _selectedMenuItem = value;
-                ItemType = InternalIssueViewModel.MenuItemItemType;
-                VariantId = value?.VariantId ?? 0;
-                MenuItemName = value?.DisplayName;
-                ProductId = 0;
-                ProductName = null;
-                UnitCost = 0;
-                OnPropertyChanged(nameof(SelectedMenuItem));
-            }
-        }
-
-        public string ItemType
-        {
-            get => _itemType;
-            set => SetProperty(ref _itemType, value);
-        }
-
-        public int ProductId
-        {
-            get => _productId;
-            set => SetProperty(ref _productId, value);
-        }
-
-        public int MenuItemId
-        {
-            get => _menuItemId;
-            set => SetProperty(ref _menuItemId, value);
-        }
-
-        public int VariantId
-        {
-            get => _variantId;
-            set => SetProperty(ref _variantId, value);
-        }
-
-        public string ProductName
-        {
-            get => _productName;
-            set => SetProperty(ref _productName, value);
-        }
-
-        public string MenuItemName
-        {
-            get => _menuItemName;
-            set => SetProperty(ref _menuItemName, value);
-        }
-
-        public decimal Qty
-        {
-            get => _qty;
-            set
-            {
-                if (SetProperty(ref _qty, value))
-                {
-                    OnPropertyChanged(nameof(LineTotal));
-                }
-            }
-        }
-
-        public decimal UnitCost
-        {
-            get => _unitCost;
-            set
-            {
-                if (SetProperty(ref _unitCost, value))
-                {
-                    OnPropertyChanged(nameof(LineTotal));
-                }
-            }
-        }
-
+    public class InternalIssueLineEntry
+    {
+        public string ItemType { get; set; }
+        public int? ProductId { get; set; }
+        public int? VariantId { get; set; }
+        public string Code { get; set; }
+        public string Name { get; set; }
+        public string UnitMeasureName { get; set; }
+        public decimal Qty { get; set; }
+        public decimal UnitCost { get; set; }
         public decimal LineTotal => Qty * UnitCost;
-
-        private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (Equals(storage, value))
-            {
-                return false;
-            }
-
-            storage = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        private void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }

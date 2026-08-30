@@ -166,6 +166,7 @@
     <None Include="app.config" />
     <None Include="Database\Inventory\ProductUnitConversion_IsMultiply.sql" />
     <None Include="Database\Inventory\StockTransfer_UOM_DatabaseChanges.sql" />
+    <None Include="Database\Inventory\uspGetInternalIssueVoucher.sql" />
     <None Include="Database\Sales\HoldRecallProcedures.sql" />
     <None Include="Database\System\CompanyContactNumber_Length.sql" />
     <None Include="Database\Purchasing\uspGetAllGoodsReceiveNotes.sql" />

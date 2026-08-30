@@ -6,7 +6,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Enums;
+using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Accounts;
 using PointOfSale.Core.Models.Accounts;
@@ -25,21 +27,25 @@ namespace PointOfSale.UI.ViewModels.Accounts
         private readonly ISupplierCreditRepository _supplierCreditRepository;
         private readonly IUserSessionService _userSessionService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IAccountingRepository _accountingRepository;
         public SupplierSettlementViewModel(ISupplierRepository supplierRepository,
                                             ISupplierPaymentRepository supplierPaymentRepository,
                                             ISupplierCreditRepository supplierCreditRepository,
                                             IUserSessionService userSessionService,
-                                            IServiceProvider serviceProvider)
+                                            IServiceProvider serviceProvider,
+                                            IAccountingRepository accountingRepository)
         {
             _supplierRepository = supplierRepository;
             _supplierPaymentRepository = supplierPaymentRepository;
             _supplierCreditRepository = supplierCreditRepository;
             _userSessionService = userSessionService;
             _serviceProvider = serviceProvider;
+            _accountingRepository = accountingRepository ?? throw new ArgumentNullException(nameof(accountingRepository));
 
             Suppliers = new ObservableCollection<Supplier>();
             PayableItems = new ObservableCollection<SupplierPayableItem>();
             CreditItems = new ObservableCollection<SupplierCreditItem>();
+            PaymentAccounts = new ObservableCollection<AccountDto>();
             PaymentMethods = new ObservableCollection<AccountsPaymentMethod>((AccountsPaymentMethod[])Enum.GetValues(typeof(AccountsPaymentMethod)));
 
             LoadPayablesCommand = new AsyncRelayCommand(_ => LoadPayablesAsync(), _ => CanLoadPayables());
@@ -48,10 +54,12 @@ namespace PointOfSale.UI.ViewModels.Accounts
             ClearSelectionCommand = new RelayCommand(_ => ClearSelection());
 
             _ = LoadSuppliersAsync();
+            _ = LoadPaymentAccountsAsync();
         }
 
         public ObservableCollection<Supplier> Suppliers { get; }
         public ObservableCollection<AccountsPaymentMethod> PaymentMethods { get; }
+        public ObservableCollection<AccountDto> PaymentAccounts { get; }
         public ObservableCollection<SupplierPayableItem> PayableItems { get; }
         public ObservableCollection<SupplierCreditItem> CreditItems { get; }
 
@@ -83,6 +91,13 @@ namespace PointOfSale.UI.ViewModels.Accounts
         {
             get => _selectedPaymentMethod;
             set => SetProperty(ref _selectedPaymentMethod, value);
+        }
+
+        private int _selectedPaymentAccountId;
+        public int SelectedPaymentAccountId
+        {
+            get => _selectedPaymentAccountId;
+            set => SetProperty(ref _selectedPaymentAccountId, value);
         }
 
         private decimal _totalSelectedPayableAmount;
@@ -143,6 +158,25 @@ namespace PointOfSale.UI.ViewModels.Accounts
             catch (Exception ex)
             {
                 ErrorMessage = $"Failed to load suppliers: {ex.Message}";
+            }
+        }
+
+        private async Task LoadPaymentAccountsAsync()
+        {
+            try
+            {
+                PaymentAccounts.Clear();
+                var accounts = await _accountingRepository.GetPaymentAccountsAsync();
+                foreach (var account in accounts)
+                {
+                    PaymentAccounts.Add(account);
+                }
+
+                SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault()?.Id ?? 0;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load payment accounts: {ex.Message}";
             }
         }
         private void RecalculateTotals()
@@ -304,6 +338,11 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 MessageBox.Show("Please select a Payment Method for the cash balance.", "Validation Error");
                 return;
             }
+            if (NetPaymentAmount > 0 && SelectedPaymentAccountId <= 0)
+            {
+                MessageBox.Show("Please select the account to pay from.", "Validation Error");
+                return;
+            }
             if (TotalSelectedPayableAmount <= 0)
             {
                 MessageBox.Show("Please select at least one bill to pay.", "Validation Error");
@@ -380,6 +419,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
                     SelectedPaymentMethod?.ToString(),
                     PaymentDate,
                     NetPaymentAmount,
+                    SelectedPaymentAccountId,
                     _userSessionService.UserId,
                     settlementList,
                     paymentLineList

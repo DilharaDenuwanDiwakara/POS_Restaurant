@@ -44,6 +44,12 @@ namespace PointOfSale.Core.Models.Inventory
         public int? JournalEntryId { get; set; }
 
         /// <summary>
+        /// Gets or sets the target account (e.g. Wastage Expense or Staff Receivable) debited for
+        /// Wastage/Staff Recovery issues. Null for Consumable issues.
+        /// </summary>
+        public int? TargetAccountId { get; set; }
+
+        /// <summary>
         /// Gets or sets optional remarks for the issue.
         /// </summary>
         public string Remarks { get; set; }

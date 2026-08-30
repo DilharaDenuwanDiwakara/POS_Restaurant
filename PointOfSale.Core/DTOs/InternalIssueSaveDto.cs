@@ -49,10 +49,10 @@ namespace PointOfSale.Core.DTOs
         public int CreatedBy { get; set; }
 
         /// <summary>
-        /// Gets or sets the wastage expense account to debit when the issue type is Wastage.
-        /// Debit/Credit accounts are otherwise resolved automatically from category-level GL mappings.
+        /// Gets or sets the target account (e.g. Wastage Expense or Staff Receivable) to debit when the
+        /// issue type is Wastage or Staff Recovery. Not required for Consumable issues.
         /// </summary>
-        public int? WastageAccountId { get; set; }
+        public int? TargetAccountId { get; set; }
 
         /// <summary>
         /// Gets or sets the products issued in this transaction.
@@ -82,9 +82,16 @@ namespace PointOfSale.Core.DTOs
     public class InternalIssueLineDto
     {
         /// <summary>
-        /// Gets or sets the issued product identifier.
+        /// Gets or sets the issued product identifier. Populated for a Consumable Product line;
+        /// left null when the line is a Menu Item (see <see cref="VariantId"/>).
         /// </summary>
-        public int ProductId { get; set; }
+        public int? ProductId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the issued menu item variant identifier. Populated for a Menu Item line so the
+        /// stored procedure can explode the recipe internally; left null for Consumable Product lines.
+        /// </summary>
+        public int? VariantId { get; set; }
 
         /// <summary>
         /// Gets or sets the issued quantity.
@@ -100,53 +107,5 @@ namespace PointOfSale.Core.DTOs
         /// Gets or sets the total value for this line.
         /// </summary>
         public decimal LineTotal { get; set; }
-    }
-
-    /// <summary>
-    /// Carries a raw product ingredient returned from a menu recipe for internal issue explosion.
-    /// Quantities are returned in the product's stock/base unit so they can be passed directly
-    /// to Inventory.InternalIssueLineType.
-    /// </summary>
-    public class RecipeIngredientDto
-    {
-        /// <summary>
-        /// Gets or sets the finished menu item identifier, when available.
-        /// </summary>
-        public int MenuItemId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the finished menu variant identifier.
-        /// </summary>
-        public int VariantId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the raw product ingredient identifier.
-        /// </summary>
-        public int ProductId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the raw product ingredient display name.
-        /// </summary>
-        public string ProductName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the ingredient quantity per one menu item, converted to product stock/base unit.
-        /// </summary>
-        public decimal QuantityPerItem { get; set; }
-
-        /// <summary>
-        /// Gets or sets the current product stock/base unit cost.
-        /// </summary>
-        public decimal UnitCost { get; set; }
-
-        /// <summary>
-        /// Gets or sets the product stock/base unit identifier.
-        /// </summary>
-        public int UnitMeasureId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the product stock/base unit code or name.
-        /// </summary>
-        public string UnitMeasureName { get; set; }
     }
 }
