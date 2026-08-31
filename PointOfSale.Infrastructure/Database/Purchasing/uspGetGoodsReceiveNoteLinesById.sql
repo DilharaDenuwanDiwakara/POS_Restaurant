@@ -18,7 +18,8 @@ BEGIN
         um.[Code] AS [UnitMeasureCode],
         grnl.[BaseQuantityReceived],
         grnl.[BaseUnitCost],
-        p.[TrackExpiry]
+        p.[TrackExpiry],
+        p.[IsTaxApplicable]
     FROM [Purchasing].[GoodsReceiveNoteLine] grnl
     LEFT JOIN [Purchasing].[GoodsPurchaseNoteLine] gpol ON gpol.[Id] = grnl.[GoodsPurchaseNoteLineId]
     INNER JOIN [Inventory].[Product] p ON p.[Id] = grnl.[ProductId]
