@@ -297,11 +297,12 @@
       <SubType>Component</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="Reports\SalesDetailReport.cs">
+    <Compile Include="Reports\SalesDetailsReport.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>SalesDetailReport.rpt</DependentUpon>
+      <DependentUpon>SalesDetailsReport.rpt</DependentUpon>
       <SubType>Component</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
     <Compile Include="Reports\SalesSummaryReport.cs">
       <AutoGen>True</AutoGen>
@@ -1128,9 +1129,10 @@
       <LastGenOutput>RoomBookingReport.cs</LastGenOutput>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="Reports\SalesDetailReport.rpt">
+    <EmbeddedResource Include="Reports\SalesDetailsReport.rpt">
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
-      <LastGenOutput>SalesDetailReport.cs</LastGenOutput>
+      <LastGenOutput>SalesDetailsReport.cs</LastGenOutput>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Reports\SalesInvoice.rpt">
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>

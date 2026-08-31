@@ -16,14 +16,14 @@ namespace PointOfSale.UI.Reports {
     using CrystalDecisions.CrystalReports.Engine;
     
     
-    public class SalesDetailReport : ReportClass {
+    public class SalesDetailsReport : ReportClass {
         
-        public SalesDetailReport() {
+        public SalesDetailsReport() {
         }
         
         public override string ResourceName {
             get {
-                return "SalesDetailReport.rpt";
+                return "SalesDetailsReport.rpt";
             }
             set {
                 // Do nothing
@@ -41,7 +41,7 @@ namespace PointOfSale.UI.Reports {
         
         public override string FullResourceName {
             get {
-                return "PointOfSale.UI.Reports.SalesDetailReport.rpt";
+                return "PointOfSale.UI.Reports.SalesDetailsReport.rpt";
             }
             set {
                 // Do nothing
@@ -87,12 +87,44 @@ namespace PointOfSale.UI.Reports {
                 return this.ReportDefinition.Sections[4];
             }
         }
+        
+        [Browsable(false)]
+        [DesignerSerializationVisibilityAttribute(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        public CrystalDecisions.Shared.IParameterField Parameter_BranchId {
+            get {
+                return this.DataDefinition.ParameterFields[0];
+            }
+        }
+        
+        [Browsable(false)]
+        [DesignerSerializationVisibilityAttribute(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        public CrystalDecisions.Shared.IParameterField Parameter_StartDate {
+            get {
+                return this.DataDefinition.ParameterFields[1];
+            }
+        }
+        
+        [Browsable(false)]
+        [DesignerSerializationVisibilityAttribute(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        public CrystalDecisions.Shared.IParameterField Parameter_EndDate {
+            get {
+                return this.DataDefinition.ParameterFields[2];
+            }
+        }
+        
+        [Browsable(false)]
+        [DesignerSerializationVisibilityAttribute(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        public CrystalDecisions.Shared.IParameterField Parameter_UserId {
+            get {
+                return this.DataDefinition.ParameterFields[3];
+            }
+        }
     }
     
     [System.Drawing.ToolboxBitmapAttribute(typeof(CrystalDecisions.Shared.ExportOptions), "report.bmp")]
-    public class CachedSalesDetailReport : Component, ICachedReport {
+    public class CachedSalesDetailsReport : Component, ICachedReport {
         
-        public CachedSalesDetailReport() {
+        public CachedSalesDetailsReport() {
         }
         
         [Browsable(false)]
@@ -129,7 +161,7 @@ namespace PointOfSale.UI.Reports {
         }
         
         public virtual CrystalDecisions.CrystalReports.Engine.ReportDocument CreateReport() {
-            SalesDetailReport rpt = new SalesDetailReport();
+            SalesDetailsReport rpt = new SalesDetailsReport();
             rpt.Site = this.Site;
             return rpt;
         }
