@@ -86,6 +86,13 @@ namespace PointOfSale.UI.ViewModels.Shell
             set => SetProperty(ref _averageOrderValue, value);
         }
 
+        private decimal _averagePerHead;
+        public decimal AveragePerHead
+        {
+            get => _averagePerHead;
+            set => SetProperty(ref _averagePerHead, value);
+        }
+
         private decimal _discountRatePercent;
         public decimal DiscountRatePercent
         {
@@ -170,6 +177,7 @@ namespace PointOfSale.UI.ViewModels.Shell
                 TotalSales = dashboard.TotalSales;
                 OrderCount = dashboard.OrderCount;
                 AverageOrderValue = dashboard.AverageOrderValue;
+                AveragePerHead = dashboard.AveragePerHead;
                 DiscountRatePercent = dashboard.DiscountRatePercent;
                 AvgTurnTime = dashboard.AverageTableTurnMinutes.HasValue
                     ? $"{Math.Round(dashboard.AverageTableTurnMinutes.Value, 0):N0}m"

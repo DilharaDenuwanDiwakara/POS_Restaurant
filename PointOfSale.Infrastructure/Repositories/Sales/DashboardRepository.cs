@@ -36,18 +36,19 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
       AND  (@BranchId IS NULL OR s.[BranchId] = @BranchId)
 )
 SELECT
-    ISNULL(SUM(fs.[NetAmount]), 0)                                                            AS TotalSales,
-    COUNT(1)                                                                                   AS OrderCount,
-    ISNULL(AVG(CAST(fs.[NetAmount] AS DECIMAL(18,4))), 0)                                     AS AverageOrderValue,
-    ISNULL(SUM(fs.[DiscountAmount]), 0)                                                       AS TotalDiscount,
+    ISNULL(SUM(fs.[NetAmount]), 0)                                                  AS TotalSales,
+    COUNT(1)                                                                        AS OrderCount,
+    ISNULL(AVG(CAST(fs.[NetAmount] AS DECIMAL(18,4))), 0)                           AS AverageOrderValue,
+    ISNULL(SUM(fs.[DiscountAmount]), 0)                                             AS TotalDiscount,
     CASE WHEN ISNULL(SUM(fs.[SubTotal]), 0) = 0 THEN 0
-         ELSE (SUM(fs.[DiscountAmount]) / NULLIF(SUM(fs.[SubTotal]), 0)) * 100 END            AS DiscountRatePercent,
+         ELSE (SUM(fs.[DiscountAmount]) / NULLIF(SUM(fs.[SubTotal]), 0)) * 100 END  AS DiscountRatePercent,
     AVG(CASE WHEN o.[Id] IS NOT NULL
-             THEN DATEDIFF(MINUTE, o.[OrderDate], fs.[SalesDate]) END)                        AS AverageTableTurnMinutes,
+             THEN DATEDIFF(MINUTE, o.[OrderDate], fs.[SalesDate]) END)              AS AverageTableTurnMinutes,
     ISNULL(SUM(CASE WHEN CAST(fs.[SalesDate] AS DATE) = CAST(GETDATE() AS DATE)
-                    THEN fs.[NetAmount] ELSE 0 END), 0)                                       AS TodaySales,
+                    THEN fs.[NetAmount] ELSE 0 END), 0)                             AS TodaySales,
     ISNULL(SUM(CASE WHEN CAST(fs.[SalesDate] AS DATE) = CAST(GETDATE() AS DATE)
-                    THEN 1 ELSE 0 END), 0)                                                    AS TodayOrderCount
+                    THEN 1 ELSE 0 END), 0)                                          AS TodayOrderCount,
+    ISNULL((SUM(fs.[NetAmount]) / NULLIF(SUM(o.[GuestCount]), 0)), 0)              AS AveragePerHead
 FROM FS fs
 LEFT JOIN [Restaurant].[Order] o ON o.[Id] = fs.[OrderId];
 
@@ -284,6 +285,7 @@ ORDER BY SeverityRank ASC, SortDate ASC, ItemName ASC;
                         result.TotalSales = GetValue<decimal>(reader, "TotalSales");
                         result.OrderCount = GetValue<int>(reader, "OrderCount");
                         result.AverageOrderValue = GetValue<decimal>(reader, "AverageOrderValue");
+                        result.AveragePerHead = GetValue<decimal>(reader, "AveragePerHead");
                         result.TotalDiscount = GetValue<decimal>(reader, "TotalDiscount");
                         result.DiscountRatePercent = GetValue<decimal>(reader, "DiscountRatePercent");
                         result.TodaySales = GetValue<decimal>(reader, "TodaySales");
