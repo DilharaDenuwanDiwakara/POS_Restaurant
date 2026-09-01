@@ -208,6 +208,8 @@
     <Compile Include="Models\Inventory\Wastage.cs" />
     <Compile Include="Models\Inventory\WastageDetailModel.cs" />
     <Compile Include="Models\Inventory\WastageLine.cs" />
+    <Compile Include="Models\Inventory\WastageLineModel.cs" />
+    <Compile Include="Models\Inventory\WastageModel.cs" />
     <Compile Include="Models\Inventory\WastageReason.cs" />
     <Compile Include="Models\Purchasing\GoodPurchaseNote.cs" />
     <Compile Include="Models\Purchasing\GoodsPurchaseNoteLine.cs" />

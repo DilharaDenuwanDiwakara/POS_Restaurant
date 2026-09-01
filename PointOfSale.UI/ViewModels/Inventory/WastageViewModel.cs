@@ -49,12 +49,15 @@ namespace PointOfSale.UI.ViewModels.Inventory
             RemoveLineCommand = new RelayCommand<WastageLine>(RemoveLine);
             ClearCommand = new RelayCommand(_ => ClearAll());
             AddReasonCommand = new RelayCommand(ExecuteOpenWastageReason);
+            SearchCommand = new AsyncRelayCommand(async _ => await SearchWastageHistoryAsync());
+            RowExpandedCommand = new AsyncRelayCommand(async parameter => await LoadWastageLinesAsync(parameter as WastageModel));
 
             Locations = new ObservableCollection<Location>();
             Products = new ObservableCollection<Product>();
             Reasons = new ObservableCollection<WastageReason>();
             AvailableBatches = new ObservableCollection<ProductBatch>();
             AllowedUOMs = new ObservableCollection<ProductUnitMeasureOption>();
+            HistoryList = new ObservableCollection<WastageModel>();
 
             // Load Initial Data
             _ = LoadInitialDataAsync();
@@ -93,6 +96,27 @@ namespace PointOfSale.UI.ViewModels.Inventory
         {
             get => _note;
             set => SetProperty(ref _note, value);
+        }
+
+        private DateTime _searchDateFrom = DateTime.Today;
+        public DateTime SearchDateFrom
+        {
+            get => _searchDateFrom;
+            set => SetProperty(ref _searchDateFrom, value);
+        }
+
+        private DateTime _searchDateTo = DateTime.Today;
+        public DateTime SearchDateTo
+        {
+            get => _searchDateTo;
+            set => SetProperty(ref _searchDateTo, value);
+        }
+
+        private int _historyLocationId;
+        public int HistoryLocationId
+        {
+            get => _historyLocationId;
+            set => SetProperty(ref _historyLocationId, value);
         }
 
         private bool _isOverlayVisible;
@@ -236,6 +260,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         #region Properties - Grid
 
         public ObservableCollection<WastageLine> WastageLines { get; } = new ObservableCollection<WastageLine>();
+        public ObservableCollection<WastageModel> HistoryList { get; }
 
         private WastageLine _selectedLine;
         public WastageLine SelectedLine
@@ -252,6 +277,8 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public ICommand RemoveLineCommand { get; }
         public ICommand ClearCommand { get; }
         public ICommand AddReasonCommand { get; }
+        public ICommand SearchCommand { get; }
+        public ICommand RowExpandedCommand { get; }
         #endregion
 
         #region Logic
@@ -278,16 +305,86 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 {
                     Locations.Clear();
                     foreach (var l in locs) Locations.Add(l);
-                    if (Locations.Any()) LocationId = Locations.First().Id;
+                    if (Locations.Any())
+                    {
+                        LocationId = Locations.First().Id;
+                        HistoryLocationId = Locations.First().Id;
+                    }
                 });
 
                 await LoadReasonsAsync();
 
                 await LoadProductsAsync();
+                await SearchWastageHistoryAsync();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading data: {ex.Message}");
+            }
+        }
+
+        private async Task SearchWastageHistoryAsync()
+        {
+            try
+            {
+                if (HistoryLocationId <= 0)
+                {
+                    HistoryList.Clear();
+                    return;
+                }
+
+                if (SearchDateTo.Date < SearchDateFrom.Date)
+                {
+                    MessageBox.Show("To Date cannot be earlier than From Date.", "Wastage History", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var items = await _wastageRepository.GetWastageHistory(
+                    _sessionService.BranchId,
+                    SearchDateFrom,
+                    SearchDateTo,
+                    HistoryLocationId);
+
+                HistoryList.Clear();
+                foreach (var item in items)
+                {
+                    HistoryList.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading wastage history: {ex.Message}", "Wastage History", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task LoadWastageLinesAsync(WastageModel wastage)
+        {
+            if (wastage == null || !wastage.IsExpanded || wastage.HasLoadedLineItems || wastage.IsLoadingLineItems)
+            {
+                return;
+            }
+
+            try
+            {
+                wastage.IsLoadingLineItems = true;
+                var lines = await _wastageRepository.GetWastageLines(Convert.ToInt32(wastage.Id));
+
+                wastage.WastageLines.Clear();
+                foreach (var line in lines)
+                {
+                    wastage.WastageLines.Add(line);
+                }
+
+                wastage.HasLoadedLineItems = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to load wastage line items: {ex.Message}", "Wastage History", MessageBoxButton.OK, MessageBoxImage.Error);
+                wastage.WastageLines.Clear();
+            }
+            finally
+            {
+                wastage.IsLoadingLineItems = false;
             }
         }
 
@@ -521,6 +618,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
                 MessageBox.Show("Wastage saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 ClearAll();
+                await SearchWastageHistoryAsync();
             }
             catch (Exception ex)
             {

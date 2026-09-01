@@ -106,6 +106,73 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             }
         }
 
+        public async Task<List<WastageModel>> GetWastageHistory(int branchId, DateTime fromDate, DateTime toDate, int locationId)
+        {
+            var history = new List<WastageModel>();
+
+            using (var connection = GetConnection())
+            using (var command = CreateCommand(connection, "[Inventory].[uspGetWastageList]"))
+            {
+                command.Parameters.Add("@BranchId", SqlDbType.Int).Value = branchId;
+                command.Parameters.Add("@FromDate", SqlDbType.Date).Value = fromDate.Date;
+                command.Parameters.Add("@ToDate", SqlDbType.Date).Value = toDate.Date;
+                command.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
+
+                await connection.OpenAsync();
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        history.Add(new WastageModel
+                        {
+                            Id = GetValue<long>(reader, "Id"),
+                            WastageNumber = GetValue<string>(reader, "WastageNumber"),
+                            WastageDate = GetValue<DateTime>(reader, "WastageDate"),
+                            LocationName = GetValue<string>(reader, "LocationName"),
+                            Note = GetValue<string>(reader, "Note"),
+                            Status = GetValue<string>(reader, "Status"),
+                            CreatedBy = GetValue<string>(reader, "CreatedBy"),
+                            CreatedDate = GetValue<DateTime>(reader, "CreatedDate"),
+                            TotalAmount = GetValue<decimal>(reader, "TotalAmount")
+                        });
+                    }
+                }
+            }
+
+            return history;
+        }
+
+        public async Task<List<WastageLineModel>> GetWastageLines(int wastageId)
+        {
+            var lines = new List<WastageLineModel>();
+
+            using (var connection = GetConnection())
+            using (var command = CreateCommand(connection, "[Inventory].[uspGetWastageLines]"))
+            {
+                command.Parameters.Add("@WastageId", SqlDbType.Int).Value = wastageId;
+
+                await connection.OpenAsync();
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lines.Add(new WastageLineModel
+                        {
+                            Id = GetValue<long>(reader, "Id"),
+                            ProductName = GetValue<string>(reader, "ProductName"),
+                            Reason = GetValue<string>(reader, "Reason"),
+                            UOM = GetValue<string>(reader, "UOM"),
+                            Quantity = GetValue<decimal>(reader, "Quantity"),
+                            UnitCost = GetValue<decimal>(reader, "UnitCost"),
+                            TotalCost = GetValue<decimal>(reader, "TotalCost")
+                        });
+                    }
+                }
+            }
+
+            return lines;
+        }
+
         public async Task<List<PendingWastageModel>> GetPendingWastageAsync(int branchId)
         {
             var queue = new List<PendingWastageModel>();
