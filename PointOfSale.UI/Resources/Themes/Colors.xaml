@@ -1,19 +1,18 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-   <!--#region Color -->
-    <!-- Brand Color -->
+    <!--#region Color-->
+    <!--  Brand Color  -->
     <Color x:Key="Color.Brand">#29378D</Color>
-    
-    <!-- Secondary Color -->
+
+    <!--  Secondary Color  -->
     <Color x:Key="Color.Secondary">#1875BB</Color>
 
-    <!-- Status Color -->
+    <!--  Status Color  -->
     <Color x:Key="Color.Danger">#E74C3C</Color>
     <Color x:Key="Color.Warning">#F39C12</Color>
     <Color x:Key="Color.Success">#27AE60</Color>
 
-    <!-- Base Color -->
+    <!--  Base Color  -->
     <Color x:Key="Color.White">#FFFFFF</Color>
     <Color x:Key="Color.Black">#000000</Color>
     <Color x:Key="Color.Gray">#CCCCCA</Color>
@@ -25,40 +24,40 @@
     <Color x:Key="Color.Text.Muted">#6B7280</Color>
 
     <!--#endregion-->
-    
-   <!--#region Brushes -->
-    <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource Color.Brand}"/>
-    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Color.Secondary}"/>
-    
-    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource Color.Danger}"/>
-    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource Color.Success}"/>
-    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource Color.Warning}"/>
-    
-    <SolidColorBrush x:Key="Brush.Text.Primary" Color="{StaticResource Color.Text.Dark}"/>
-    <SolidColorBrush x:Key="Brush.Text.Muted" Color="{StaticResource Color.Text.Muted}"/>
-    <SolidColorBrush x:Key="Brush.Text.OnDark" Color="{StaticResource Color.White}"/>
-    <SolidColorBrush x:Key="Brush.App.Background" Color="{StaticResource Color.App.Background}"/>
 
-    <SolidColorBrush x:Key="Brush.Structure.Sidebar" Color="{StaticResource Color.Sidebar}"/>
+    <!--#region Brushes-->
+    <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource Color.Brand}" />
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Color.Secondary}" />
 
-    <SolidColorBrush x:Key="Brush.Card.Surface" Color="{StaticResource Color.White}"/>
-    <SolidColorBrush x:Key="Brush.Card.Border" Color="{StaticResource Color.DarkGray}"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource Color.Danger}" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource Color.Success}" />
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource Color.Warning}" />
 
-    <!-- Status Pill Brushes -->
-    <SolidColorBrush x:Key="StatusPendingBackgroundBrush" Color="#F3F4F6"/>
-    <SolidColorBrush x:Key="StatusPendingForegroundBrush" Color="#374151"/>
+    <SolidColorBrush x:Key="Brush.Text.Primary" Color="{StaticResource Color.Text.Dark}" />
+    <SolidColorBrush x:Key="Brush.Text.Muted" Color="{StaticResource Color.Text.Muted}" />
+    <SolidColorBrush x:Key="Brush.Text.OnDark" Color="{StaticResource Color.White}" />
+    <SolidColorBrush x:Key="Brush.App.Background" Color="{StaticResource Color.App.Background}" />
 
-    <SolidColorBrush x:Key="StatusApprovedBackgroundBrush" Color="#DBEAFE"/>
-    <SolidColorBrush x:Key="StatusApprovedForegroundBrush" Color="#1D4ED8"/>
+    <SolidColorBrush x:Key="Brush.Structure.Sidebar" Color="{StaticResource Color.Sidebar}" />
 
-    <SolidColorBrush x:Key="StatusPartiallyReceivedBackgroundBrush" Color="#FEF3C7"/>
-    <SolidColorBrush x:Key="StatusPartiallyReceivedForegroundBrush" Color="#B45309"/>
+    <SolidColorBrush x:Key="Brush.Card.Surface" Color="{StaticResource Color.White}" />
+    <SolidColorBrush x:Key="Brush.Card.Border" Color="{StaticResource Color.DarkGray}" />
 
-    <SolidColorBrush x:Key="StatusCompletedBackgroundBrush" Color="#DCFCE7"/>
-    <SolidColorBrush x:Key="StatusCompletedForegroundBrush" Color="#15803D"/>
+    <!--  Status Pill Brushes  -->
+    <SolidColorBrush x:Key="StatusPendingBackgroundBrush" Color="#F3F4F6" />
+    <SolidColorBrush x:Key="StatusPendingForegroundBrush" Color="#374151" />
 
-    <SolidColorBrush x:Key="StatusRejectedBackgroundBrush" Color="#FEE2E2"/>
-    <SolidColorBrush x:Key="StatusRejectedForegroundBrush" Color="#B91C1C"/>
+    <SolidColorBrush x:Key="StatusApprovedBackgroundBrush" Color="#DBEAFE" />
+    <SolidColorBrush x:Key="StatusApprovedForegroundBrush" Color="#1D4ED8" />
+
+    <SolidColorBrush x:Key="StatusPartiallyReceivedBackgroundBrush" Color="#FEF3C7" />
+    <SolidColorBrush x:Key="StatusPartiallyReceivedForegroundBrush" Color="#B45309" />
+
+    <SolidColorBrush x:Key="StatusCompletedBackgroundBrush" Color="#DCFCE7" />
+    <SolidColorBrush x:Key="StatusCompletedForegroundBrush" Color="#15803D" />
+
+    <SolidColorBrush x:Key="StatusRejectedBackgroundBrush" Color="#FEE2E2" />
+    <SolidColorBrush x:Key="StatusRejectedForegroundBrush" Color="#B91C1C" />
     <!--#endregion-->
-    
+
 </ResourceDictionary>

@@ -189,7 +189,7 @@ namespace PointOfSale.UI.Services
                 case SalesReportService.SalesSummaryKey:
                     return new SalesSummaryReport();
                 case SalesReportService.SalesDetailKey:
-                    throw new InvalidOperationException("A print template for the Sales Detail report has not been added yet.");
+                    return new SalesDetailsReport();
                 case SalesReportService.PaymentModeWiseKey:
                     throw new InvalidOperationException("A print template for the Payment Mode Wise report has not been added yet.");
                 default:

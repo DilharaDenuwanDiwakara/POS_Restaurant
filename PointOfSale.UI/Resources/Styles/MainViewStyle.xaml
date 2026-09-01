@@ -1,40 +1,39 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- ============================================================ -->
-    <!-- HEADER (Header Specific) -->
-    <!-- ============================================================ -->
+    <!--  ============================================================  -->
+    <!--  HEADER (Header Specific)  -->
+    <!--  ============================================================  -->
     <Style x:Key="Style.Shell.Header" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource Brush.Card.Surface}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Card.Border}"/>
-        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-        <Setter Property="Padding" Value="20,0"/>
-        <Setter Property="Height" Value="60"/>
+        <Setter Property="Background" Value="{StaticResource Brush.Card.Surface}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Brush.Card.Border}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="20,0" />
+        <Setter Property="Height" Value="60" />
     </Style>
 
-    <!-- User Name -->
+    <!--  User Name  -->
     <Style x:Key="Style.Text.UserName" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <!-- Role (Admin/User) -->
+    <!--  Role (Admin/User)  -->
     <Style x:Key="Style.Text.UserRole" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11"/>
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    
+
 
     <Style x:Key="ProfileToggleButtonStyle" TargetType="ToggleButton">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Border Background="Transparent" Padding="5">
-                        <ContentPresenter/>
+                    <Border Padding="5" Background="Transparent">
+                        <ContentPresenter />
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -42,68 +41,75 @@
     </Style>
 
     <Style x:Key="MenuButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="HorizontalContentAlignment" Value="Left"/>
-        <Setter Property="Padding" Value="15,10"/>
-        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Padding" Value="15,10" />
+        <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter/>
+                    <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                        <ContentPresenter />
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#F5F5F5"/>
+                <Setter Property="Background" Value="#F5F5F5" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
 
-    <!-- ============================================================ -->
-    <!-- SIDEBAR (Header Specific) -->
-    <!-- ============================================================ -->
+    <!--  ============================================================  -->
+    <!--  SIDEBAR (Header Specific)  -->
+    <!--  ============================================================  -->
     <Style x:Key="Style.Shell.Sidebar" TargetType="Border">
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="BorderThickness" Value="0,0,1,0"/>
-        <Setter Property="BorderBrush" Value="#E0E0E0"/>
-        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Background" Value="White" />
+        <Setter Property="BorderThickness" Value="0,0,1,0" />
+        <Setter Property="BorderBrush" Value="#E0E0E0" />
+        <Setter Property="Padding" Value="0" />
         <Setter Property="Effect">
             <Setter.Value>
-                <DropShadowEffect Color="Black" Direction="0" ShadowDepth="1" BlurRadius="15" Opacity="0.08"/>
+                <DropShadowEffect
+                    BlurRadius="15"
+                    Direction="0"
+                    Opacity="0.08"
+                    ShadowDepth="1"
+                    Color="Black" />
             </Setter.Value>
         </Setter>
     </Style>
 
     <Style x:Key="Style.Shell.Expander" TargetType="Expander">
-        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Background" Value="Transparent" />
 
-        <Setter Property="Foreground" Value="#444444"/>
+        <Setter Property="Foreground" Value="#444444" />
 
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Margin" Value="10,4"/>
-        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Margin" Value="10,4" />
+        <Setter Property="Cursor" Value="Hand" />
 
         <Setter Property="HeaderTemplate">
             <Setter.Value>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="{Binding Tag, RelativeSource={RelativeSource AncestorType=Expander}}" 
-                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Expander}}" 
-                          Style="{StaticResource Style.Icon.Base}" 
-                          VerticalAlignment="Center"/>
+                        <Path
+                            VerticalAlignment="Center"
+                            Data="{Binding Tag, RelativeSource={RelativeSource AncestorType=Expander}}"
+                            Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Expander}}"
+                            Style="{StaticResource Style.Icon.Base}" />
 
-                        <TextBlock Text="{Binding}" 
-                               Margin="12,0,0,0" 
-                               VerticalAlignment="Center" 
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Expander}}"
-                               Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}"/>
+                        <TextBlock
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Expander}}"
+                            Text="{Binding}"
+                            Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
                 </DataTemplate>
             </Setter.Value>
@@ -113,53 +119,58 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Expander">
                     <StackPanel>
-                        <ToggleButton x:Name="HeaderSite"
-                                  Height="44"
-                                  Background="Transparent"
-                                  BorderThickness="0"
-                                  Foreground="{TemplateBinding Foreground}"
-                                  IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                  Cursor="Hand">
+                        <ToggleButton
+                            x:Name="HeaderSite"
+                            Height="44"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Foreground="{TemplateBinding Foreground}"
+                            IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border x:Name="TglBorder" 
-                                        Background="{TemplateBinding Background}" 
-                                        CornerRadius="4" 
-                                        Padding="12,0">
+                                    <Border
+                                        x:Name="TglBorder"
+                                        Padding="12,0"
+                                        Background="{TemplateBinding Background}"
+                                        CornerRadius="4">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
 
-                                            <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}"
-                                                          ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}"
-                                                          VerticalAlignment="Center"
-                                                          HorizontalAlignment="Left"/>
+                                            <ContentPresenter
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}"
+                                                ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" />
 
-                                            <Path x:Name="Arrow" Grid.Column="1"
-                                              Data="M 0 0 L 4 4 L 8 0"
-                                              Stroke="{TemplateBinding Foreground}" 
-                                              StrokeThickness="1.5"
-                                              VerticalAlignment="Center" 
-                                              Margin="0,0,8,0" 
-                                              RenderTransformOrigin="0.5,0.5">
+                                            <Path
+                                                x:Name="Arrow"
+                                                Grid.Column="1"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Data="M 0 0 L 4 4 L 8 0"
+                                                RenderTransformOrigin="0.5,0.5"
+                                                Stroke="{TemplateBinding Foreground}"
+                                                StrokeThickness="1.5">
                                                 <Path.RenderTransform>
-                                                    <RotateTransform Angle="0"/>
+                                                    <RotateTransform Angle="0" />
                                                 </Path.RenderTransform>
                                             </Path>
                                         </Grid>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="TglBorder" Property="Background" Value="#F5F5F5"/>
-                                            <Setter Property="Foreground" Value="Black"/>
+                                            <Setter TargetName="TglBorder" Property="Background" Value="#F5F5F5" />
+                                            <Setter Property="Foreground" Value="Black" />
                                         </Trigger>
 
                                         <Trigger Property="IsChecked" Value="True">
                                             <Setter TargetName="Arrow" Property="RenderTransform">
                                                 <Setter.Value>
-                                                    <RotateTransform Angle="180"/>
+                                                    <RotateTransform Angle="180" />
                                                 </Setter.Value>
                                             </Setter>
                                         </Trigger>
@@ -168,15 +179,16 @@
                             </ToggleButton.Template>
                         </ToggleButton>
 
-                        <ContentPresenter x:Name="ExpandSite"
-                                      Content="{TemplateBinding Content}"
-                                      Visibility="Collapsed"
-                                      Margin="0,0,0,4"/>
+                        <ContentPresenter
+                            x:Name="ExpandSite"
+                            Margin="0,0,0,4"
+                            Content="{TemplateBinding Content}"
+                            Visibility="Collapsed" />
                     </StackPanel>
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsExpanded" Value="True">
-                            <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -185,60 +197,63 @@
     </Style>
 
     <Style x:Key="Style.Nav.RadioButton" TargetType="RadioButton">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="#666666"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="GroupName" Value="SidebarNav"/>
-        <Setter Property="Height" Value="40"/>
-        <Setter Property="Margin" Value="0,2"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#666666" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="GroupName" Value="SidebarNav" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Margin" Value="0,2" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="MainBorder" 
-                            Background="{TemplateBinding Background}" 
-                            CornerRadius="4" 
-                            Padding="15,0">
+                    <Border
+                        x:Name="MainBorder"
+                        Padding="15,0"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="4">
 
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <Border x:Name="Indicator"
-                                    Grid.Column="0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    Width="3" 
-                                    Height="18"
-                                    CornerRadius="1.5"
-                                    Background="{StaticResource BrandBrush}"
-                                    Visibility="Collapsed"
-                                    Margin="-15,0,0,0"></Border>
+                            <Border
+                                x:Name="Indicator"
+                                Grid.Column="0"
+                                Width="3"
+                                Height="18"
+                                Margin="-15,0,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource BrandBrush}"
+                                CornerRadius="1.5"
+                                Visibility="Collapsed" />
 
-                            <ContentPresenter Grid.Column="1" 
-                                          VerticalAlignment="Center" 
-                                          HorizontalAlignment="Left"
-                                          RecognizesAccessKey="True"/>
+                            <ContentPresenter
+                                Grid.Column="1"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
                         </Grid>
                     </Border>
 
                     <ControlTemplate.Triggers>
 
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#10000000"/>
-                            <Setter Property="Foreground" Value="Black"/>
+                            <Setter Property="Background" Value="#10000000" />
+                            <Setter Property="Foreground" Value="Black" />
                         </Trigger>
 
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Indicator" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="Indicator" Property="Visibility" Value="Visible" />
 
-                            <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource BrandBrush}" />
 
-                            <Setter Property="Background" Value="#15007BFF"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Background" Value="#15007BFF" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
                         </Trigger>
 
                     </ControlTemplate.Triggers>
@@ -247,56 +262,57 @@
         </Setter>
     </Style>
 
-    <!-- ============================================================ -->
-    <!-- CONTENT (Header Specific) -->
-    <!-- ============================================================ -->
+    <!--  ============================================================  -->
+    <!--  CONTENT (Header Specific)  -->
+    <!--  ============================================================  -->
     <Style x:Key="Style.Shell.Content" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource Brush.App.Background}"/>
+        <Setter Property="Background" Value="{StaticResource Brush.App.Background}" />
     </Style>
 
 
-    <!-- ============================================================ -->
-    <!-- FOOTER (Header Specific) -->
-    <!-- ============================================================ -->
+    <!--  ============================================================  -->
+    <!--  FOOTER (Header Specific)  -->
+    <!--  ============================================================  -->
     <Style x:Key="Style.Shell.Footer" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource Brush.Structure.Sidebar}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Card.Border}"/>
-        <Setter Property="BorderThickness" Value="0,1,0,0"/>
-        <Setter Property="Height" Value="28"/>
-        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="Background" Value="{StaticResource Brush.Structure.Sidebar}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Brush.Card.Border}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Padding" Value="10,0" />
     </Style>
 
-    <!-- Status Text (Footer) -->
+    <!--  Status Text (Footer)  -->
     <Style x:Key="Style.Text.Status" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text.OnDark}"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.OnDark}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <Style x:Key="MaterialDesignCircularProgressBar" TargetType="ProgressBar">
-        <Setter Property="Foreground" Value="#007BFF"/>
-        <Setter Property="IsIndeterminate" Value="True"/>
-        <Setter Property="Width" Value="30"/>
-        <Setter Property="Height" Value="30"/>
-        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#007BFF" />
+        <Setter Property="IsIndeterminate" Value="True" />
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ProgressBar">
                     <Grid x:Name="TemplateRoot" ClipToBounds="False">
-                        <Path x:Name="Path"
-                              Stroke="{TemplateBinding Foreground}"
-                              StrokeThickness="3"
-                              StrokeStartLineCap="Round"
-                              StrokeEndLineCap="Round"
-                              StrokeDashArray="60,100" 
-                              StrokeDashOffset="0"
-                              RenderTransformOrigin="0.5,0.5"
-                              Width="{TemplateBinding Width}"
-                              Height="{TemplateBinding Height}"
-                              Stretch="Uniform"
-                              Data="M 0,0 A 10,10 0 1 1 0.1,0 Z">
+                        <Path
+                            x:Name="Path"
+                            Width="{TemplateBinding Width}"
+                            Height="{TemplateBinding Height}"
+                            Data="M 0,0 A 10,10 0 1 1 0.1,0 Z"
+                            RenderTransformOrigin="0.5,0.5"
+                            Stretch="Uniform"
+                            Stroke="{TemplateBinding Foreground}"
+                            StrokeDashArray="60,100"
+                            StrokeDashOffset="0"
+                            StrokeEndLineCap="Round"
+                            StrokeStartLineCap="Round"
+                            StrokeThickness="3">
                             <Path.RenderTransform>
-                                <RotateTransform Angle="0"/>
+                                <RotateTransform Angle="0" />
                             </Path.RenderTransform>
                         </Path>
                     </Grid>
@@ -306,16 +322,20 @@
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard RepeatBehavior="Forever">
-                                        <DoubleAnimation Storyboard.TargetName="Path"
-                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                                     From="0" To="360"
-                                                     Duration="0:0:2" />
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Path"
+                                            Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                            From="0"
+                                            To="360"
+                                            Duration="0:0:2" />
 
-                                        <DoubleAnimation Storyboard.TargetName="Path"
-                                                     Storyboard.TargetProperty="StrokeDashOffset"
-                                                     From="0" To="100"
-                                                     Duration="0:0:1.5"
-                                                     AutoReverse="False"/>
+                                        <DoubleAnimation
+                                            AutoReverse="False"
+                                            Storyboard.TargetName="Path"
+                                            Storyboard.TargetProperty="StrokeDashOffset"
+                                            From="0"
+                                            To="100"
+                                            Duration="0:0:1.5" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
