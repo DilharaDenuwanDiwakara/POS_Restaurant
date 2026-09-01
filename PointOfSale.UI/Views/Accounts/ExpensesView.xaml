@@ -1,171 +1,242 @@
 <UserControl x:Class="PointOfSale.UI.Views.Accounts.ExpensesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:PointOfSale.UI.Views.Accounts" 
-             xmlns:accounts="clr-namespace:PointOfSale.UI.ViewModels.Accounts" 
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="620"
+             d:DesignWidth="1100">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <TabControl Style="{StaticResource TabControlStyle}" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+            <TabItem Header=" New Expense " Style="{StaticResource TabItemStyle}">
+                <Grid Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="285"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-        <TextBlock Text="Expenses" Style="{StaticResource HeaderTextStyle}"/>
+                    <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel>
+                                <TextBlock Text="Expenses Form" Style="{StaticResource SubHeaderTextStyle}"/>
 
-        <Grid Grid.Row="1" >
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="285"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+                                <TextBlock Text="Branch" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding Branches}"
+                                          SelectedItem="{Binding SelectedBranch, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                          DisplayMemberPath="Name"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
 
-            <!-- Left Panel - Form -->
-            <Border Style="{StaticResource PanelCardStyle}" Margin="0 0 8 0">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
+                                <TextBlock Text="Paid From" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding PaymentAccounts}"
+                                          SelectedItem="{Binding SelectedPaymentAccount, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                          DisplayMemberPath="DisplayText"
+                                          Style="{StaticResource ComboBoxStyle}"
+                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                          PreviewKeyDown="MoveFocusOnEnter"/>
 
-                        <TextBlock Text="Expenses Form" Style="{StaticResource SubHeaderTextStyle}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Expenses Date" Style="{StaticResource LabelStyle}"/>
+                                <DatePicker x:Name="ExpensesDatePicker"
+                                            SelectedDate="{Binding ExpensesDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                            Style="{StaticResource DatePickerStyle}"
+                                            PreviewKeyDown="MoveFocusOnEnter"/>
 
-                        <!-- Expenses Date -->
-                        <TextBlock Text="Expenses Date" 
-                                    Style="{StaticResource LabelStyle}"/>
-                        <DatePicker SelectedDate="{Binding ExpensesDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                    Style="{StaticResource DatePickerStyle}"
-                                    Margin="0,0,0,8"
-                                    Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
-                                    PreviewKeyDown="MoveFocusOnEnter"/>
+                                <TextBlock Text="Header Description" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                         Style="{StaticResource TextBoxStyle}"
+                                         PreviewKeyDown="MoveFocusOnEnter"
+                                         PreviewTextInput="DescriptionTextBox_PreviewTextInput"
+                                         DataObject.Pasting="DescriptionTextBox_Pasting"
+                                         MaxLength="500"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         Height="60"
+                                         VerticalContentAlignment="Top"
+                                         VerticalScrollBarVisibility="Auto"/>
 
-                        <!-- Expenses Selection -->
+                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Center">
+                                    <Button Content="Save"
+                                            Command="{Binding SaveExpenseCommand}"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Name="SaveButton"
+                                            Margin="0,0,12,0"
+                                            Click="SaveButton_Click"/>
+
+                                    <Button Content="Clear"
+                                            Command="{Binding NewExpenseCommand}"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Focusable="False"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="35"/>
-                            </Grid.ColumnDefinitions>
+                            <Border Background="#F8F9FA"
+                                    BorderBrush="#E1E8ED"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="8"
+                                    Margin="0,0,0,4">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                            <TextBlock Text="Expenses Type" Style="{StaticResource LabelStyle}"/>
-                            <ComboBox Grid.Row="1"
-                                      x:Name="ExpensesType"
-                                      ItemsSource="{Binding ExpensesCategories}"
-                                      SelectedItem="{Binding SelectedExeCategory, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                                      DisplayMemberPath="ExpensesCategoryName"
-                                      IsTextSearchEnabled="True"
-                                      TextSearch.TextPath="ExpensesCategoryName"
-                                      Style="{StaticResource ComboBoxStyle}"
-                                      ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
-                                      PreviewKeyDown="MoveFocusOnEnter"
-                                      Margin="0,0,0,8"/>
+                                    <TextBlock Text="Add Line" Style="{StaticResource SubHeaderTextStyle}"/>
 
-                            <Button Grid.Column="1" Grid.Row="1"
-                                    Command="{Binding OpenAddExpensesCategoryCommand}"
-                                    ToolTip="Add New Category"
-                                    Margin="4,0,0,0"
-                                    VerticalAlignment="Top"
-                                    Focusable="False"
-                                    Style="{StaticResource AddButtonStyle}"/>
+                                    <Grid Grid.Row="1" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="320"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="90"/>
+                                        </Grid.ColumnDefinitions>
 
+                                        <StackPanel Margin="0,0,8,0">
+                                            <TextBlock Text="GL Account:" Style="{StaticResource LabelStyle}"/>
+                                            <ComboBox ItemsSource="{Binding GLExpenseAccounts}"
+                                                      SelectedItem="{Binding SelectedLineAccount, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                      DisplayMemberPath="DisplayText"
+                                                      Style="{StaticResource ComboBoxStyle}"
+                                                      ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                                      Margin="0"
+                                                      PreviewKeyDown="MoveFocusOnEnter"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                            <TextBlock Text="Line Description:" Style="{StaticResource LabelStyle}"/>
+                                            <TextBox Text="{Binding LineDescription, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource TextBoxStyle}"
+                                                     Margin="0"
+                                                     MaxLength="500"
+                                                     PreviewKeyDown="MoveFocusOnEnter"
+                                                     PreviewTextInput="DescriptionTextBox_PreviewTextInput"
+                                                     DataObject.Pasting="DescriptionTextBox_Pasting"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                            <TextBlock Text="Amount:" Style="{StaticResource LabelStyle}"/>
+                                            <TextBox Text="{Binding LineAmount, UpdateSourceTrigger=LostFocus, StringFormat={}{0:N2}}"
+                                                     TextAlignment="Right"
+                                                     Style="{StaticResource TextBoxStyle}"
+                                                     Margin="0"
+                                                     GotKeyboardFocus="SelectAllText_GotFocus"
+                                                     PreviewTextInput="AmountTextBox_PreviewTextInput"
+                                                     DataObject.Pasting="AmountTextBox_Pasting"
+                                                     PreviewKeyDown="MoveFocusOnEnter"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="3">
+                                            <TextBlock Text="" Style="{StaticResource LabelStyle}"/>
+                                            <Button Content="Add"
+                                                    Command="{Binding AddLineCommand}"
+                                                    Style="{StaticResource PrimaryButtonStyle}"
+                                                    Width="80"
+                                                    Height="30"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <DataGrid Grid.Row="1"
+                                      x:Name="ExpenseLinesDataGrid"
+                                      ItemsSource="{Binding ExpenseLines}"
+                                      Style="{StaticResource DataGridStyle}"
+                                      Margin="0,4,0,0"
+                                      AutoGenerateColumns="False"
+                                      SelectionMode="Single"
+                                      CanUserAddRows="False"
+                                      IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="GL Account" Binding="{Binding AccountDisplayText}" Width="320"/>
+                                    <DataGridTextColumn Header="Line Description" Binding="{Binding Description}" Width="*"/>
+
+                                    <DataGridTextColumn Header="Amount"
+                                                        Binding="{Binding Amount, StringFormat='Rs. {0:N2}'}"
+                                                        Width="150"
+                                                        HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTemplateColumn Header="Action" Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource DeleteButtonStyle}"
+                                                        ToolTip="Remove line"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Border Grid.Row="2"
+                                    Background="#F8F9FA"
+                                    BorderBrush="#E1E8ED"
+                                    BorderThickness="1"
+                                    CornerRadius="0 0 6 6"
+                                    Padding="12"
+                                    Margin="0,4,0,0">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="Grand Total:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Text="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}"
+                                               FontWeight="SemiBold"
+                                               FontSize="16"
+                                               Foreground="#2F3B96"
+                                               TextAlignment="Right"
+                                               MinWidth="140"/>
+                                </StackPanel>
+                            </Border>
                         </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
 
-                        <!-- Paid From -->
-                        <TextBlock Text="Paid From" Style="{StaticResource LabelStyle}"/>
-                        <ComboBox ItemsSource="{Binding PaymentAccounts}"
-                                  SelectedItem="{Binding SelectedPaymentAccount, UpdateSourceTrigger=PropertyChanged}"
-                                  DisplayMemberPath="DisplayText"
-                                  Style="{StaticResource ComboBoxStyle}"
-                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
-                                  PreviewKeyDown="MoveFocusOnEnter"
-                                  Margin="0,0,0,8"/>
-
-                        <!-- Amount -->
-                        <TextBlock Text="Amount" Style="{StaticResource LabelStyle}"/>
-                        <TextBox Text="{Binding Amount, UpdateSourceTrigger=LostFocus, ValidatesOnNotifyDataErrors=True, StringFormat={}{0:N2}}"
-                                 Style="{StaticResource TextBoxStyle}"
-                                 TextAlignment="Right"
-                                 PreviewKeyDown="MoveFocusOnEnter"
-                                 PreviewTextInput="AmountTextBox_PreviewTextInput"
-                                 DataObject.Pasting="AmountTextBox_Pasting"
-                                 GotKeyboardFocus="SelectAllText_GotFocus"
-                                 MaxLength="50"/>
-
-                        <!-- Description -->
-                        <TextBlock Text="Description" Style="{StaticResource LabelStyle}"/>
-                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                 Grid.Column="1"
-                                 Style="{StaticResource TextBoxStyle}"
-                                 PreviewKeyDown="MoveFocusOnEnter"
-                                 PreviewTextInput="DescriptionTextBox_PreviewTextInput"
-                                 DataObject.Pasting="DescriptionTextBox_Pasting"
-                                 Margin="0"/>
-
-                        <!-- Action Buttons -->
-                        <StackPanel Orientation="Horizontal" Margin="0,24,0,0" HorizontalAlignment="Left">
-                            <Button Content="Save"
-                                    Command="{Binding SaveExpenseCommand}" 
-                                    Style="{StaticResource PrimaryButtonStyle}" 
-                                    Name="SaveButton"
-                                    Margin="0,0,8,0"
-                                    Click="SaveButton_Click"/>
-
-                            <Button Content="Reset" 
-                                    Command="{Binding NewExpenseCommand}" 
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    Margin="0,0,0,0"/>
-
-                        </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
-
-            <!-- Right Panel - Data Grid -->
-            <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
-                <Grid>
+            <TabItem Header=" Expense History " Style="{StaticResource TabItemStyle}">
+                <Grid Margin="0,4,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Background="#F1F2F6" Padding="12,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                    <Border Grid.Row="0" Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1" CornerRadius="6" Padding="8">
+                        <DockPanel LastChildFill="False">
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <TextBlock Text="Expenses List"
+                                           Style="{StaticResource SubHeaderTextStyle}"
+                                           VerticalAlignment="Center"/>
 
-                            <TextBlock Grid.Column="0" Margin="0"
-                                    Text="Expenses List" 
-                                    Style="{StaticResource SubHeaderTextStyle}" 
-                                    VerticalAlignment="Center"/>
+                                <Button Command="{Binding LoadExpensesCommand}"
+                                        Style="{StaticResource RefreshButtonStyle}"
+                                        ToolTip="Refresh Expenses List"
+                                        Margin="10,0,0,0"/>
+                            </StackPanel>
 
-                            <Button Grid.Column="1"
-                                    Command="{Binding LoadExpensesCommand}" 
-                                    Style="{StaticResource RefreshButtonStyle}" 
-                                    ToolTip="Refresh Expenses List"
-                                    Margin="10,0,0,0"/>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <TextBlock Text="From Date"
+                                           Style="{StaticResource LabelStyle}"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,6,0"/>
+                                <DatePicker SelectedDate="{Binding FromDate, UpdateSourceTrigger=PropertyChanged}"
+                                            Style="{StaticResource DatePickerStyle}"
+                                            Width="130"
+                                            Margin="0,0,8,0"/>
 
-                            <TextBlock Grid.Column="3"
-                                       Text="From Date"
-                                       Style="{StaticResource LabelStyle}"
-                                       VerticalAlignment="Center"
-                                       Margin="16,0,6,0"/>
-
-                            <DatePicker Grid.Column="4"
-                                        SelectedDate="{Binding FromDate, UpdateSourceTrigger=PropertyChanged}"
-                                        Style="{StaticResource DatePickerStyle}"
-                                        Width="130"
-                                        Margin="0,0,8,0"/>
-
-                            <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="To Date"
                                            Style="{StaticResource LabelStyle}"
                                            VerticalAlignment="Center"
@@ -174,40 +245,33 @@
                                             Style="{StaticResource DatePickerStyle}"
                                             Width="130"
                                             Margin="0,0,8,0"/>
+
                                 <Button Content="Search"
                                         Command="{Binding SearchExpensesCommand}"
-                                        Style="{StaticResource PrimaryButtonStyle}"/>
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Width="100"
+                                        Height="30"/>
                             </StackPanel>
-
-                            <Button Grid.Column="6" Visibility="Hidden"
-                                    Command="{Binding CancelAdvanceCommand}" 
-                                    Style="{StaticResource DeleteButtonStyle}" 
-                                    ToolTip="Delete Supplier"/>
-
-                        </Grid>
+                        </DockPanel>
                     </Border>
 
-                    <!-- Data Grid -->
                     <DataGrid Grid.Row="1"
-                          x:Name="ExpensesDataGrid"
-                          ItemsSource="{Binding ExpensesList}"
-                          SelectedItem="{Binding SelectedExpense, UpdateSourceTrigger=PropertyChanged}"
-                          Style="{StaticResource DataGridStyle}"
-                          Margin="0,4,0,0"
-                          AutoGenerateColumns="False"
-                          SelectionMode="Single"
-                          CanUserAddRows="False"
-                          IsReadOnly="True">
-
+                              x:Name="ExpensesDataGrid"
+                              ItemsSource="{Binding ExpensesList}"
+                              SelectedItem="{Binding SelectedExpense, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource DataGridStyle}"
+                              Margin="0,4,0,0"
+                              AutoGenerateColumns="False"
+                              SelectionMode="Single"
+                              CanUserAddRows="False"
+                              IsReadOnly="True">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Voucher No" Binding="{Binding VoucherNumber}" Width="130"/>
                             <DataGridTextColumn Header="ID" Binding="{Binding ExpensesId}" Width="60" Visibility="Hidden"/>
-                            <DataGridTextColumn Header="Expenses Date" Binding="{Binding ExpensesDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="150" />
-                            <DataGridTextColumn Header="Expenses CategoryId" Binding="{Binding ExpensesCategoryId}" Width="*" Visibility="Hidden" />
-                            <DataGridTextColumn Header="Expenses Type" Binding="{Binding ExpensesCategoryName, Mode=TwoWay}" Width="220" />
-                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" />
-                            
-                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='Rs. {0:N2}'}" Width="150"  HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                            <DataGridTextColumn Header="Expenses Date" Binding="{Binding ExpensesDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="150"/>
+                            <DataGridTextColumn Header="Expense Account" Binding="{Binding ExpensesCategoryName}" Width="220"/>
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='Rs. {0:N2}'}" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -227,7 +291,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
-            </Border>
-        </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>

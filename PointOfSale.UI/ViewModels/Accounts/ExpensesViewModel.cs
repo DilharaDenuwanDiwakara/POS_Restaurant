@@ -1,20 +1,25 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Data;
-using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using CrystalDecisions.CrystalReports.Engine;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Repositories.Accounts;
+using PointOfSale.Core.Interfaces.Repositories.System;
 using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Accounts.Entities;
+using PointOfSale.Core.Models.System;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.Reports;
 using PointOfSale.UI.Views.Sales;
 
 namespace PointOfSale.UI.ViewModels.Accounts
@@ -22,49 +27,49 @@ namespace PointOfSale.UI.ViewModels.Accounts
     public class ExpensesViewModel : BaseViewModel
     {
         private readonly IExpensesRepository _expensesRepository;
-        private readonly IExpensesCategoryRepository _expensesCategoryRepository;
         private readonly IAccountingRepository _accountingRepository;
+        private readonly IBranchRepository _branchRepository;
         private readonly IUserSessionService _userSessionService;
-        private readonly IDialogService _dialogService;
 
-        public ExpensesViewModel(IExpensesRepository expensesRepository,
+        public ExpensesViewModel(
+            IExpensesRepository expensesRepository,
             IDialogService dialogService,
             IExpensesCategoryRepository expensesCategoryRepository,
             IAccountingRepository accountingRepository,
+            IBranchRepository branchRepository,
             IUserSessionService userSessionService)
         {
             _expensesRepository = expensesRepository ?? throw new ArgumentNullException(nameof(expensesRepository));
-            _expensesCategoryRepository = expensesCategoryRepository;
             _accountingRepository = accountingRepository ?? throw new ArgumentNullException(nameof(accountingRepository));
+            _branchRepository = branchRepository ?? throw new ArgumentNullException(nameof(branchRepository));
             _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
-            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
             ExpensesList = new ObservableCollection<Expenses>();
-            ExpensesCategories = new ObservableCollection<ExpensesCategory>();
+            Branches = new ObservableCollection<Branch>();
             PaymentAccounts = new ObservableCollection<AccountDto>();
+            GLExpenseAccounts = new ObservableCollection<AccountDto>();
+            ExpenseLines = new ObservableCollection<ExpenseLineModel>();
+            ExpenseLines.CollectionChanged += ExpenseLinesCollectionChanged;
 
             SaveExpenseCommand = new AsyncRelayCommand(async _ => await SaveExpenseAsync());
             LoadExpensesCommand = new AsyncRelayCommand(async _ => await LoadExpensesAsync());
             SearchExpensesCommand = new AsyncRelayCommand(async _ => await LoadExpensesAsync());
             PrintExpenseCommand = new AsyncRelayCommand(async parameter => await PrintExpenseAsync(parameter));
             NewExpenseCommand = new RelayCommand(_ => CreateNewExpense());
+            AddLineCommand = new RelayCommand(_ => AddLine());
+            RemoveLineCommand = new RelayCommand(RemoveLine, parameter => parameter is ExpenseLineModel);
 
+            _ = LoadBranchesAsync();
             _ = LoadExpensesAsync();
-            _ = LoadExpensesCategoryAsync();
             _ = LoadPaymentAccountsAsync();
-
-            _dialogService = dialogService;
-
+            _ = LoadGLExpenseAccountsAsync();
         }
 
         public ObservableCollection<Expenses> ExpensesList { get; }
-
-        private ObservableCollection<ExpensesCategory> _expensesCategories;
-        public ObservableCollection<ExpensesCategory> ExpensesCategories
-        {
-            get => _expensesCategories;
-            set => SetProperty(ref _expensesCategories, value);
-        }
+        public ObservableCollection<Branch> Branches { get; }
+        public ObservableCollection<AccountDto> PaymentAccounts { get; }
+        public ObservableCollection<AccountDto> GLExpenseAccounts { get; }
+        public ObservableCollection<ExpenseLineModel> ExpenseLines { get; }
 
         private Expenses _selectedExpense;
         public Expenses SelectedExpense
@@ -73,22 +78,18 @@ namespace PointOfSale.UI.ViewModels.Accounts
             set => SetProperty(ref _selectedExpense, value);
         }
 
-        private ExpensesCategory _selectedExeCategory;
-        public ExpensesCategory SelectedExeCategory
+        private Branch _selectedBranch;
+        public Branch SelectedBranch
         {
-            get => _selectedExeCategory;
+            get => _selectedBranch;
             set
             {
-                if (SetProperty(ref _selectedExeCategory, value))
+                if (SetProperty(ref _selectedBranch, value))
                 {
-                    ValidateExpensesCategory();
-                    // Force button re-evaluation
-                    CommandManager.InvalidateRequerySuggested();
+                    ValidateBranch();
                 }
             }
         }
-
-        public ObservableCollection<AccountDto> PaymentAccounts { get; }
 
         private AccountDto _selectedPaymentAccount;
         public AccountDto SelectedPaymentAccount
@@ -98,7 +99,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             {
                 if (SetProperty(ref _selectedPaymentAccount, value))
                 {
-                    CommandManager.InvalidateRequerySuggested();
+                    ValidatePaymentAccount();
                 }
             }
         }
@@ -107,50 +108,28 @@ namespace PointOfSale.UI.ViewModels.Accounts
         public DateTime ExpensesDate
         {
             get => _expensesDate;
-            set
-            {
-                SetProperty(ref _expensesDate, value);
-            }
+            set => SetProperty(ref _expensesDate, value);
         }
 
         private DateTime _fromDate = DateTime.Today;
         public DateTime FromDate
         {
             get => _fromDate;
-            set
-            {
-                if (SetProperty(ref _fromDate, value))
-                {
-                    CommandManager.InvalidateRequerySuggested();
-                }
-            }
+            set => SetProperty(ref _fromDate, value);
         }
 
         private DateTime _toDate = DateTime.Today;
         public DateTime ToDate
         {
             get => _toDate;
-            set
-            {
-                if (SetProperty(ref _toDate, value))
-                {
-                    CommandManager.InvalidateRequerySuggested();
-                }
-            }
+            set => SetProperty(ref _toDate, value);
         }
 
-        private decimal _amount;
-        public decimal Amount
+        private decimal _totalAmount;
+        public decimal TotalAmount
         {
-            get => _amount;
-            set
-            {
-                if (SetProperty(ref _amount, value))
-                {
-                    ValidateAmount();
-                    CommandManager.InvalidateRequerySuggested();
-                }
-            }
+            get => _totalAmount;
+            private set => SetProperty(ref _totalAmount, value);
         }
 
         private string _description;
@@ -166,89 +145,135 @@ namespace PointOfSale.UI.ViewModels.Accounts
             }
         }
 
-        private bool _isOverlayVisible;
-        public bool IsOverlayVisible
+        private int _selectedTabIndex;
+        public int SelectedTabIndex
         {
-            get { return _isOverlayVisible; }
-            set
-            {
-                _isOverlayVisible = value;
-                OnPropertyChanged(nameof(IsOverlayVisible));
-            }
+            get => _selectedTabIndex;
+            set => SetProperty(ref _selectedTabIndex, value);
         }
 
-        #region Command
+        private AccountDto _selectedLineAccount;
+        public AccountDto SelectedLineAccount
+        {
+            get => _selectedLineAccount;
+            set => SetProperty(ref _selectedLineAccount, value);
+        }
+
+        private string _lineDescription;
+        public string LineDescription
+        {
+            get => _lineDescription;
+            set => SetProperty(ref _lineDescription, value);
+        }
+
+        private decimal _lineAmount;
+        public decimal LineAmount
+        {
+            get => _lineAmount;
+            set => SetProperty(ref _lineAmount, value);
+        }
+
         public ICommand SaveExpenseCommand { get; }
         public ICommand LoadExpensesCommand { get; }
         public ICommand SearchExpensesCommand { get; }
         public ICommand PrintExpenseCommand { get; }
         public ICommand NewExpenseCommand { get; }
-        public ICommand OpenAddExpensesCategoryCommand => new RelayCommand(ExecuteOpenAddCategories);
+        public ICommand AddLineCommand { get; }
+        public ICommand RemoveLineCommand { get; }
 
-        #endregion
-
-        private bool CanSaveExpense(object _)
-        {
-            return !HasErrors &&
-                    Amount > 0m &&
-                    SelectedExeCategory != null;
-        }
         private void CreateNewExpense()
         {
             ExpensesDate = DateTime.Now;
-            SelectedExeCategory = null;
-            Amount = 0m;
             Description = string.Empty;
+            SelectedPaymentAccount = PaymentAccounts.FirstOrDefault();
+            SelectedBranch = Branches.FirstOrDefault(b => b.Id == _userSessionService.BranchId) ?? Branches.FirstOrDefault();
+            ExpenseLines.Clear();
+            ClearLineEntry();
             ClearAllErrors();
             SelectedExpense = null;
         }
 
-        private async void ExecuteOpenAddCategories(object parameter)
+        private void AddLine()
+        {
+            if (SelectedLineAccount == null)
+            {
+                MessageBox.Show("Select the GL account for this expense line.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (LineAmount <= 0m)
+            {
+                MessageBox.Show("Enter a valid line amount.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(LineDescription) && LineDescription.Length > 500)
+            {
+                MessageBox.Show("Line description cannot exceed 500 characters.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(LineDescription) && !Regex.IsMatch(LineDescription, @"^[a-zA-Z0-9\s\-\(\)]+$"))
+            {
+                MessageBox.Show("Line description cannot contain special character.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            ExpenseLines.Add(new ExpenseLineModel
+            {
+                AccountId = SelectedLineAccount.Id,
+                AccountDisplayText = SelectedLineAccount.DisplayText,
+                Description = LineDescription,
+                Amount = LineAmount
+            });
+
+            ClearLineEntry();
+            ValidateLines();
+        }
+
+        private void RemoveLine(object parameter)
+        {
+            var line = parameter as ExpenseLineModel;
+            if (line == null)
+            {
+                return;
+            }
+
+            ExpenseLines.Remove(line);
+            ValidateLines();
+        }
+
+        private void ClearLineEntry()
+        {
+            SelectedLineAccount = null;
+            LineDescription = string.Empty;
+            LineAmount = 0m;
+        }
+
+        private async Task LoadBranchesAsync()
         {
             try
             {
-                IsOverlayVisible = true;
-
-                if (_dialogService == null)
+                Branches.Clear();
+                var branches = await _branchRepository.GetAllAsync();
+                foreach (var branch in branches.Where(b => b.IsActive))
                 {
-                    MessageBox.Show("Dialog Service is not initialized.");
-                    return;
+                    Branches.Add(branch);
                 }
 
-                _dialogService.ShowDialog<ExpensesCategoryViewModel>(out var expenseCategoryVm);
-
-                if (expenseCategoryVm.ExpensesCategoryList != null && expenseCategoryVm.ExpensesCategoryList.Count > 0)
-                {
-                    // Loop through the accumulated list and add them to the ComboBox source
-                    foreach (var expensesCategory in expenseCategoryVm.ExpensesCategoryList)
-                    {
-                        // Check if it already exists to be safe (optional)
-                        if (!ExpensesCategories.Any(b => b.ExpensesCategoryId == expensesCategory.ExpensesCategoryId))
-                        {
-                            ExpensesCategories.Add(expensesCategory);
-                        }
-                    }
-                    SelectedExeCategory = expenseCategoryVm.ExpensesCategoryList.Last();
-                }
-                else
-                {
-
-                    await LoadExpensesCategoryAsync();
-                }
+                SelectedBranch = Branches.FirstOrDefault(b => b.Id == _userSessionService.BranchId) ?? Branches.FirstOrDefault();
             }
-            finally
+            catch (Exception ex)
             {
-                IsOverlayVisible = false;
+                ErrorMessage = $"Failed to load branches: {ex.Message}";
             }
         }
 
-        #region Command Implementation
         private async Task LoadExpensesAsync()
         {
             try
             {
                 ExpensesList.Clear();
-                var currentBranchId = _userSessionService.BranchId;
 
                 if (ToDate.Date < FromDate.Date)
                 {
@@ -256,7 +281,8 @@ namespace PointOfSale.UI.ViewModels.Accounts
                     return;
                 }
 
-                var items = await _expensesRepository.GetAllAsync(currentBranchId, FromDate, ToDate);
+                var branchId = SelectedBranch?.Id ?? _userSessionService.BranchId;
+                var items = await _expensesRepository.GetAllAsync(branchId, FromDate, ToDate);
                 if (items == null) return;
 
                 foreach (var item in items)
@@ -269,29 +295,18 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 ErrorMessage = $"Failed to load expenses: {ex.Message}";
             }
         }
-        private async Task LoadExpensesCategoryAsync()
-        {
-            try
-            {
-                var expensesCategories = await _expensesCategoryRepository.GetAllAsync();
-                ExpensesCategories = new ObservableCollection<ExpensesCategory>(expensesCategories);
 
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"Failed to load expenses category: {ex.Message}";
-            }
-        }
         private async Task LoadPaymentAccountsAsync()
         {
             try
             {
-                var accounts = await _accountingRepository.GetAccountsAsync();
                 PaymentAccounts.Clear();
-                foreach (var account in accounts.Where(a => a.AccountTypeId == 1 && !a.IsHeader && a.IsActive))
+                var accounts = await _accountingRepository.GetPaymentAccountsAsync();
+                foreach (var account in accounts)
                 {
                     PaymentAccounts.Add(account);
                 }
+
                 SelectedPaymentAccount = PaymentAccounts.FirstOrDefault();
             }
             catch (Exception ex)
@@ -299,44 +314,73 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 ErrorMessage = $"Failed to load payment accounts: {ex.Message}";
             }
         }
+
+        private async Task LoadGLExpenseAccountsAsync()
+        {
+            try
+            {
+                GLExpenseAccounts.Clear();
+
+                var accountTypes = await _accountingRepository.GetAccountTypesAsync();
+                var expenseTypeIds = new HashSet<int>(
+                    accountTypes
+                        .Where(t => string.Equals(t.Name, "Expense", StringComparison.OrdinalIgnoreCase)
+                                    || string.Equals(t.Name, "Expenses", StringComparison.OrdinalIgnoreCase))
+                        .Select(t => t.AccountTypeId));
+
+                if (!expenseTypeIds.Any())
+                {
+                    expenseTypeIds.Add(5);
+                }
+
+                var accounts = await _accountingRepository.GetAccountsAsync();
+                foreach (var account in accounts.Where(a => expenseTypeIds.Contains(a.AccountTypeId) && !a.IsHeader && a.IsActive))
+                {
+                    GLExpenseAccounts.Add(account);
+                }
+
+                SelectedLineAccount = GLExpenseAccounts.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load GL expense accounts: {ex.Message}";
+            }
+        }
+
         private async Task SaveExpenseAsync()
         {
             try
             {
                 ValidateAll();
 
-                if (HasErrors || SelectedExeCategory == null)
+                if (HasErrors)
                 {
                     MessageBox.Show("Please correct the errors before saving.");
                     return;
                 }
 
-                if (SelectedPaymentAccount == null)
-                {
-                    MessageBox.Show("Select the account this expense was paid from.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var expense = new Expenses
+                var expense = new ExpenseHeader
                 {
                     ExpensesDate = ExpensesDate,
-                    ExpensesCategoryId = SelectedExeCategory.ExpensesCategoryId,
+                    BranchId = SelectedBranch.Id,
                     PaymentAccountId = SelectedPaymentAccount.Id,
-                    Amount = Amount,
+                    Amount = TotalAmount,
                     Description = Description,
                     CreatedBy = _userSessionService.UserId,
-                    LocationId = _userSessionService.BranchId
-
+                    Lines = ExpenseLines.Select(line => new ExpenseLine
+                    {
+                        AccountId = line.AccountId,
+                        Amount = line.Amount,
+                        Description = line.Description
+                    }).ToList()
                 };
 
                 var expensesId = await _expensesRepository.CreateAsync(expense);
                 MessageBox.Show("Expenses saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 await OpenExpenseVoucherAsync(expensesId);
-
                 await LoadExpensesAsync();
                 CreateNewExpense();
-
             }
             catch (Exception ex)
             {
@@ -370,23 +414,20 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
                 if (reportData == null || reportData.Rows.Count == 0)
                 {
-                    MessageBox.Show(
-                        "No data found for this Expense Voucher.",
-                        "Expense Voucher",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                    MessageBox.Show("No data found for this Expense Voucher.", "Expense Voucher", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    ReportDocument reportDocument = null;
+                    ExpenseVoucher reportDocument = null;
 
                     try
                     {
-                        reportDocument = new ReportDocument();
-                        reportDocument.Load(ResolveExpenseVoucherReportPath());
+                        reportData.TableName = "uspGetExpenseVoucher";
+                        reportDocument = new ExpenseVoucher();
                         reportDocument.SetDataSource(reportData);
+                        TrySetReportParameter(reportDocument, "ExpensesId", expensesId);
 
                         var previewWindow = new ZReportViewerWindow(reportDocument, disposeReportOnClose: true)
                         {
@@ -427,59 +468,172 @@ namespace PointOfSale.UI.ViewModels.Accounts
             }
         }
 
-        private static string ResolveExpenseVoucherReportPath()
+        private static void TrySetReportParameter(ExpenseVoucher reportDocument, string parameterName, object value)
         {
-            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var candidatePaths = new[]
+            try
             {
-                Path.Combine(baseDirectory, "Reports", "ExpenseVoucher.rpt"),
-                Path.Combine(baseDirectory, "ExpenseVoucher.rpt"),
-                Path.GetFullPath(Path.Combine(baseDirectory, @"..\..\Reports\ExpenseVoucher.rpt"))
-            };
+                reportDocument.SetParameterValue(parameterName, value);
+            }
+            catch
+            {
+                // The report may be fully data-source bound and not expose the parameter at runtime.
+            }
+        }
 
-            foreach (var candidatePath in candidatePaths)
+        private void ExpenseLinesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
             {
-                if (File.Exists(candidatePath))
+                foreach (ExpenseLineModel line in e.OldItems)
                 {
-                    return candidatePath;
+                    line.PropertyChanged -= ExpenseLinePropertyChanged;
                 }
             }
 
-            throw new FileNotFoundException(
-                "Crystal report file not found. Expected ExpenseVoucher.rpt under the application Reports folder.",
-                candidatePaths[0]);
-        }
-        #endregion
-
-        #region Validation
-        private void ValidateAll()
-        {
-            ValidateAmount();
-            ValidateExpensesCategory();
-            ValidateDescription();
-        }
-        private void ValidateAmount()
-        {
-            ClearErrors(nameof(Amount));
-            if (Amount <= 0m)
+            if (e.NewItems != null)
             {
-                AddError(nameof(Amount), "Enter valid amount.");
+                foreach (ExpenseLineModel line in e.NewItems)
+                {
+                    line.PropertyChanged += ExpenseLinePropertyChanged;
+                }
+            }
+
+            CalculateTotalAmount();
+            ValidateLines();
+            (RemoveLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
+
+        private void ExpenseLinePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ExpenseLineModel.Amount)
+                || e.PropertyName == nameof(ExpenseLineModel.AccountId)
+                || e.PropertyName == nameof(ExpenseLineModel.Description))
+            {
+                CalculateTotalAmount();
+                ValidateLines();
             }
         }
-        private void ValidateExpensesCategory()
+
+        private void CalculateTotalAmount()
         {
-            ClearErrors(nameof(SelectedExeCategory));
-            if (SelectedExeCategory == null)
-                AddError(nameof(ExpensesCategory), "Please select a valid expense category.");
+            TotalAmount = ExpenseLines.Sum(line => line.Amount);
         }
+
+        private void ValidateAll()
+        {
+            ValidateBranch();
+            ValidatePaymentAccount();
+            ValidateDescription();
+            ValidateLines();
+        }
+
+        private void ValidateBranch()
+        {
+            ClearErrors(nameof(SelectedBranch));
+            if (SelectedBranch == null)
+            {
+                AddError(nameof(SelectedBranch), "Please select a branch.");
+            }
+        }
+
+        private void ValidatePaymentAccount()
+        {
+            ClearErrors(nameof(SelectedPaymentAccount));
+            if (SelectedPaymentAccount == null)
+            {
+                AddError(nameof(SelectedPaymentAccount), "Please select the account to pay from.");
+            }
+        }
+
         private void ValidateDescription()
         {
             ClearErrors(nameof(Description));
             if (!string.IsNullOrWhiteSpace(Description) && Description.Length > 500)
+            {
                 AddError(nameof(Description), "Description cannot exceed 500 characters.");
+            }
             else if (!string.IsNullOrWhiteSpace(Description) && !Regex.IsMatch(Description, @"^[a-zA-Z0-9\s\-\(\)]+$"))
+            {
                 AddError(nameof(Description), "Cannot contain special character");
+            }
         }
-        #endregion
+
+        private void ValidateLines()
+        {
+            ClearErrors(nameof(ExpenseLines));
+
+            if (!ExpenseLines.Any())
+            {
+                AddError(nameof(ExpenseLines), "Add at least one expense line.");
+                return;
+            }
+
+            if (ExpenseLines.Any(line => line.AccountId <= 0))
+            {
+                AddError(nameof(ExpenseLines), "Select a GL account for every line.");
+            }
+
+            if (ExpenseLines.Any(line => line.Amount <= 0m))
+            {
+                AddError(nameof(ExpenseLines), "Enter a valid amount for every line.");
+            }
+
+            if (ExpenseLines.Any(line => !string.IsNullOrWhiteSpace(line.Description) && line.Description.Length > 500))
+            {
+                AddError(nameof(ExpenseLines), "Line description cannot exceed 500 characters.");
+            }
+
+            if (ExpenseLines.Any(line => !string.IsNullOrWhiteSpace(line.Description)
+                                        && !Regex.IsMatch(line.Description, @"^[a-zA-Z0-9\s\-\(\)]+$")))
+            {
+                AddError(nameof(ExpenseLines), "Line description cannot contain special character.");
+            }
+        }
+    }
+
+    public class ExpenseLineModel : INotifyPropertyChanged
+    {
+        private int _accountId;
+        private decimal _amount;
+        private string _description;
+        private string _accountDisplayText;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public int AccountId
+        {
+            get => _accountId;
+            set => SetProperty(ref _accountId, value);
+        }
+
+        public string AccountDisplayText
+        {
+            get => _accountDisplayText;
+            set => SetProperty(ref _accountDisplayText, value);
+        }
+
+        public decimal Amount
+        {
+            get => _amount;
+            set => SetProperty(ref _amount, value);
+        }
+
+        public string Description
+        {
+            get => _description;
+            set => SetProperty(ref _description, value);
+        }
+
+        private bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (Equals(field, value))
+            {
+                return false;
+            }
+
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            return true;
+        }
     }
 }

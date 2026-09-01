@@ -276,6 +276,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ExpenseVoucher.rpt</DependentUpon>
       <SubType>Component</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
     <Compile Include="Reports\FundTransferVoucher.cs">
       <AutoGen>True</AutoGen>
@@ -1088,6 +1089,7 @@
     <EmbeddedResource Include="Reports\ExpenseVoucher.rpt">
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
       <LastGenOutput>ExpenseVoucher.cs</LastGenOutput>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Reports\ExpiryReport.rpt">
       <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>

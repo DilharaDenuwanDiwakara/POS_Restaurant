@@ -178,6 +178,8 @@
     <Compile Include="Models\Accounts\DTOs\SupplierPayableItem.cs" />
     <Compile Include="Models\Accounts\DTOs\SupplierAdvance.cs" />
     <Compile Include="Models\Accounts\DTOs\SupplierPayable.cs" />
+    <Compile Include="Models\Accounts\Entities\ExpenseHeader.cs" />
+    <Compile Include="Models\Accounts\Entities\ExpenseLine.cs" />
     <Compile Include="Models\Accounts\Entities\Expenses.cs" />
     <Compile Include="Models\Accounts\Entities\ExpensesCategory.cs" />
     <Compile Include="Models\Accounts\Entities\FundTransfer.cs" />

@@ -8,9 +8,9 @@ namespace PointOfSale.Core.Interfaces.Repositories.Accounts
 {
     public interface IExpensesRepository
     {
-        Task<int> CreateAsync(Expenses expenses);
-        Task<IEnumerable<Expenses>> GetAllAsync(int locationId);
-        Task<IEnumerable<Expenses>> GetAllAsync(int locationId, DateTime fromDate, DateTime toDate);
+        Task<int> CreateAsync(ExpenseHeader expense);
+        Task<IEnumerable<Expenses>> GetAllAsync(int branchId);
+        Task<IEnumerable<Expenses>> GetAllAsync(int branchId, DateTime fromDate, DateTime toDate);
         Task<DataTable> GetExpenseVoucherAsync(int expensesId);
     }
 }

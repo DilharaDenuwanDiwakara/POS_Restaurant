@@ -57,7 +57,7 @@ namespace PointOfSale.UI.Views.Accounts
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            ExpensesType.Focus();
+            ExpensesDatePicker.Focus();
         }
 
         private void SelectAllText_GotFocus(object sender, KeyboardFocusChangedEventArgs e)
