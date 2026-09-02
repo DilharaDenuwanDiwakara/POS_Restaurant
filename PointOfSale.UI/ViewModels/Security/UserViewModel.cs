@@ -93,8 +93,12 @@ namespace PointOfSale.UI.ViewModels.Security
             get => _isEditing;
             set
             {
-                SetProperty(ref _isEditing, value);
-                OnPropertyChanged(nameof(SaveButtonText));
+                if (SetProperty(ref _isEditing, value))
+                {
+                    ValidatePassword();
+                    OnPropertyChanged(nameof(SaveButtonText));
+                    RaiseCanExecuteChanged();
+                }
             }
         }
         public string SaveButtonText => IsEditing ? "Update" : "Save";
@@ -192,7 +196,7 @@ namespace PointOfSale.UI.ViewModels.Security
         public bool CanSaveUser => !HasErrors &&
             !string.IsNullOrWhiteSpace(FullName) &&
             !string.IsNullOrWhiteSpace(Username) &&
-            (!string.IsNullOrWhiteSpace(Password) || !IsEditing) &&
+            (IsEditing || !string.IsNullOrWhiteSpace(Password)) &&
             BranchId > 0 &&
             RoleId > 0;
         #endregion
@@ -318,9 +322,8 @@ namespace PointOfSale.UI.ViewModels.Security
                     userToUpdate.IsActive = IsActive;
                     userToUpdate.Pin = Pin;
 
-                    // Only update password if user typed something
-                    if (!string.IsNullOrEmpty(Password))
-                        userToUpdate.PasswordHash = _passwordHasher.HashPassword(Password);
+                    // Blank password means keep the existing password; repository sends NULL to the update SP.
+                    userToUpdate.PasswordHash = Password;
 
                     await _userRepository.UpdateAsync(userToUpdate);
                     savedUserId = userToUpdate.UserId;

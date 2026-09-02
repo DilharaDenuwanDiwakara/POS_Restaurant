@@ -593,6 +593,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             {
                 await _taxRateLoadTask;
                 await _suppliersLoadTask;
+                await EnsureEditableGrnSupplierLoadedAsync(grn.SupplierId);
 
                 _currentGoodsReceiveNoteId = grn.IsDraft ? grn.GoodsReceiveNoteId : 0;
                 _editingRejectedGrnId = grn.IsRejected ? grn.GoodsReceiveNoteId : 0;
@@ -649,7 +650,6 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                         line.UnitMeasure = poLine.UnitMeasure;
                         line.OrderedPrice = poLine.UnitPrice;
                         line.TrackExpiry = poLine.TrackExpiry;
-                        line.IsTaxApplicable = poLine.IsTaxApplicable;
                     }
                     else if (line.QuantityOrdered < line.QuantityReceived)
                     {
@@ -672,6 +672,40 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             {
                 _isResettingGoodsReceiveNote = false;
             }
+        }
+
+        private async Task EnsureEditableGrnSupplierLoadedAsync(int supplierId)
+        {
+            if (supplierId <= 0)
+            {
+                return;
+            }
+
+            if (Suppliers == null)
+            {
+                Suppliers = new ObservableCollection<Supplier>();
+            }
+
+            var loadedSupplier = Suppliers.FirstOrDefault(item => item.SupplierId == supplierId);
+            if (loadedSupplier != null && !string.IsNullOrWhiteSpace(loadedSupplier.TaxRegistrationNumber))
+            {
+                return;
+            }
+
+            var supplierDetails = await _supplierRepository.GetByIdAsync(supplierId);
+            if (supplierDetails == null)
+            {
+                return;
+            }
+
+            if (loadedSupplier == null)
+            {
+                Suppliers.Add(supplierDetails);
+                return;
+            }
+
+            loadedSupplier.TaxRegistrationNumber = supplierDetails.TaxRegistrationNumber;
+            loadedSupplier.CreditPeriodDays = supplierDetails.CreditPeriodDays;
         }
 
         private async Task DeleteDraftGRNAsync(GoodsReceiveNote draft)

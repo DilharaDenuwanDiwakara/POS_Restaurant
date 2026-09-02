@@ -96,6 +96,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public bool CanNavProvisioning => _userSessionService.HasPermission("NAV_ITEM_PROVISIONING") || CanAccessInventory;
         public bool CanNavInternalIssue => _userSessionService.HasPermission("NAV_INTERNAL_ISSUE") || CanAccessInventory;
         public bool CanNavAdjustment => _userSessionService.HasPermission("NAV_STOCK_ADJUSTMENT");
+        public bool CanNavOpeningStock => _userSessionService.HasPermission("NAV_OPENING_STOCK");
         //public bool CanNavBarcodePrint => _userSessionService.HasPermission("NAV_BARCODE_PRINT");
         public bool CanNavProduct => _userSessionService.HasPermission("NAV_PRODUCT");
         public bool CanNavCategory => _userSessionService.HasPermission("NAV_CATEGORY");
@@ -220,6 +221,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public ICommand NavigateToInventoryReportCommand { get; private set; }
         public ICommand NavigateToSalesReportCommand { get; private set; }
         public ICommand NavigateToStockAdjustmentCommand { get; private set; }
+        public ICommand NavigateToOpeningStockCommand { get; private set; }
         public ICommand NavigateToWastageApprovalCommand { get; private set; }
         public ICommand NavigateToSettingsCommand { get; private set; }
         #endregion
@@ -279,6 +281,9 @@ namespace PointOfSale.UI.ViewModels.Shell
 
             NavigateToStockAdjustmentCommand = new RelayCommand(_ =>
                 NavigateTo<StockAdjustmentViewModel>("Inventory  →  Stock Adjustments"));
+
+            NavigateToOpeningStockCommand = new RelayCommand(_ =>
+                NavigateTo<OpeningStockViewModel>("Inventory  →  Opening Stock"));
 
             NavigateToWastageCommand = new RelayCommand(_ =>
                 NavigateTo<WastageViewModel>("Inventory  →  Wastage"));

@@ -1,13 +1,11 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using CrystalDecisions.CrystalReports.Engine;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
@@ -18,6 +16,7 @@ using PointOfSale.Core.Models.Restaurant;
 using PointOfSale.Core.Models.System;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.Reports;
 using PointOfSale.UI.Views.Sales;
 
 namespace PointOfSale.UI.ViewModels.Inventory
@@ -683,13 +682,14 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                ReportDocument reportDocument = null;
+                InternalIssueNote reportDocument = null;
 
                 try
                 {
-                    reportDocument = new ReportDocument();
-                    reportDocument.Load(ResolveInternalIssueVoucherReportPath());
+                    reportData.TableName = "uspGetInternalIssueNote";
+                    reportDocument = new InternalIssueNote();
                     reportDocument.SetDataSource(reportData);
+                    TrySetReportParameter(reportDocument, "InternalIssueId", internalIssueId);
 
                     var previewWindow = new ZReportViewerWindow(reportDocument, disposeReportOnClose: true)
                     {
@@ -721,27 +721,16 @@ namespace PointOfSale.UI.ViewModels.Inventory
             });
         }
 
-        private static string ResolveInternalIssueVoucherReportPath()
+        private static void TrySetReportParameter(InternalIssueNote reportDocument, string parameterName, object value)
         {
-            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var candidatePaths = new[]
+            try
             {
-                Path.Combine(baseDirectory, "Reports", "InternalIssueNote.rpt"),
-                Path.Combine(baseDirectory, "InternalIssueNote.rpt"),
-                Path.GetFullPath(Path.Combine(baseDirectory, @"..\..\Reports\InternalIssueNote.rpt"))
-            };
-
-            foreach (var candidatePath in candidatePaths)
-            {
-                if (File.Exists(candidatePath))
-                {
-                    return candidatePath;
-                }
+                reportDocument.SetParameterValue(parameterName, value);
             }
-
-            throw new FileNotFoundException(
-                "Crystal report file not found. Expected InternalIssueVoucher.rpt under the application Reports folder.",
-                candidatePaths[0]);
+            catch
+            {
+                // The report may be fully data-source bound and not expose the parameter at runtime.
+            }
         }
 
         private void ClearAll()

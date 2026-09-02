@@ -7,12 +7,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using PointOfSale.Core.Interfaces.Security;
 using PointOfSale.Core.Models.Security;
+using PointOfSale.Core.Services;
 
 namespace PointOfSale.Infrastructure.Repositories.Security
 {
     public class UserRepository : BaseRepository, IUserRepository
     {
-        public UserRepository(DatabaseConnection dbConnection) : base(dbConnection) { }
+        private readonly IPasswordHasher _passwordHasher;
+
+        public UserRepository(DatabaseConnection dbConnection, IPasswordHasher passwordHasher) : base(dbConnection)
+        {
+            _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
+        }
 
         #region Methods
         #region Public Methods
@@ -172,7 +178,7 @@ namespace PointOfSale.Infrastructure.Repositories.Security
                     {
                         command.Parameters.Add("@UserId", SqlDbType.Int).Value = user.UserId;
 
-                        AddUserParameters(command, user);
+                        AddUserParameters(command, user, hashPassword: true, allowEmptyPassword: true);
 
                         await connection.OpenAsync();
                         await command.ExecuteNonQueryAsync();
@@ -387,18 +393,36 @@ namespace PointOfSale.Infrastructure.Repositories.Security
         #endregion
 
         #region Private Methods
-        private void AddUserParameters(SqlCommand command, User user)
+        private void AddUserParameters(SqlCommand command, User user, bool hashPassword = false, bool allowEmptyPassword = false)
         {
+            object passwordHash = GetPasswordHashParameterValue(user.PasswordHash, hashPassword, allowEmptyPassword);
+
             command.Parameters.Add("@BranchId", SqlDbType.Int).Value = user.BranchId;
             command.Parameters.Add("@FullName", SqlDbType.NVarChar, 100).Value = user.FullName;
             command.Parameters.Add("@Username", SqlDbType.NVarChar, 50).Value = user.Username;
-            command.Parameters.Add("@PasswordHash", SqlDbType.NVarChar, 255).Value = user.PasswordHash;
+            command.Parameters.Add("@PasswordHash", SqlDbType.NVarChar, 255).Value = passwordHash;
             // Column is [Auth].[User].[PinCode]; left NULL when no PIN is assigned.
             command.Parameters.Add("@PinCode", SqlDbType.NVarChar, 10).Value =
                 string.IsNullOrWhiteSpace(user.Pin) ? (object)DBNull.Value : user.Pin.Trim();
             command.Parameters.Add("@RoleId", SqlDbType.Int).Value = (int)user.Role;
             command.Parameters.Add("@IsActive", SqlDbType.Bit).Value = user.IsActive;
         }
+
+        private object GetPasswordHashParameterValue(string password, bool hashPassword, bool allowEmptyPassword)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                if (allowEmptyPassword)
+                {
+                    return DBNull.Value;
+                }
+
+                throw new InvalidOperationException("Password is required when creating a user.");
+            }
+
+            return hashPassword ? _passwordHasher.HashPassword(password) : password;
+        }
+
         private User MapUser(IDataRecord record)
         {
             return new User

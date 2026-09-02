@@ -15,16 +15,16 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
         }
 
         #region Public Method
-        public async Task<int> CreateAsync(Expenses expenses)
+        public async Task<int> CreateAsync(ExpenseHeader expense)
         {
             try
             {
                 using (var connection = GetConnection())
-                using (var command = CreateCommand(connection, "[Accounts].[uspInsertExpenses]"))
+                using (var command = CreateCommand(connection, "[Accounts].[uspInsertExpensesMasterDetail]"))
                 {
-                    AddExpenseParameters(command, expenses);
+                    AddExpenseParameters(command, expense);
 
-                    var outputParam = command.Parameters.Add("@ExpensesId", SqlDbType.Int);
+                    var outputParam = command.Parameters.Add("@NewExpenseHeaderId", SqlDbType.Int);
                     outputParam.Direction = ParameterDirection.Output;
 
                     await connection.OpenAsync();
@@ -38,12 +38,12 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
                 throw new InvalidOperationException("A database error occurred while creating the expense.", ex);
             }
         }
-        public async Task<IEnumerable<Expenses>> GetAllAsync(int locationId)
+        public async Task<IEnumerable<Expenses>> GetAllAsync(int branchId)
         {
-            return await GetAllAsync(locationId, DateTime.Today, DateTime.Today);
+            return await GetAllAsync(branchId, DateTime.Today, DateTime.Today);
         }
 
-        public async Task<IEnumerable<Expenses>> GetAllAsync(int locationId, DateTime fromDate, DateTime toDate)
+        public async Task<IEnumerable<Expenses>> GetAllAsync(int branchId, DateTime fromDate, DateTime toDate)
         {
             var expensesList = new List<Expenses>();
 
@@ -52,7 +52,7 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
                 using (var connection = GetConnection())
                 using (var command = CreateCommand(connection, "[Accounts].[uspGetAllExpenses]"))
                 {
-                    command.Parameters.AddWithValue("@LocationId", locationId);
+                    command.Parameters.Add("@BranchId", SqlDbType.Int).Value = branchId;
                     command.Parameters.Add("@FromDate", SqlDbType.Date).Value = fromDate.Date;
                     command.Parameters.Add("@ToDate", SqlDbType.Date).Value = toDate.Date;
 
@@ -76,7 +76,7 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
 
         public async Task<DataTable> GetExpenseVoucherAsync(int expensesId)
         {
-            var dataTable = new DataTable();
+            var dataTable = new DataTable("uspGetExpenseVoucher");
 
             try
             {
@@ -105,18 +105,45 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
         #endregion
 
         #region Private Helper Method
-        private void AddExpenseParameters(SqlCommand command, Expenses expense)
+        private void AddExpenseParameters(SqlCommand command, ExpenseHeader expense)
         {
-            // If the stored procedure expects an ExpenseId for updates, it can be added here.
-            command.Parameters.Add("@ExpensesDate", SqlDbType.DateTime).Value = expense.ExpensesDate;
-            command.Parameters.Add("@ExpensesCategoryId", SqlDbType.Int).Value = expense.ExpensesCategoryId;
             command.Parameters.Add("@PaymentAccountId", SqlDbType.Int).Value = expense.PaymentAccountId;
-            command.Parameters.Add("@Amount", SqlDbType.Decimal).Value = expense.Amount;
-            command.Parameters.Add("@Description", SqlDbType.NVarChar, 500).Value = string.IsNullOrWhiteSpace(expense.Description)
+            command.Parameters.Add("@ExpenseDate", SqlDbType.DateTime).Value = expense.ExpensesDate;
+            command.Parameters.Add("@HeaderDescription", SqlDbType.NVarChar, 500).Value = string.IsNullOrWhiteSpace(expense.Description)
                 ? (object)DBNull.Value
                 : expense.Description;
             command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = expense.CreatedBy;
-            command.Parameters.Add("@LocationId", SqlDbType.Int).Value = expense.LocationId;
+            command.Parameters.Add("@BranchId", SqlDbType.Int).Value = expense.BranchId;
+
+            var linesParameter = command.Parameters.Add("@ExpenseLines", SqlDbType.Structured);
+            linesParameter.TypeName = "[Accounts].[ExpenseLineType]";
+            linesParameter.Value = CreateExpenseLineDataTable(expense.Lines);
+        }
+
+        private static DataTable CreateExpenseLineDataTable(IEnumerable<ExpenseLine> lines)
+        {
+            var table = new DataTable();
+            table.Columns.Add("AccountId", typeof(int));
+            table.Columns.Add("Amount", typeof(decimal));
+            table.Columns.Add("Description", typeof(string));
+
+            if (lines == null)
+            {
+                return table;
+            }
+
+            foreach (var line in lines)
+            {
+                var row = table.NewRow();
+                row["AccountId"] = line.AccountId;
+                row["Amount"] = line.Amount;
+                row["Description"] = string.IsNullOrWhiteSpace(line.Description)
+                    ? (object)DBNull.Value
+                    : line.Description;
+                table.Rows.Add(row);
+            }
+
+            return table;
         }
         private Expenses MapExpense(IDataRecord record)
         {
@@ -129,8 +156,13 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
                     ? GetValue<string>(record, "VoucherNumber")
                     : expensesId.ToString(),
                 ExpensesDate = GetValue<DateTime>(record, "ExpensesDate"),
-                ExpensesCategoryId = GetValue<int>(record, "ExpensesCategoryId"),
-                ExpensesCategoryName = GetValue<string>(record, "ExpensesCategory"),
+                BranchId = HasRecordColumn(record, "BranchId") ? GetValue<int>(record, "BranchId") : 0,
+                ExpensesCategoryId = HasRecordColumn(record, "ExpensesCategoryId") ? GetValue<int>(record, "ExpensesCategoryId") : 0,
+                ExpensesCategoryName = HasRecordColumn(record, "ExpensesCategory")
+                    ? GetValue<string>(record, "ExpensesCategory")
+                    : HasRecordColumn(record, "ExpenseAccount")
+                        ? GetValue<string>(record, "ExpenseAccount")
+                        : string.Empty,
                 Amount = GetValue<decimal>(record, "Amount"),
                 Description = GetValue<string>(record, "Description"),
 

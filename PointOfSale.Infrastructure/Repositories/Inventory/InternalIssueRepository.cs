@@ -58,7 +58,7 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
                 throw new ArgumentOutOfRangeException(nameof(internalIssueId), "A valid internal issue ID is required.");
             }
 
-            var reportTable = new DataTable("rptGetInternalIssueVoucher");
+            var reportTable = new DataTable("uspGetInternalIssueNote");
 
             try
             {

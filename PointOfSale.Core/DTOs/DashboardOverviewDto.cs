@@ -8,6 +8,7 @@ namespace PointOfSale.Core.DTOs
         public decimal TotalSales { get; set; }
         public int OrderCount { get; set; }
         public decimal AverageOrderValue { get; set; }
+        public decimal AveragePerHead { get; set; }
         public decimal TotalDiscount { get; set; }
         public decimal DiscountRatePercent { get; set; }
         public double? AverageTableTurnMinutes { get; set; }

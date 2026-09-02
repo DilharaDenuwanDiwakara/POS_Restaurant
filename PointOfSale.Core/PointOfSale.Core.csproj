@@ -178,6 +178,8 @@
     <Compile Include="Models\Accounts\DTOs\SupplierPayableItem.cs" />
     <Compile Include="Models\Accounts\DTOs\SupplierAdvance.cs" />
     <Compile Include="Models\Accounts\DTOs\SupplierPayable.cs" />
+    <Compile Include="Models\Accounts\Entities\ExpenseHeader.cs" />
+    <Compile Include="Models\Accounts\Entities\ExpenseLine.cs" />
     <Compile Include="Models\Accounts\Entities\Expenses.cs" />
     <Compile Include="Models\Accounts\Entities\ExpensesCategory.cs" />
     <Compile Include="Models\Accounts\Entities\FundTransfer.cs" />
@@ -193,6 +195,7 @@
     <Compile Include="Models\Inventory\InternalIssue.cs" />
     <Compile Include="Models\Inventory\InternalIssueLine.cs" />
     <Compile Include="Models\Inventory\Location.cs" />
+    <Compile Include="Models\Inventory\OpeningStockItemModel.cs" />
     <Compile Include="Models\Inventory\PendingWastageModel.cs" />
     <Compile Include="Models\Inventory\Product.cs" />
     <Compile Include="Models\Inventory\ProductUnitConversion.cs" />
@@ -206,6 +209,8 @@
     <Compile Include="Models\Inventory\Wastage.cs" />
     <Compile Include="Models\Inventory\WastageDetailModel.cs" />
     <Compile Include="Models\Inventory\WastageLine.cs" />
+    <Compile Include="Models\Inventory\WastageLineModel.cs" />
+    <Compile Include="Models\Inventory\WastageModel.cs" />
     <Compile Include="Models\Inventory\WastageReason.cs" />
     <Compile Include="Models\Purchasing\GoodPurchaseNote.cs" />
     <Compile Include="Models\Purchasing\GoodsPurchaseNoteLine.cs" />

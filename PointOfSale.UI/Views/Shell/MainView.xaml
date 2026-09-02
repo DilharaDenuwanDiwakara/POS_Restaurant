@@ -363,6 +363,14 @@
                                     </StackPanel>
                                 </RadioButton>
 
+                                <RadioButton Command="{Binding NavigateToOpeningStockCommand}"
+                                             Style="{StaticResource Style.Nav.RadioButton}"
+                                             Visibility="{Binding CanNavOpeningStock, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Opening Stock"/>
+                                    </StackPanel>
+                                </RadioButton>
+
                                 <RadioButton Command="{Binding NavigateToBarcodePrintCommand}"
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="Collapsed"> <!--{Binding CanNavBarcodePrint, Converter={StaticResource BoolToVisibility}}-->
@@ -629,7 +637,7 @@
                 </Grid.ColumnDefinitions>
                 
                 <TextBlock Grid.Column="2" Style="{StaticResource Style.Text.Status}" Margin="20,0,0,0">
-                    <Run Text="v1.1.3 | "/>
+                    <Run Text="v1.2.1 | "/>
                     <Run Text="{Binding CurrentDateTime, StringFormat='dd/MM/yyyy - HH:mm:ss'}"/>
                 </TextBlock>
                 

@@ -158,6 +158,7 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                         }
                     }
 
+                    await PopulateReceiveLineTaxApplicabilityAsync(connection, goodsReceiveNoteId, lines);
                     await PopulateMissingReceiveLineUomsAsync(connection, goodsReceiveNoteId, lines);
                 }
             }
@@ -498,6 +499,66 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
 
             line.SetStoredQuantityReceived(GetValue<decimal>(record, "QuantityReceived"));
             return line;
+        }
+
+        private async Task PopulateReceiveLineTaxApplicabilityAsync(
+            SqlConnection connection,
+            long goodsReceiveNoteId,
+            IList<GoodsReceiveNoteLine> lines)
+        {
+            if (lines == null || lines.Count == 0)
+            {
+                return;
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.Text;
+                command.CommandText = @"
+SELECT
+    grnl.GoodsPurchaseNoteLineId,
+    grnl.ProductId,
+    p.IsTaxApplicable
+FROM [Purchasing].[GoodsReceiveNoteLine] grnl
+INNER JOIN [Inventory].[Product] p ON p.Id = grnl.ProductId
+WHERE grnl.GoodsReceiveNoteId = @GoodsReceiveNoteId;";
+                command.Parameters.Add("@GoodsReceiveNoteId", SqlDbType.BigInt).Value = goodsReceiveNoteId;
+
+                var taxByPurchaseLineId = new Dictionary<long, bool>();
+                var taxByProductId = new Dictionary<int, bool>();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var isTaxApplicable = GetValue<bool>(reader, "IsTaxApplicable");
+
+                        var purchaseLineId = GetOptionalValue<long>(reader, "GoodsPurchaseNoteLineId");
+                        if (purchaseLineId > 0)
+                        {
+                            taxByPurchaseLineId[purchaseLineId] = isTaxApplicable;
+                        }
+
+                        var productId = GetOptionalValue<int>(reader, "ProductId");
+                        if (productId > 0)
+                        {
+                            taxByProductId[productId] = isTaxApplicable;
+                        }
+                    }
+                }
+
+                foreach (var line in lines)
+                {
+                    bool isTaxApplicable;
+                    if (!taxByPurchaseLineId.TryGetValue(line.GoodsPurchaseNoteLineId, out isTaxApplicable) &&
+                        !taxByProductId.TryGetValue(line.ProductId, out isTaxApplicable))
+                    {
+                        continue;
+                    }
+
+                    line.IsTaxApplicable = isTaxApplicable;
+                }
+            }
         }
 
         private async Task PopulateMissingReceiveLineUomsAsync(
