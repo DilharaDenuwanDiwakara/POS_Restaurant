@@ -11,6 +11,8 @@ namespace PointOfSale.Core.Interfaces.Repositories.Inventory
     {
         Task<long> CreateStockTransferAsync(StockTransfer transfer);
         Task ImportOpeningStockAsync(List<OpenStockItemDto> items, int userId, int locationId = 1);
+        Task<List<OpeningStockItemModel>> GetOpeningStockItemsAsync(int locationId);
+        string SaveOpeningStock(int locationId, int userId, DateTime openingDate, List<OpeningStockItemModel> stockItems);
         Task<IEnumerable<Location>> GetLocationsByBranchAsync(int branchId);
         Task<IEnumerable<StockTransfer>> GetAllStockTransfersAsync(int branchId, DateTime? dateFrom, DateTime? dateTo);
         Task<DataTable> GetStockTransferNoteReportAsync(long transferId);

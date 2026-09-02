@@ -196,6 +196,10 @@
                 <viewinventory:StockAdjustmentView />
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelinventory:OpeningStockViewModel}">
+                <viewinventory:OpeningStockView />
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type viewmodelinventory:InternalIssueViewModel}">
                 <viewinventory:InternalIssueView />
             </DataTemplate>

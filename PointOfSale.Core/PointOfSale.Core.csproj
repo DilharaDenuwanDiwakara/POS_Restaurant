@@ -195,6 +195,7 @@
     <Compile Include="Models\Inventory\InternalIssue.cs" />
     <Compile Include="Models\Inventory\InternalIssueLine.cs" />
     <Compile Include="Models\Inventory\Location.cs" />
+    <Compile Include="Models\Inventory\OpeningStockItemModel.cs" />
     <Compile Include="Models\Inventory\PendingWastageModel.cs" />
     <Compile Include="Models\Inventory\Product.cs" />
     <Compile Include="Models\Inventory\ProductUnitConversion.cs" />

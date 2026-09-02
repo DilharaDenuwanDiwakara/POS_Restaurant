@@ -102,6 +102,102 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
                 throw new InvalidOperationException("Failed to import opening stock. Database error: " + ex.Message, ex);
             }
         }
+
+        public string SaveOpeningStock(int locationId, int userId, DateTime openingDate, List<OpeningStockItemModel> stockItems)
+        {
+            if (locationId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(locationId), "A valid location is required.");
+
+            if (userId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(userId), "A valid user is required.");
+
+            if (stockItems == null)
+                throw new ArgumentNullException(nameof(stockItems));
+
+            var openingStockTable = CreateOpeningStockDataTable(stockItems);
+            if (openingStockTable.Rows.Count == 0)
+                throw new InvalidOperationException("At least one product must have an opening quantity greater than zero.");
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[uspSaveOpeningStock]"))
+                {
+                    command.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
+                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                    command.Parameters.Add("@OpeningDate", SqlDbType.DateTime).Value = openingDate;
+
+                    var stockItemsParameter = command.Parameters.Add("@StockItems", SqlDbType.Structured);
+                    stockItemsParameter.TypeName = "[Inventory].[udtOpeningStock]";
+                    stockItemsParameter.Value = openingStockTable;
+
+                    connection.Open();
+                    var result = command.ExecuteScalar();
+
+                    if (result == null || result == DBNull.Value)
+                        throw new InvalidOperationException("Opening stock was saved, but the database did not return a document number.");
+
+                    return Convert.ToString(result);
+                }
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2627 || ex.Number == 2601 || ex.Number == 50000)
+                {
+                    throw new InvalidOperationException(ex.Message, ex);
+                }
+
+                throw new InvalidOperationException("A database error occurred while saving opening stock.", ex);
+            }
+        }
+
+        public async Task<List<OpeningStockItemModel>> GetOpeningStockItemsAsync(int locationId)
+        {
+            var items = new List<OpeningStockItemModel>();
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = @"
+SELECT
+    p.Id AS ProductId,
+    p.Name AS ProductName,
+    uom.Code AS UOM,
+    ISNULL(SUM(ls.AvailableQuantity), 0) AS CurrentStock,
+    ISNULL(p.StandardCost, 0) AS UnitCost
+FROM [Inventory].[Product] p
+INNER JOIN [Inventory].[UnitMeasure] uom ON uom.Id = p.UnitMeasureId
+LEFT JOIN [Inventory].[LocationStock] ls
+    ON ls.ProductId = p.Id
+   AND ls.LocationId = @LocationId
+WHERE p.IsActive = 1
+GROUP BY p.Id, p.Name, uom.Code, p.StandardCost
+ORDER BY p.Name;";
+
+                    command.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            items.Add(MapOpeningStockItem(reader));
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occurred while loading opening stock products.", ex);
+            }
+
+            return items;
+        }
+
         private DataTable CreateLinesDataTable(List<StockTransferLine> lines)
         {
             var table = new DataTable();
@@ -114,6 +210,34 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             foreach (var line in lines)
             {
                 table.Rows.Add(line.ProductId, line.BatchId, line.Quantity, line.UnitMeasureId);
+            }
+
+            return table;
+        }
+
+        private OpeningStockItemModel MapOpeningStockItem(IDataRecord record)
+        {
+            return new OpeningStockItemModel
+            {
+                ProductId = GetValue<int>(record, "ProductId"),
+                ProductName = GetValue<string>(record, "ProductName"),
+                DefaultUOM = GetValue<string>(record, "UOM"),
+                CurrentStock = GetValue<decimal>(record, "CurrentStock"),
+                OpeningQuantity = 0m,
+                UnitCost = GetValue<decimal>(record, "UnitCost")
+            };
+        }
+
+        private DataTable CreateOpeningStockDataTable(IEnumerable<OpeningStockItemModel> stockItems)
+        {
+            var table = new DataTable();
+            table.Columns.Add("ProductId", typeof(int));
+            table.Columns.Add("Quantity", typeof(decimal));
+            table.Columns.Add("UnitCost", typeof(decimal));
+
+            foreach (var item in stockItems.Where(x => x.OpeningQuantity > 0))
+            {
+                table.Rows.Add(item.ProductId, item.OpeningQuantity, item.UnitCost);
             }
 
             return table;

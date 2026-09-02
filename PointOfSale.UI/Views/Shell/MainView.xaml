@@ -363,6 +363,14 @@
                                     </StackPanel>
                                 </RadioButton>
 
+                                <RadioButton Command="{Binding NavigateToOpeningStockCommand}"
+                                             Style="{StaticResource Style.Nav.RadioButton}"
+                                             Visibility="{Binding CanNavOpeningStock, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Opening Stock"/>
+                                    </StackPanel>
+                                </RadioButton>
+
                                 <RadioButton Command="{Binding NavigateToBarcodePrintCommand}"
                                              Style="{StaticResource Style.Nav.RadioButton}"
                                              Visibility="Collapsed"> <!--{Binding CanNavBarcodePrint, Converter={StaticResource BoolToVisibility}}-->
