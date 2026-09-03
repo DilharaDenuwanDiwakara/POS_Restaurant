@@ -303,12 +303,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>InventoryReport.rpt</DependentUpon>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Reports\SalesDetailsReport.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>SalesDetailsReport.rpt</DependentUpon>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Reports\SalesSummaryReport.cs">
       <AutoGen>True</AutoGen>

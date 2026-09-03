@@ -15,5 +15,7 @@ namespace PointOfSale.Core.DTOs
         public decimal Cash { get; set; }
         public decimal CreditAmount { get; set; }
         public string PaymentStatus { get; set; }
+
+        public decimal TaxAmount { get; set; }
     }
 }

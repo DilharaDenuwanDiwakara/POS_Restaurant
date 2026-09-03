@@ -27,6 +27,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             CustomerName = source.CustomerName;
             NetAmount = source.NetAmount;
             PaymentMethod = source.PaymentStatus;
+            Discount = source.Discount;
+            TaxAmount = source.TaxAmount;
         }
 
         public long SalesId { get; }
@@ -35,6 +37,8 @@ namespace PointOfSale.UI.ViewModels.Sales
         public string CustomerName { get; }
         public decimal NetAmount { get; }
         public string PaymentMethod { get; }
+        public decimal Discount { get; set; }
+        public decimal TaxAmount { get; set; }
 
         private ObservableCollection<InvoiceLineItemModel> _lineItems;
         public ObservableCollection<InvoiceLineItemModel> LineItems
@@ -84,7 +88,9 @@ namespace PointOfSale.UI.ViewModels.Sales
                         ItemName = item.ItemName,
                         Qty = item.Quantity,
                         UnitPrice = item.UnitPrice,
-                        StoredTotal = item.LineTotal
+                        StoredTotal = item.LineTotal,
+                        Discount = item.Discount,
+                        TaxAmount = item.TaxAmount
                     });
                 }
 
