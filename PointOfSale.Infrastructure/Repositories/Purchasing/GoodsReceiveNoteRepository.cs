@@ -137,6 +137,39 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
 
             return receiveNotes;
         }
+
+        public async Task<List<GoodsReceiveNoteLineModel>> GetGoodsReceiveNoteLines(long grnId)
+        {
+            var lines = new List<GoodsReceiveNoteLineModel>();
+
+            try
+            {
+                using (SqlConnection connection = GetConnection())
+                using (SqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "[Purchasing].[uspGetGoodsReceiveNoteLinesById]";
+                    command.Parameters.Add("@GoodsReceiveNoteId", SqlDbType.BigInt).Value = grnId;
+
+                    await connection.OpenAsync();
+
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            lines.Add(MapGoodsReceiveNoteLineModel(reader));
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException($"A database error occured while retrieving line items for GRN {grnId}. {ex.Message}", ex);
+            }
+
+            return lines;
+        }
+
         public async Task<IEnumerable<GoodsReceiveNoteLine>> GetLinesByGRNIdAsync(long goodsReceiveNoteId)
         {
             var lines = new List<GoodsReceiveNoteLine>();
@@ -499,6 +532,22 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
 
             line.SetStoredQuantityReceived(GetValue<decimal>(record, "QuantityReceived"));
             return line;
+        }
+
+        private GoodsReceiveNoteLineModel MapGoodsReceiveNoteLineModel(IDataRecord record)
+        {
+            return new GoodsReceiveNoteLineModel
+            {
+                GoodsPurchaseNoteLineId = GetOptionalValue<long>(record, "GoodsPurchaseNoteLineId"),
+                ProductId = GetValue<int>(record, "ProductId"),
+                ProductName = GetValue<string>(record, "ProductName"),
+                QuantityOrdered = GetValue<decimal>(record, "QuantityOrdered"),
+                QuantityReceived = GetValue<decimal>(record, "QuantityReceived"),
+                UnitPrice = GetValue<decimal>(record, "UnitPrice"),
+                LineDiscount = GetOptionalValue<decimal>(record, "LineDiscount"),
+                TaxAmount = GetOptionalValue<decimal>(record, "TaxAmount"),
+                ExpiryDate = GetOptionalValue<DateTime?>(record, "ExpiryDate")
+            };
         }
 
         private async Task PopulateReceiveLineTaxApplicabilityAsync(

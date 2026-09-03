@@ -422,15 +422,74 @@
                         </StackPanel>
                     </Border>
 
-                    <DataGrid Grid.Row="1" Margin="0 4" 
+                    <DataGrid x:Name="GrnHistoryDataGrid"
+                              Grid.Row="1" Margin="0 4" 
                               ItemsSource="{Binding HistoryList}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
                               CanUserAddRows="False"
                               GridLinesVisibility="Horizontal"
-                              Style="{StaticResource DataGridStyle}">
+                              Style="{StaticResource DataGridStyle}"
+                              RowDetailsVisibilityMode="Visible"
+                              SelectionMode="Single"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
+                                <Setter Property="Height" Value="Auto"/>
+                                <Setter Property="MinHeight" Value="42"/>
+                                <Setter Property="DetailsVisibility" Value="Visible"/>
+                            </Style>
+                        </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="44">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      Width="28"
+                                                      Height="28"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      ToolTip="Expand GRN">
+                                            <ToggleButton.Style>
+                                                <Style TargetType="ToggleButton">
+                                                    <Setter Property="Content" Value="&gt;"/>
+                                                    <Setter Property="FontFamily" Value="Segoe UI"/>
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="Foreground" Value="#334155"/>
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                    <Setter Property="Focusable" Value="False"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                                      VerticalAlignment="Center"/>
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter Property="Content" Value="v"/>
+                                                            <Setter Property="ToolTip" Value="Collapse GRN"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#E5E7EB"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ToggleButton.Style>
+                                        </ToggleButton>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <DataGridTextColumn Header="GRN #" Binding="{Binding GoodsReceiveNoteNumber}" Width="120"/>
                             <DataGridTextColumn Header="Invoice #" Binding="{Binding InvoiceNumber}" Width="120"/>
                             <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="*"/>
@@ -499,7 +558,8 @@
 
                                             <Button Command="{Binding DataContext.DeleteDraftGRNCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                     CommandParameter="{Binding}"
-                                                    ToolTip="Delete draft GRN">
+                                                    ToolTip="Delete draft GRN"
+                                                    Margin="0,0,6,0">
                                                 <Button.Style>
                                                     <Style TargetType="Button" BasedOn="{StaticResource DeleteButtonStyle}">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -511,11 +571,94 @@
                                                     </Style>
                                                 </Button.Style>
                                             </Button>
+
+                                            <Button Command="{Binding DataContext.PrintCommand, ElementName=GrnHistoryDataGrid}"
+                                                    CommandParameter="{Binding GoodsReceiveNoteId}"
+                                                    Style="{StaticResource DataGridPrintButtonStyle}"
+                                                    ToolTip="Print GRN"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
+
+                        <DataGrid.RowDetailsTemplate>
+                            <DataTemplate>
+                                <Border Background="#F4F6F8"
+                                        BorderBrush="#D8DEE6"
+                                        BorderThickness="0,1,0,1"
+                                        Margin="0,12,0,12"
+                                        Padding="40,0,12,0"
+                                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        HorizontalAlignment="Stretch"
+                                        Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid>
+                                        <TextBlock Text="Loading GRN items..."
+                                                   Foreground="#64748B"
+                                                   Margin="4,0,0,8">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsLoadingLineItems}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <Border Margin="0,22,0,0"
+                                                HorizontalAlignment="Stretch">
+                                            <DataGrid ItemsSource="{Binding GrnLines}"
+                                                      Style="{StaticResource DataGridStyle}"
+                                                      AutoGenerateColumns="False"
+                                                      CanUserAddRows="False"
+                                                      IsReadOnly="True"
+                                                      HeadersVisibility="Column"
+                                                      HorizontalAlignment="Stretch"
+                                                      MinHeight="78"
+                                                      HorizontalScrollBarVisibility="Disabled"
+                                                      VerticalScrollBarVisibility="Disabled">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Item Name" Binding="{Binding ProductName}" Width="*"/>
+
+                                                    <DataGridTextColumn Header="Ordered Qty"
+                                                                        Binding="{Binding QuantityOrdered, StringFormat=N3}"
+                                                                        Width="110"
+                                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"/>
+
+                                                    <DataGridTextColumn Header="Received Qty"
+                                                                        Binding="{Binding QuantityReceived, StringFormat=N3}"
+                                                                        Width="120"
+                                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"/>
+
+                                                    <DataGridTextColumn Header="Unit Price"
+                                                                        Binding="{Binding UnitPrice, StringFormat='Rs. {0:N2}'}"
+                                                                        Width="120"
+                                                                        ElementStyle="{StaticResource RightAlignedTextStyle}" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+
+                                                    <DataGridTextColumn Header="Discount"
+                                                                        Binding="{Binding LineDiscount, StringFormat='Rs. {0:N2}'}"
+                                                                        Width="110"
+                                                                        ElementStyle="{StaticResource RightAlignedTextStyle}" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+
+                                                    <DataGridTextColumn Header="Tax"
+                                                                        Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}"
+                                                                        Width="100"
+                                                                        ElementStyle="{StaticResource RightAlignedTextStyle}" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+
+                                                    <DataGridTextColumn Header="Total"
+                                                                        Binding="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}"
+                                                                        Width="120"
+                                                                        ElementStyle="{StaticResource RightAlignedTextStyle}" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </DataGrid.RowDetailsTemplate>
 
                     </DataGrid>
                 </Grid>

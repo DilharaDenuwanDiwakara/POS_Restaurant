@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using CrystalDecisions.CrystalReports.Engine;
 using PointOfSale.Core.Enums;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Purchasing;
@@ -15,6 +17,9 @@ using PointOfSale.Core.Interfaces.Repositories.System;
 using PointOfSale.Core.Models.Purchasing;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.DataSets;
+using PointOfSale.UI.Views.Sales;
+using GoodsReceiveNoteReport = PointOfSale.UI.Reports.GoodsReceiveNote;
 
 namespace PointOfSale.UI.ViewModels.Purchasing
 {
@@ -65,6 +70,10 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 async grn => await LoadEditableGRNAsync(grn as GoodsReceiveNote));
             DeleteDraftGRNCommand = new AsyncRelayCommand(
                 async grn => await DeleteDraftGRNAsync(grn as GoodsReceiveNote));
+            RowExpandedCommand = new AsyncRelayCommand(
+                async grn => await LoadHistoryLineItemsAsync(grn as GoodsReceiveNote));
+            PrintCommand = new AsyncRelayCommand(
+                async grnId => await PrintGoodsReceiveNoteAsync(grnId));
 
             this.PropertyChanged += (s, e) =>
             {
@@ -330,6 +339,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public ICommand RemoveLineCommand { get; }
         public ICommand LoadEditableGRNCommand { get; }
         public ICommand DeleteDraftGRNCommand { get; }
+        public ICommand RowExpandedCommand { get; }
+        public ICommand PrintCommand { get; }
         #endregion
 
         #region HelperMethod
@@ -564,7 +575,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                         string.Equals(x.Status, FilterStatus.Value.ToString(), StringComparison.OrdinalIgnoreCase));
                 }
 
-                HistoryList = new ObservableCollection<GoodsReceiveNote>(results);
+                SetHistoryList(results);
                 (LoadEditableGRNCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
                 (DeleteDraftGRNCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
 
@@ -577,6 +588,154 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             {
                 MessageBox.Show($"Error loading history: {ex.Message}");
             }
+        }
+
+        private void SetHistoryList(IEnumerable<GoodsReceiveNote> results)
+        {
+            if (HistoryList != null)
+            {
+                foreach (var existingItem in HistoryList)
+                {
+                    existingItem.PropertyChanged -= HistoryGoodsReceiveNote_PropertyChanged;
+                }
+            }
+
+            HistoryList = new ObservableCollection<GoodsReceiveNote>(results);
+
+            foreach (var item in HistoryList)
+            {
+                item.PropertyChanged += HistoryGoodsReceiveNote_PropertyChanged;
+            }
+        }
+
+        private void HistoryGoodsReceiveNote_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(GoodsReceiveNote.IsExpanded))
+            {
+                _ = LoadHistoryLineItemsAsync(sender as GoodsReceiveNote);
+            }
+        }
+
+        private async Task LoadHistoryLineItemsAsync(GoodsReceiveNote grn)
+        {
+            if (grn == null || !grn.IsExpanded || grn.HasLoadedLineItems || grn.IsLoadingLineItems)
+            {
+                return;
+            }
+
+            try
+            {
+                grn.IsLoadingLineItems = true;
+                grn.GrnLines.Clear();
+
+                var lines = await _goodsReceiveNoteRepository.GetGoodsReceiveNoteLines(grn.GoodsReceiveNoteId);
+                foreach (var line in lines)
+                {
+                    grn.GrnLines.Add(line);
+                }
+
+                grn.HasLoadedLineItems = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to load GRN line items: {ex.Message}", "GRN History", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                grn.IsLoadingLineItems = false;
+            }
+        }
+
+        private async Task PrintGoodsReceiveNoteAsync(object parameter)
+        {
+            var goodsReceiveNoteId = GetGoodsReceiveNoteId(parameter);
+            if (goodsReceiveNoteId <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await OpenGoodsReceiveNoteReportAsync(goodsReceiveNoteId);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open GRN preview: {ex.Message}", "GRN Preview", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private static long GetGoodsReceiveNoteId(object parameter)
+        {
+            if (parameter is GoodsReceiveNote grn)
+            {
+                return grn.GoodsReceiveNoteId;
+            }
+
+            if (parameter is long longValue)
+            {
+                return longValue;
+            }
+
+            if (parameter is int intValue)
+            {
+                return intValue;
+            }
+
+            return 0L;
+        }
+
+        private async Task OpenGoodsReceiveNoteReportAsync(long goodsReceiveNoteId)
+        {
+            DataTable reportData = await _goodsReceiveNoteRepository.GetGoodsReceiveNoteReportDataAsync(goodsReceiveNoteId);
+
+            if (reportData == null || reportData.Rows.Count == 0)
+            {
+                MessageBox.Show("No data found for this Goods Receive Note.", "GRN Preview", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                ReportDocument reportDocument = null;
+
+                try
+                {
+                    reportDocument = new GoodsReceiveNoteReport();
+
+                    var ds = new GoodsReceiveDS();
+                    ds.EnforceConstraints = false;
+                    ds.rptGetGoodsReceiveNote.Merge(reportData);
+
+                    reportDocument.SetDataSource(ds);
+
+                    var previewWindow = new ZReportViewerWindow(reportDocument, disposeReportOnClose: true)
+                    {
+                        Title = "GRN Preview"
+                    };
+
+                    var owner = Application.Current.MainWindow;
+                    if (owner != null && owner != previewWindow)
+                    {
+                        previewWindow.Owner = owner;
+                        previewWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                    }
+                    else
+                    {
+                        previewWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    }
+
+                    previewWindow.ShowDialog();
+                    reportDocument = null;
+                }
+                finally
+                {
+                    if (reportDocument != null)
+                    {
+                        reportDocument.Close();
+                        reportDocument.Dispose();
+                    }
+                }
+            });
         }
 
         private bool CanEditGoodsReceiveNote(GoodsReceiveNote grn)
