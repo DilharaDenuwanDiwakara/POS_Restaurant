@@ -26,6 +26,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             // Each SELECT is separated by a semicolon so ADO.NET receives 8 result sets,
             // matching the original stored-procedure contract exactly.
             const string sql = @"
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 -- RS1: Overview KPIs
 ;WITH FS AS (
     SELECT s.*

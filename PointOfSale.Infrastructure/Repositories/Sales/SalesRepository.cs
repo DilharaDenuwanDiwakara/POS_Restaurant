@@ -29,6 +29,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             {
                 command.CommandType = CommandType.StoredProcedure;
                 command.CommandText = "[Sales].[uspInsertSales]";
+                command.CommandTimeout = 60;
 
                 AddMainParameters(command, sale);
                 AddLineItemsParameter(command, sale.Lines);
@@ -54,6 +55,8 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             using (var connection = GetConnection())
             using (var command = CreateCommand(connection, "[Sales].[uspHoldSale]"))
             {
+                command.CommandTimeout = 60;
+
                 AddHoldSaleParameters(command, dto);
                 AddLineItemsParameter(command, dto.Lines);
 
@@ -82,6 +85,8 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             using (var connection = GetConnection())
             using (var command = CreateCommand(connection, "[Sales].[uspFinalizeSale]"))
             {
+                command.CommandTimeout = 60;
+
                 command.Parameters.Add("@SalesId", SqlDbType.BigInt).Value = dto.SalesId;
                 command.Parameters.Add("@CustomerId", SqlDbType.Int).Value = (object)dto.CustomerId ?? DBNull.Value;
                 command.Parameters.Add("@CashGiven", SqlDbType.Decimal).Value = dto.CashGiven;

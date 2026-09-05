@@ -54,7 +54,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             HistoryList = new ObservableCollection<StockTransfer>();
 
             // Initialize Commands
-            SaveTransferCommand = new RelayCommand(async _ => await SaveTransferAsync(), _ => CanSaveTransfer);
+            SaveTransferCommand = new AsyncRelayCommand(async _ => await SaveTransferAsync(), _ => CanSaveTransfer);
             AddLineCommand = new AsyncRelayCommand(async _ => await AddLineAsync(), _ => CanAddLine);
             RemoveLineCommand = new RelayCommand<StockTransferLine>(RemoveLine);
             ClearCommand = new RelayCommand(_ => ClearAll());
@@ -64,7 +64,11 @@ namespace PointOfSale.UI.ViewModels.Inventory
             _ = LoadInitialDataAsync();
 
         }
-        private void RefreshSaveCommand() => (SaveTransferCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        private void RefreshSaveCommand()
+        {
+            (SaveTransferCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (SaveTransferCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+        }
         private void RefreshAddCommand()
         {
             (AddLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
@@ -258,6 +262,17 @@ namespace PointOfSale.UI.ViewModels.Inventory
             set => SetProperty(ref _historyList, value);
         }
 
+        private bool _isSavingTransfer;
+        public bool IsSavingTransfer
+        {
+            get => _isSavingTransfer;
+            set
+            {
+                if (SetProperty(ref _isSavingTransfer, value))
+                    RefreshSaveCommand();
+            }
+        }
+
         private DateTime? _historyDateFrom = DateTime.Today.AddDays(-30);
         public DateTime? HistoryDateFrom
         {
@@ -281,7 +296,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public ICommand ClearCommand { get; }
         public ICommand SearchHistoryCommand { get; }
 
-        public bool CanSaveTransfer => !HasErrors && TransferLines.Any() && FromLocationId > 0 && ToLocationId > 0 && FromLocationId != ToLocationId;
+        public bool CanSaveTransfer => !IsSavingTransfer && !HasErrors && TransferLines.Any() && FromLocationId > 0 && ToLocationId > 0 && FromLocationId != ToLocationId;
         #endregion
 
         #region Methods
@@ -500,6 +515,9 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             try
             {
+                IsSavingTransfer = true;
+                ErrorMessage = null;
+
                 var transfer = new StockTransfer
                 {
                     BranchId = _sessionService.BranchId,
@@ -513,10 +531,33 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
                 newTransferId = await _inventoryRepository.CreateStockTransferAsync(transfer);
             }
+            catch (SqlException ex) when (ex.Number == -2)
+            {
+                ErrorMessage = "Save failed due to network timeout. Please try again.";
+                MessageBox.Show(ErrorMessage, "Save Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            catch (SqlException ex)
+            {
+                ErrorMessage = $"Save failed due to a database error. Please try again. {ex.Message}";
+                MessageBox.Show(ErrorMessage, "Save Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            catch (InvalidOperationException ex) when (ex.InnerException is SqlException sqlEx)
+            {
+                ErrorMessage = GetStockTransferSaveErrorMessage(sqlEx, ex.Message);
+                MessageBox.Show(ErrorMessage, "Save Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Save Failed: {ex.Message}");
+                ErrorMessage = $"Save failed. {ex.Message}";
+                MessageBox.Show(ErrorMessage, "Save Failed", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
+            }
+            finally
+            {
+                IsSavingTransfer = false;
             }
 
             MessageBox.Show("Transfer Saved Successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -530,6 +571,16 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 MessageBox.Show($"Transfer saved, but the report could not be opened: {ex.Message}", "Report Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        private static string GetStockTransferSaveErrorMessage(SqlException sqlException, string fallbackMessage)
+        {
+            if (sqlException.Number == -2)
+                return "Save failed due to network timeout. Please try again.";
+
+            return string.IsNullOrWhiteSpace(fallbackMessage)
+                ? "Save failed due to a database error. Please try again."
+                : fallbackMessage;
         }
 
         private async Task OpenStockTransferReportAsync(long transferId)
