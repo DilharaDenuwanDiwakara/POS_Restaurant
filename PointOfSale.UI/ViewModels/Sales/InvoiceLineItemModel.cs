@@ -34,6 +34,30 @@ namespace PointOfSale.UI.ViewModels.Sales
                 }
             }
         }
+        private decimal _discount;
+        public decimal Discount
+        {
+            get => _discount;
+            set
+            {
+                if (SetProperty(ref _discount, value))
+                {
+                    OnPropertyChanged(nameof(Total));
+                }
+            }
+        }
+        private decimal _taxAmount;
+        public decimal TaxAmount
+        {
+            get => _taxAmount;
+            set
+            {
+                if (SetProperty(ref _taxAmount, value))
+                {
+                    OnPropertyChanged(nameof(Total));
+                }
+            }
+        }
 
         private decimal _storedTotal;
         public decimal StoredTotal

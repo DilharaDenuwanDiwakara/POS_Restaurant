@@ -141,6 +141,16 @@
                                             Width="110"
                                             FontWeight="Bold"
                                             ElementStyle="{StaticResource RightAlignedTextStyle}" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+                        <DataGridTextColumn Header="Discount"
+                                            Binding="{Binding Discount, StringFormat='Rs. {0:N2}'}"
+                                            Width="110"
+                                            FontWeight="Bold"
+                                            ElementStyle="{StaticResource RightAlignedTextStyle}" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+                        <DataGridTextColumn Header="Tax Amount"
+                                            Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}"
+                                            Width="110"
+                                            FontWeight="Bold"
+                                            ElementStyle="{StaticResource RightAlignedTextStyle}" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
 
                         <DataGridTextColumn Header="Payment Method" Binding="{Binding PaymentMethod}" Width="130" />
 
@@ -199,6 +209,14 @@
 
                                                 <DataGridTextColumn Header="Qty"
                                                                     Binding="{Binding Qty, StringFormat=N2}"
+                                                                    Width="80"
+                                                                    ElementStyle="{StaticResource RightAlignedTextStyle}"/>
+                                                <DataGridTextColumn Header="Discount"
+                                                                    Binding="{Binding Discount, StringFormat=N2}"
+                                                                    Width="80"
+                                                                    ElementStyle="{StaticResource RightAlignedTextStyle}"/>
+                                                <DataGridTextColumn Header="Tax Amount"
+                                                                    Binding="{Binding TaxAmount, StringFormat=N2}"
                                                                     Width="80"
                                                                     ElementStyle="{StaticResource RightAlignedTextStyle}"/>
 

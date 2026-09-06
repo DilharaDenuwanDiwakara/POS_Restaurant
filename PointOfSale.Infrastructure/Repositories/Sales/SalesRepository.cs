@@ -249,6 +249,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                     var salesPersonOrdinal = reader.GetOrdinal("SalesPerson");
                     var totalAmountOrdinal = reader.GetOrdinal("TotalAmount");
                     var discountOrdinal = reader.GetOrdinal("Discount");
+                    var taxAmountOrdinal = reader.GetOrdinal("TaxAmount");
                     var netAmountOrdinal = reader.GetOrdinal("NetAmount");
                     var cashOrdinal = reader.GetOrdinal("Cash");
                     var creditAmountOrdinal = reader.GetOrdinal("CreditAmount");
@@ -265,6 +266,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                             SalesPerson = GetStringOrDefault(reader, salesPersonOrdinal),
                             TotalAmount = GetDecimalOrDefault(reader, totalAmountOrdinal),
                             Discount = GetDecimalOrDefault(reader, discountOrdinal),
+                            TaxAmount = GetDecimalOrDefault(reader, taxAmountOrdinal),
                             NetAmount = GetDecimalOrDefault(reader, netAmountOrdinal),
                             Cash = GetDecimalOrDefault(reader, cashOrdinal),
                             CreditAmount = GetDecimalOrDefault(reader, creditAmountOrdinal),
@@ -295,6 +297,11 @@ SELECT
         CONCAT('Item #', CAST(sl.[ProductId] AS NVARCHAR(20)))) AS ItemName,
     CAST(sl.[Quantity] AS DECIMAL(18, 3)) AS Quantity,
     CAST(sl.[UnitPrice] AS DECIMAL(18, 2)) AS UnitPrice,
+    
+    -- ALUTHIN ADD KARAPU COLUMNS 2KA:
+    CAST(ISNULL(sl.[DiscountAmount], 0) AS DECIMAL(18, 2)) AS Discount,
+    CAST(ISNULL(sl.[TaxAmount], 0) AS DECIMAL(18, 2)) AS TaxAmount,
+
     CAST(ISNULL(sl.[LineTotal], (sl.[UnitPrice] * sl.[Quantity]) - ISNULL(sl.[DiscountAmount], 0)) AS DECIMAL(18, 2)) AS LineTotal
 FROM [Sales].[SalesLine] sl
 LEFT JOIN [Restaurant].[Variant] v ON v.[Id] = sl.[ProductId]
@@ -320,7 +327,10 @@ ORDER BY TRY_CAST(v.[ItemCode] AS INT) ASC, v.[ItemCode] ASC, sl.[Id] ASC;";
                             ItemName = GetValue<string>(reader, "ItemName"),
                             Quantity = GetValue<decimal>(reader, "Quantity"),
                             UnitPrice = GetValue<decimal>(reader, "UnitPrice"),
-                            LineTotal = GetValue<decimal>(reader, "LineTotal")
+                            LineTotal = GetValue<decimal>(reader, "LineTotal"),
+
+                            Discount = GetValue<decimal>(reader, "Discount"),
+                            TaxAmount = GetValue<decimal>(reader, "TaxAmount"),
                         });
                     }
                 }
