@@ -637,7 +637,7 @@
                 </Grid.ColumnDefinitions>
                 
                 <TextBlock Grid.Column="2" Style="{StaticResource Style.Text.Status}" Margin="20,0,0,0">
-                    <Run Text="v1.3.1 | "/>
+                    <Run Text="v1.3.2 | "/>
                     <Run Text="{Binding CurrentDateTime, StringFormat='dd/MM/yyyy - HH:mm:ss'}"/>
                 </TextBlock>
                 
