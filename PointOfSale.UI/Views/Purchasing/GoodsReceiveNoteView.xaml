@@ -435,6 +435,18 @@
                               HorizontalScrollBarVisibility="Auto"
                               VerticalScrollBarVisibility="Auto">
 
+                        <DataGrid.Resources>
+                            <Style x:Key="GrnHistoryFullTextCellStyle" TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="NoWrap"/>
+                                <Setter Property="TextTrimming" Value="None"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+
+                            <Style x:Key="GrnHistoryRightAlignedCellStyle" TargetType="TextBlock" BasedOn="{StaticResource GrnHistoryFullTextCellStyle}">
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                            </Style>
+                        </DataGrid.Resources>
+
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
                                 <Setter Property="Height" Value="Auto"/>
@@ -490,37 +502,31 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="GRN #" Binding="{Binding GoodsReceiveNoteNumber}" Width="120"/>
-                            <DataGridTextColumn Header="Invoice #" Binding="{Binding InvoiceNumber}" Width="120"/>
-                            <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="*"/>
+                            <DataGridTextColumn Header="GRN #" Binding="{Binding GoodsReceiveNoteNumber}" Width="SizeToCells" MinWidth="120" ElementStyle="{StaticResource GrnHistoryFullTextCellStyle}"/>
+                            <DataGridTextColumn Header="Invoice #" Binding="{Binding InvoiceNumber}" Width="SizeToCells" MinWidth="120" ElementStyle="{StaticResource GrnHistoryFullTextCellStyle}"/>
+                            <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="SizeToCells" MinWidth="220" ElementStyle="{StaticResource GrnHistoryFullTextCellStyle}"/>
 
                             <DataGridTextColumn Header="Dis. Amount" Binding="{Binding DiscountAmount, StringFormat='Rs. {0:N2}'}" Width="100" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="GrnHistoryRightAlignedCellStyle"/>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}" Width="100" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="GrnHistoryRightAlignedCellStyle"/>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="GrnHistoryRightAlignedCellStyle"/>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Note" Binding="{Binding Notes}" Width="Auto"/>
+                            <DataGridTextColumn Header="Note" Binding="{Binding Notes}" Width="SizeToCells" MinWidth="260" ElementStyle="{StaticResource GrnHistoryFullTextCellStyle}"/>
 
-                            <DataGridTextColumn Header="Received By" Binding="{Binding ReceivedBy}" Width="120"/>
+                            <DataGridTextColumn Header="Received By" Binding="{Binding ReceivedBy}" Width="SizeToCells" MinWidth="140" ElementStyle="{StaticResource GrnHistoryFullTextCellStyle}"/>
                             <DataGridTextColumn Header="Received Date" Binding="{Binding GoodsReceiveNoteDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
                             <DataGridTemplateColumn Header="Status" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -532,7 +538,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Created By" Binding="{Binding Username}" Width="120"/>
+                            <DataGridTextColumn Header="Created By" Binding="{Binding Username}" Width="SizeToCells" MinWidth="120" ElementStyle="{StaticResource GrnHistoryFullTextCellStyle}"/>
                             <DataGridTemplateColumn Header="Action" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -621,7 +627,7 @@
                                                       HorizontalScrollBarVisibility="Disabled"
                                                       VerticalScrollBarVisibility="Disabled">
                                                 <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="Item Name" Binding="{Binding ProductName}" Width="*"/>
+                                                    <DataGridTextColumn Header="Item Name" Binding="{Binding ProductName}" Width="320" MinWidth="240"/>
 
                                                     <DataGridTextColumn Header="Ordered Qty"
                                                                         Binding="{Binding QuantityOrdered, StringFormat=N3}"
