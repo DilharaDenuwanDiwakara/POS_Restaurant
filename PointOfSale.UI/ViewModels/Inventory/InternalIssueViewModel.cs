@@ -135,13 +135,11 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _issueType, value))
                 {
-                    OnPropertyChanged(nameof(IsTargetAccountRequired));
                     OnPropertyChanged(nameof(IsConsumableIssue));
+                    SelectedTargetAccount = null;
 
                     if (IsConsumableIssue)
                     {
-                        SelectedTargetAccount = null;
-
                         if (SelectedStation == null)
                         {
                             SelectedStation = Stations.FirstOrDefault();
@@ -151,7 +149,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     {
                         SelectedStation = null;
 
-                        if (string.Equals(IssueType, WastageIssueType, StringComparison.OrdinalIgnoreCase) && SelectedTargetAccount == null)
+                        if (string.Equals(IssueType, WastageIssueType, StringComparison.OrdinalIgnoreCase))
                         {
                             SelectedTargetAccount = TargetAccounts.FirstOrDefault(a => a.Id == _defaultWastageAccountId);
                         }
@@ -164,10 +162,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         public bool IsConsumableIssue =>
             string.Equals(IssueType, "Consumable", StringComparison.OrdinalIgnoreCase);
-
-        public bool IsTargetAccountRequired =>
-            string.Equals(IssueType, WastageIssueType, StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(IssueType, StaffRecoveryIssueType, StringComparison.OrdinalIgnoreCase);
 
         private AccountDto _selectedTargetAccount;
         public AccountDto SelectedTargetAccount
@@ -357,7 +351,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             SelectedLocation != null &&
             (!IsConsumableIssue || SelectedStation != null) &&
             IssueLines.Any() &&
-            (!IsTargetAccountRequired || SelectedTargetAccount != null);
+            SelectedTargetAccount != null;
 
         private void RefreshAddLineCommand() => (AddLineCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
         private void RefreshProcessIssueCommand() => (ProcessIssueCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
@@ -615,9 +609,9 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     return;
                 }
 
-                if (IsTargetAccountRequired && SelectedTargetAccount == null)
+                if (SelectedTargetAccount == null)
                 {
-                    MessageBox.Show("Select a target account for this issue type.", "Internal Issue", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Select a target account.", "Internal Issue", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -631,7 +625,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     TotalValue = TotalValue,
                     Remarks = string.IsNullOrWhiteSpace(Remarks) ? null : Remarks.Trim(),
                     CreatedBy = _userSessionService.UserId,
-                    TargetAccountId = IsTargetAccountRequired ? SelectedTargetAccount?.Id : null,
+                    TargetAccountId = SelectedTargetAccount.Id,
                     Lines = IssueLines.Select(l => new InternalIssueLineDto
                     {
                         ProductId = l.ItemType == ProductItemType ? l.ProductId : null,

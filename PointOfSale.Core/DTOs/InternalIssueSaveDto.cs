@@ -49,8 +49,7 @@ namespace PointOfSale.Core.DTOs
         public int CreatedBy { get; set; }
 
         /// <summary>
-        /// Gets or sets the target account (e.g. Wastage Expense or Staff Receivable) to debit when the
-        /// issue type is Wastage or Staff Recovery. Not required for Consumable issues.
+        /// Gets or sets the target account to debit for the internal issue.
         /// </summary>
         public int? TargetAccountId { get; set; }
 

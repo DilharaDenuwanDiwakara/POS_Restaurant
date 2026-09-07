@@ -197,6 +197,73 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             param.SqlDbType = SqlDbType.Structured;
             param.TypeName = "[Sales].[tvpSalesReturnLine]";
         }
-        #endregion
+
+        private static decimal GetDecimalOrDefault(SqlDataReader reader, int ordinal)
+        {
+            return reader.IsDBNull(ordinal)
+                ? 0m
+                : Convert.ToDecimal(reader.GetValue(ordinal));
+        }
+
+        private static string GetStringOrDefault(SqlDataReader reader, int ordinal, string defaultValue = "")
+        {
+            return reader.IsDBNull(ordinal)
+                ? defaultValue
+                : reader.GetValue(ordinal).ToString();
+        }
+
+        public async Task<List<SalesReturnFlatDto>> GetSalesReturnsAsync(DateTime from, DateTime to)
+        {
+            var list = new List<SalesReturnFlatDto>();
+
+            using (var connection = GetConnection()) 
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.CommandText = "[Sales].[uspGetSalesReturnsWithDetails]";
+
+                // Parameters
+                command.Parameters.AddWithValue("@FromDate", from);
+                command.Parameters.AddWithValue("@ToDate", to);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    var returnNoOrdinal = reader.GetOrdinal("ReturnNo");
+                    var invoiceNoOrdinal = reader.GetOrdinal("InvoiceNo");
+                    var totalRefundOrdinal = reader.GetOrdinal("TotalRefundAmount");
+                    var createDateOrdinal = reader.GetOrdinal("CreateDate");
+
+                    var productNameOrdinal = reader.GetOrdinal("ProductName");
+                    var qtyReturnOrdinal = reader.GetOrdinal("QtyReturn");
+                    var refundAmountOrdinal = reader.GetOrdinal("RefundAmount");
+                    var returnReasonOrdinal = reader.GetOrdinal("ReturnReason");
+                    var isWastageOrdinal = reader.GetOrdinal("IsWastage");
+
+                    while (await reader.ReadAsync())
+                    {
+                        list.Add(new SalesReturnFlatDto
+                        {
+                            ReturnNo = GetStringOrDefault(reader, returnNoOrdinal),
+                            InvoiceNo = GetStringOrDefault(reader, invoiceNoOrdinal),
+                            TotalRefundAmount = GetDecimalOrDefault(reader, totalRefundOrdinal),
+                            CreateDate = reader.GetDateTime(createDateOrdinal),
+
+                            ProductName = GetStringOrDefault(reader, productNameOrdinal),
+                            QtyReturn = GetDecimalOrDefault(reader, qtyReturnOrdinal),
+                            RefundAmount = GetDecimalOrDefault(reader, refundAmountOrdinal),
+                            ReturnReason = GetStringOrDefault(reader, returnReasonOrdinal),
+
+                            IsWastage = !reader.IsDBNull(isWastageOrdinal) && reader.GetBoolean(isWastageOrdinal)
+                        });
+                    }
+                }
+            }
+
+            return list;
+        }
+
     }
 }
+        #endregion

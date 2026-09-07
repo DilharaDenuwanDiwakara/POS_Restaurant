@@ -1,5 +1,5 @@
-<UserControl
-    x:Class="PointOfSale.UI.Views.Sales.SalesListView"
+﻿<UserControl
+    x:Class="PointOfSale.UI.Views.Sales.SalesReturn"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -16,7 +16,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Sales History" />
+        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Sales Return" />
 
         <Border
             Grid.Row="1"
@@ -70,24 +70,6 @@
                                 Style="{StaticResource DatePickerStyle}" />
                         </StackPanel>
 
-                        <StackPanel
-                            Grid.Column="1"
-                            Margin="0,0,8,8"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal">
-                            <TextBlock
-                                Margin="0,0,8,0"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource LabelStyle}"
-                                Text="Type:" />
-                            <ComboBox
-                                Width="100"
-                                Margin="0"
-                                ItemsSource="{Binding PaymentTypes}"
-                                SelectedItem="{Binding SelectedPaymentType}"
-                                Style="{StaticResource ComboBoxStyle}" />
-                        </StackPanel>
-
                         <Button
                             Grid.Column="2"
                             Margin="12,0,0,8"
@@ -99,28 +81,30 @@
                 </Border>
 
                 <DataGrid
-                    x:Name="InvoicesDataGrid"
+                    x:Name="ReturnsDataGrid"
                     Grid.Row="1"
                     Margin="0,4"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
                     HorizontalScrollBarVisibility="Disabled"
                     IsReadOnly="True"
-                    ItemsSource="{Binding SalesList}"
-                    RowDetailsVisibilityMode="Visible"
+                    ItemsSource="{Binding SalesReturnList}"
                     SelectionMode="Single"
                     Style="{StaticResource DataGridStyle}"
                     VerticalScrollBarVisibility="Auto">
+                    <!--  RowDetailsVisibilityMode ඉවත් කර ඇත  -->
 
                     <DataGrid.RowStyle>
                         <Style BasedOn="{StaticResource Style.DataGrid.Row}" TargetType="DataGridRow">
                             <Setter Property="Height" Value="Auto" />
                             <Setter Property="MinHeight" Value="42" />
-                            <Setter Property="DetailsVisibility" Value="Visible" />
+                            <!--  මෙතනින් තමයි click කරද්දී විතරක් open වෙන්න හැදුවේ  -->
+                            <Setter Property="DetailsVisibility" Value="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}" />
                         </Style>
                     </DataGrid.RowStyle>
 
                     <DataGrid.Columns>
+                        <!--  Expand / Collapse Button  -->
                         <DataGridTemplateColumn Width="44">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -130,7 +114,7 @@
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        ToolTip="Expand invoice">
+                                        ToolTip="Expand return details">
                                         <ToggleButton.Style>
                                             <Style TargetType="ToggleButton">
                                                 <Setter Property="Content" Value="&gt;" />
@@ -154,7 +138,7 @@
                                                 <Style.Triggers>
                                                     <Trigger Property="IsChecked" Value="True">
                                                         <Setter Property="Content" Value="v" />
-                                                        <Setter Property="ToolTip" Value="Collapse invoice" />
+                                                        <Setter Property="ToolTip" Value="Collapse return details" />
                                                     </Trigger>
                                                     <Trigger Property="IsMouseOver" Value="True">
                                                         <Setter Property="Background" Value="#E5E7EB" />
@@ -167,59 +151,30 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
+                        <!--  Parent Row Columns  -->
                         <DataGridTextColumn
                             Width="140"
-                            Binding="{Binding Date, StringFormat='dd/MM/yyyy HH:mm'}"
+                            Binding="{Binding CreateDate, StringFormat='dd/MM/yyyy HH:mm'}"
                             Header="Date" />
                         <DataGridTextColumn
-                            Width="120"
+                            Width="140"
+                            Binding="{Binding ReturnNo}"
+                            Header="Return No" />
+                        <DataGridTextColumn
+                            Width="140"
                             Binding="{Binding InvoiceNo}"
                             Header="Invoice No" />
+
                         <DataGridTextColumn
                             Width="*"
-                            Binding="{Binding CustomerName}"
-                            Header="Customer" />
-
-                        <DataGridTextColumn
-                            Width="110"
-                            Binding="{Binding NetAmount, StringFormat='Rs. {0:N2}'}"
+                            Binding="{Binding TotalRefundAmount, StringFormat='Rs. {0:N2}'}"
                             ElementStyle="{StaticResource RightAlignedTextStyle}"
                             FontWeight="Bold"
-                            Header="Net Amount"
+                            Header="Total Refund"
                             HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
-                        <DataGridTextColumn
-                            Width="110"
-                            Binding="{Binding Discount, StringFormat='Rs. {0:N2}'}"
-                            ElementStyle="{StaticResource RightAlignedTextStyle}"
-                            FontWeight="Bold"
-                            Header="Discount"
-                            HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
-                        <DataGridTextColumn
-                            Width="110"
-                            Binding="{Binding TaxAmount, StringFormat='Rs. {0:N2}'}"
-                            ElementStyle="{StaticResource RightAlignedTextStyle}"
-                            FontWeight="Bold"
-                            Header="Tax Amount"
-                            HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
-
-                        <DataGridTextColumn
-                            Width="130"
-                            Binding="{Binding PaymentMethod}"
-                            Header="Payment Method" />
-
-                        <DataGridTemplateColumn Width="56" Header="Action">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button
-                                        Command="{Binding DataContext.ReprintInvoiceCommand, ElementName=InvoicesDataGrid}"
-                                        CommandParameter="{Binding}"
-                                        Style="{StaticResource DataGridPrintButtonStyle}"
-                                        ToolTip="Reprint bill" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
 
+                    <!--  Child Row Details (Expanded Area)  -->
                     <DataGrid.RowDetailsTemplate>
                         <DataTemplate>
                             <Border
@@ -232,71 +187,53 @@
                                 BorderThickness="0,1,0,1"
                                 Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}">
                                 <Grid>
-                                    <TextBlock
-                                        Margin="4,0,0,8"
-                                        Foreground="#64748B"
-                                        Text="Loading invoice items...">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsLoadingLineItems}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                    <Border Margin="0,10,0,10" HorizontalAlignment="Stretch">
 
-                                    <Border Margin="0,22,0,0" HorizontalAlignment="Stretch">
+                                        <!--  Child DataGrid  -->
                                         <DataGrid
-                                            MinHeight="78"
+                                            MinHeight="50"
                                             HorizontalAlignment="Stretch"
                                             AutoGenerateColumns="False"
                                             CanUserAddRows="False"
                                             HeadersVisibility="Column"
                                             HorizontalScrollBarVisibility="Disabled"
                                             IsReadOnly="True"
-                                            ItemsSource="{Binding LineItems}"
+                                            ItemsSource="{Binding ReturnLines}"
                                             Style="{StaticResource DataGridStyle}"
                                             VerticalScrollBarVisibility="Disabled">
                                             <DataGrid.Columns>
                                                 <DataGridTextColumn
                                                     Width="*"
-                                                    Binding="{Binding ItemName}"
-                                                    Header="Item Name" />
+                                                    Binding="{Binding ProductName}"
+                                                    Header="Product Name" />
 
                                                 <DataGridTextColumn
-                                                    Width="80"
-                                                    Binding="{Binding Qty, StringFormat=N2}"
+                                                    Width="100"
+                                                    Binding="{Binding QtyReturn, StringFormat=N2}"
                                                     ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                                    Header="Qty" />
-                                                <DataGridTextColumn
-                                                    Width="80"
-                                                    Binding="{Binding Discount, StringFormat=N2}"
-                                                    ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                                    Header="Discount" />
-                                                <DataGridTextColumn
-                                                    Width="80"
-                                                    Binding="{Binding TaxAmount, StringFormat=N2}"
-                                                    ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                                    Header="Tax Amount" />
-
-                                                <DataGridTextColumn
-                                                    Width="120"
-                                                    Binding="{Binding UnitPrice, StringFormat='Rs. {0:N2}'}"
-                                                    ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                                    Header="Unit Price"
+                                                    Header="Return Qty"
                                                     HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
 
                                                 <DataGridTextColumn
-                                                    Width="120"
-                                                    Binding="{Binding Total, StringFormat='Rs. {0:N2}'}"
+                                                    Width="150"
+                                                    Binding="{Binding ReturnReason}"
+                                                    Header="Reason" />
+
+                                                <!--  Checkbox column for Boolean value  -->
+                                                <DataGridCheckBoxColumn
+                                                    Width="80"
+                                                    Binding="{Binding IsWastage}"
+                                                    Header="Wastage" />
+
+                                                <DataGridTextColumn
+                                                    Width="140"
+                                                    Binding="{Binding RefundAmount, StringFormat='Rs. {0:N2}'}"
                                                     ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                                    Header="Total"
+                                                    Header="Refund Amount"
                                                     HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
                                             </DataGrid.Columns>
                                         </DataGrid>
+
                                     </Border>
                                 </Grid>
                             </Border>
@@ -315,34 +252,22 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel
-                            Grid.Column="0"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource LabelStyle}" Text="Total Invoices: " />
-                            <TextBlock
-                                Margin="4,0,0,0"
-                                FontWeight="Bold"
-                                Style="{StaticResource LabelStyle}"
-                                Text="{Binding SalesList.Count}" />
-                        </StackPanel>
 
                         <StackPanel
                             Grid.Column="2"
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource LabelStyle}" Text="Total Revenue: " />
+                            <TextBlock Style="{StaticResource LabelStyle}" Text="Total Refund Amount: " />
                             <TextBlock
                                 Margin="4,0,10,0"
                                 FontWeight="Bold"
                                 Foreground="{StaticResource BrandBrush}"
                                 Style="{StaticResource LabelStyle}"
-                                Text="{Binding TotalRevenue, StringFormat='{} {0:N2}'}" />
+                                Text="{Binding TotalRefundAmount, StringFormat='{} {0:N2}'}" />
                         </StackPanel>
                     </Grid>
                 </Border>
             </Grid>
         </Border>
     </Grid>
-
 </UserControl>

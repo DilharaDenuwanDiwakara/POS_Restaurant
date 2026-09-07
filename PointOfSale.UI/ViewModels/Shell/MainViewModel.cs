@@ -84,6 +84,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public bool CanNavDiscount => _userSessionService.HasPermission("NAV_DISCOUNT") || CanNavInvoices;
         public bool CanNavPromotion => _userSessionService.HasPermission("NAV_PROMOTION") || CanNavInvoices;
         public bool CanNavSalesReturn => _userSessionService.HasPermission("NAV_SALES_RETURN");
+        public bool CanNavMainSalesReturn => _userSessionService.HasPermission("NAV_SALES_RETURN");
         public bool CanNavCustomer => _userSessionService.HasPermission("NAV_CUSTOMER");
 
 
@@ -209,6 +210,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public ICommand NavigateToDiscountCommand { get; private set; }
         public ICommand NavigateToPromotionCommand { get; private set; }
         public ICommand NavigateToSalesReturnCommand { get; private set; }
+        public ICommand NavigateToMainSalesReturnCommand { get; private set; }
         public ICommand NavigateToAccountsPayableCommand { get; private set; }
         public ICommand NavigateToAccountsReceivableCommand { get; private set; }
         public ICommand NavigateToExpensesCommand { get; private set; }
@@ -343,6 +345,9 @@ namespace PointOfSale.UI.ViewModels.Shell
 
             NavigateToSalesReturnCommand = new RelayCommand(_ =>
                 NavigateTo<SalesReturnViewModel>("Sales  →  Sales Return"));
+
+            NavigateToMainSalesReturnCommand = new RelayCommand(_ =>
+                NavigateTo<MainSalesReturnViewModel>("Sales  →  Sales Return"));
 
             // --- Accounts Module ---
             NavigateToAccountsPayableCommand = new RelayCommand(_ =>
