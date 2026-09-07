@@ -80,19 +80,7 @@
                               ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
                               PreviewKeyDown="MoveFocusOnEnter"/>
 
-                    <StackPanel Visibility="{Binding IsConsumableIssue, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="To (Station):" Style="{StaticResource LabelStyle}"/>
-                        <ComboBox ItemsSource="{Binding Stations}"
-                                  SelectedItem="{Binding SelectedStation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  DisplayMemberPath="Name"
-                                  IsEditable="True"
-                                  IsTextSearchEnabled="True"
-                                  Style="{StaticResource ComboBoxStyle}"
-                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
-                                  PreviewKeyDown="MoveFocusOnEnter"/>
-                    </StackPanel>
-
-                    <StackPanel Visibility="{Binding IsTargetAccountRequired, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
                         <TextBlock Text="To (Account):" Style="{StaticResource LabelStyle}"/>
                         <ComboBox ItemsSource="{Binding TargetAccounts}"
                                   SelectedItem="{Binding SelectedTargetAccount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
