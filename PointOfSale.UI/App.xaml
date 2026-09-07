@@ -246,6 +246,10 @@
                 <viewsales:SalesReturnView />
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelsales:MainSalesReturnViewModel}">
+                <viewsales:SalesReturn />
+            </DataTemplate>
+
             <!--  Accounts  -->
 
             <DataTemplate DataType="{x:Type viewmodelaccounts:AccountRegisterViewModel}">

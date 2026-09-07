@@ -176,6 +176,7 @@ namespace PointOfSale.UI
             services.AddTransient<ManagerAuthorizationViewModel>();
             services.AddTransient<OpenShiftDialogView>();
             services.AddTransient<CloseShiftDialogView>();
+            services.AddTransient<MainSalesReturnViewModel>();
 
             services.AddTransient<UserViewModel>();
             services.AddTransient<UserProfileViewModel>();

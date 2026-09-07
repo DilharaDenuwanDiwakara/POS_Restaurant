@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\FileUploadConstraints.cs" />
+    <Compile Include="DTOs\SalesReturnFlatDto.cs" />
     <Compile Include="Enums\GoodsReceiveNoteStatus.cs" />
     <Compile Include="Enums\PurchaseOrderStatus.cs" />
     <Compile Include="Enums\SupplierReturnStatus.cs" />
@@ -245,6 +246,7 @@
     <Compile Include="Models\Sales\ReturnReasonModel.cs" />
     <Compile Include="Models\Sales\SalesLine.cs" />
     <Compile Include="Models\Sales\SalesReturnItemModel.cs" />
+    <Compile Include="Models\Sales\SalesReturnLineModel.cs" />
     <Compile Include="Models\Security\PermissionGroup.cs" />
     <Compile Include="Models\Security\PermissionNode.cs" />
     <Compile Include="Models\Security\PinAuthResult.cs" />

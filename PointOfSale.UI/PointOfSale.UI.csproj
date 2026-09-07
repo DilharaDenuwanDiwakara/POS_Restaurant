@@ -470,8 +470,10 @@
     <Compile Include="ViewModels\Sales\CloseShiftDialogViewModel.cs" />
     <Compile Include="ViewModels\Sales\CustomerViewModel.cs" />
     <Compile Include="ViewModels\Sales\DiscountViewModel.cs" />
+    <Compile Include="ViewModels\Sales\MainSalesReturnViewModel.cs" />
     <Compile Include="ViewModels\Sales\OpenShiftDialogViewModel.cs" />
     <Compile Include="ViewModels\Sales\PromotionViewModel.cs" />
+    <Compile Include="ViewModels\Sales\SalesReturnModel.cs" />
     <Compile Include="ViewModels\Sales\ShiftManagementViewModel.cs" />
     <Compile Include="ViewModels\Sales\InvoiceLineItemModel.cs" />
     <Compile Include="ViewModels\Sales\InvoiceSummaryModel.cs" />
@@ -656,6 +658,9 @@
     </Compile>
     <Compile Include="Views\Sales\Dialogs\CloseShiftDialogView.xaml.cs">
       <DependentUpon>CloseShiftDialogView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Sales\SalesReturn.xaml.cs">
+      <DependentUpon>SalesReturn.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Sales\ShiftManagementView.xaml.cs">
       <DependentUpon>ShiftManagementView.xaml</DependentUpon>
@@ -980,6 +985,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Sales\Dialogs\CloseShiftDialogView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Sales\SalesReturn.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

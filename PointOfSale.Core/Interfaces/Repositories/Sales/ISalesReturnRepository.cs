@@ -1,7 +1,8 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Models.Sales;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PointOfSale.Core.Interfaces.Repositories.Sales
 {
@@ -18,5 +19,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Sales
             int authorizedBy,
             int createdBy,
             List<SalesReturnItemModel> returnItems);
+
+        Task<List<SalesReturnFlatDto>> GetSalesReturnsAsync(DateTime from, DateTime to);
     }
 }
