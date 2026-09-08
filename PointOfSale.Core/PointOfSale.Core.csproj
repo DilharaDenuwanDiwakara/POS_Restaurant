@@ -60,6 +60,8 @@
   <ItemGroup>
     <Compile Include="Common\FileUploadConstraints.cs" />
     <Compile Include="DTOs\SalesReturnFlatDto.cs" />
+    <Compile Include="DTOs\StockAdjustmentHeaderDto.cs" />
+    <Compile Include="DTOs\StockAdjustmentLineDto.cs" />
     <Compile Include="Enums\GoodsReceiveNoteStatus.cs" />
     <Compile Include="Enums\PurchaseOrderStatus.cs" />
     <Compile Include="Enums\SupplierReturnStatus.cs" />
@@ -204,6 +206,7 @@
     <Compile Include="Models\Inventory\ProductBatch.cs" />
     <Compile Include="Models\Inventory\ProvisioningOutputModel.cs" />
     <Compile Include="Models\Inventory\StockAdjustment.cs" />
+    <Compile Include="Models\Inventory\StockAdjustmentLine.cs" />
     <Compile Include="Models\Inventory\StockTransfer.cs" />
     <Compile Include="Models\Inventory\StockTransferLine.cs" />
     <Compile Include="Models\Inventory\UnitMeasure.cs" />

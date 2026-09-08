@@ -216,7 +216,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
         {
             var list = new List<SalesReturnFlatDto>();
 
-            using (var connection = GetConnection()) 
+            using (var connection = GetConnection())
             using (var command = connection.CreateCommand())
             {
                 command.CommandType = CommandType.StoredProcedure;
@@ -266,4 +266,4 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
 
     }
 }
-        #endregion
+#endregion

@@ -7,8 +7,9 @@ namespace PointOfSale.Core.Interfaces.Repositories.Inventory
 {
     public interface IStockAdjustmentRepository
     {
-        Task<int> CreateAsync(StockAdjustment stockAdjustment);
+        Task<long> CreateAsync(StockAdjustment stockAdjustment);
         Task<IEnumerable<StockAdjustment>> GetAllAsync();
         Task<IEnumerable<AvailableQuantityDto>> GetAvailableQty(int locationId, int productId);
+        Task<List<StockAdjustmentHeaderDto>> GetHistoryAsync(global::System.DateTime? fromDate, global::System.DateTime? toDate, int? locationId);
     }
 }

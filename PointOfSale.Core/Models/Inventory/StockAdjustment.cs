@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 
 namespace PointOfSale.Core.Models.Inventory
 {
@@ -11,9 +12,12 @@ namespace PointOfSale.Core.Models.Inventory
         public int LocationId { get; set; }
         public decimal Quantity { get; set; }
         public string Reason { get; set; }
+        public string Note { get; set; }
         public string UserName { get; set; }
         public string LocationName { get; set; }
         public int ProductId { get; set; }
         public string ProductName { get; set; }
+
+        public List<StockAdjustmentLine> Lines { get; set; } = new List<StockAdjustmentLine>();
     }
 }

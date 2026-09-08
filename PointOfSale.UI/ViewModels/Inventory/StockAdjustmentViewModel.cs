@@ -1,9 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
+using Microsoft.Win32;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Inventory;
@@ -18,7 +23,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private readonly IProductRepository _productRepository;
         private readonly IInventoryRepository _inventoryRepository;
         private readonly IUserSessionService _userSessionService;
-        private readonly IDialogService _dialogService;
 
         public StockAdjustmentViewModel(
             IProductRepository productRepository,
@@ -29,96 +33,37 @@ namespace PointOfSale.UI.ViewModels.Inventory
         {
             _stockAdjustmentRepository = stockAdjustmentRepository ?? throw new ArgumentNullException(nameof(stockAdjustmentRepository));
             _inventoryRepository = inventoryRepository ?? throw new ArgumentNullException(nameof(inventoryRepository));
-            _userSessionService = userSessionService;
-            _productRepository = productRepository;
+            _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
+            _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
 
             Locations = new ObservableCollection<Location>();
-            StockAdjustments = new ObservableCollection<StockAdjustment>();
             Products = new ObservableCollection<Product>();
+            StockAdjustmentLines = new ObservableCollection<StockAdjustmentLine>();
+            AdjustmentHistory = new ObservableCollection<StockAdjustmentHeaderDto>();
+            AddorDeduct = new ObservableCollection<string> { "ADD", "REDUCE" };
 
-            // Initialize Commands
-            RefreshCommand = new RelayCommand(async _ => await LoadAdjustmentsAsync());
-            SaveCommand = new AsyncRelayCommand(async _ => await ExecuteSave(), _ => CanExecuteSave());
+            AddLineCommand = new RelayCommand(_ => AddLine(), _ => CanAddLine);
+            RemoveLineCommand = new RelayCommand<StockAdjustmentLine>(RemoveLine);
+            ClearCommand = new RelayCommand(_ => ClearAll(), _ => !IsBusy);
+            RefreshCommand = new RelayCommand(async _ => await LoadDependenciesAsync(), _ => !IsBusy);
+            SaveCommand = new AsyncRelayCommand(async _ => await ExecuteSaveAsync(), _ => CanExecuteSave());
+            SearchCommand = new AsyncRelayCommand(async _ => await SearchAdjustmentHistoryAsync(), _ => !IsBusy);
 
-            // Load Initial Data
+            SelectedAddOrDeduct = AddorDeduct.First();
             _ = LoadDependenciesAsync();
-
-            AddorDeduct = new ObservableCollection<string>
-            {
-                "ADD", "REDUCE"
-            };
-            SelectedAddOrDeduct = AddorDeduct[0];
         }
 
+        public ObservableCollection<Location> Locations { get; }
+        public ObservableCollection<Product> Products { get; }
+        public ObservableCollection<StockAdjustmentLine> StockAdjustmentLines { get; }
+        public ObservableCollection<StockAdjustmentHeaderDto> AdjustmentHistory { get; }
         public ObservableCollection<string> AddorDeduct { get; }
 
-        #region Properties
-        private ObservableCollection<Product> _products;
-        public ObservableCollection<Product> Products
+        private DateTime _adjustDate = DateTime.Today;
+        public DateTime AdjustDate
         {
-            get => _products;
-            set => SetProperty(ref _products, value);
-        }
-
-        private Product _selectedProduct;
-        public Product SelectedProduct
-        {
-            get => _selectedProduct;
-            set
-            {
-                if (SetProperty(ref _selectedProduct, value))
-                {
-                    if (value != null) SelectedProductId = value.ProductId;
-                    _ = LoadCurrentStockAsync();
-                    SaveCommand.RaiseCanExecuteChanged();
-                }
-            }
-        }
-
-        private string _selectedAddOrDeduct;
-        public string SelectedAddOrDeduct
-        {
-            get => _selectedAddOrDeduct;
-            set
-            {
-                if (SetProperty(ref _selectedAddOrDeduct, value))
-                {
-                    SaveCommand.RaiseCanExecuteChanged(); // Update Button
-                }
-
-            }
-        }
-
-        private int? _selectedProductId;
-        public int? SelectedProductId
-        {
-            get => _selectedProductId;
-            set => SetProperty(ref _selectedProductId, value);
-        }
-
-        private bool _isOverlayVisible;
-        public bool IsOverlayVisible
-        {
-            get { return _isOverlayVisible; }
-            set
-            {
-                _isOverlayVisible = value;
-                OnPropertyChanged(nameof(IsOverlayVisible));
-            }
-        }
-
-        private ObservableCollection<StockAdjustment> _stockAdjustments;
-        public ObservableCollection<StockAdjustment> StockAdjustments
-        {
-            get => _stockAdjustments;
-            set => SetProperty(ref _stockAdjustments, value);
-        }
-
-        private ObservableCollection<Location> _locations;
-        public ObservableCollection<Location> Locations
-        {
-            get => _locations;
-            set => SetProperty(ref _locations, value);
+            get => _adjustDate;
+            set => SetProperty(ref _adjustDate, value);
         }
 
         private Location _selectedLocation;
@@ -129,10 +74,58 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _selectedLocation, value))
                 {
+                    StockAdjustmentLines.Clear();
+                    ClearItemEntry();
+                    RefreshCommands();
+                }
+            }
+        }
 
-                    _ = LoadAdjustmentsAsync();
-                    _ = LoadAvailableQuantityAsync();
-                    SaveCommand.RaiseCanExecuteChanged();
+        private string _note;
+        public string Note
+        {
+            get => _note;
+            set
+            {
+                if (SetProperty(ref _note, value))
+                {
+                    ValidateNote();
+                    RefreshCommands();
+                }
+            }
+        }
+
+        private DateTime _searchDateFrom = DateTime.Today;
+        public DateTime SearchDateFrom
+        {
+            get => _searchDateFrom;
+            set => SetProperty(ref _searchDateFrom, value);
+        }
+
+        private DateTime _searchDateTo = DateTime.Today;
+        public DateTime SearchDateTo
+        {
+            get => _searchDateTo;
+            set => SetProperty(ref _searchDateTo, value);
+        }
+
+        private int _historyLocationId;
+        public int HistoryLocationId
+        {
+            get => _historyLocationId;
+            set => SetProperty(ref _historyLocationId, value);
+        }
+
+        private Product _selectedProduct;
+        public Product SelectedProduct
+        {
+            get => _selectedProduct;
+            set
+            {
+                if (SetProperty(ref _selectedProduct, value))
+                {
+                    _ = LoadCurrentStockAsync();
+                    RefreshCommands();
                 }
             }
         }
@@ -144,7 +137,19 @@ namespace PointOfSale.UI.ViewModels.Inventory
             set => SetProperty(ref _currentStock, value);
         }
 
-        // 2. Adjustment Quantity (User Input - Bound to TextBox)
+        private string _selectedAddOrDeduct;
+        public string SelectedAddOrDeduct
+        {
+            get => _selectedAddOrDeduct;
+            set
+            {
+                if (SetProperty(ref _selectedAddOrDeduct, value))
+                {
+                    RefreshCommands();
+                }
+            }
+        }
+
         private string _adjustmentQuantity;
         public string AdjustmentQuantity
         {
@@ -153,41 +158,118 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _adjustmentQuantity, value))
                 {
-                    // Fix 2: Notify Command to re-evaluate
-                    SaveCommand.RaiseCanExecuteChanged();
+                    ValidateQuantity();
+                    RefreshCommands();
                 }
             }
         }
 
-        private decimal _quantity;
-        public decimal Quantity
+        private string _lineReason;
+        public string LineReason
         {
-            get => _quantity;
-            set => SetProperty(ref _quantity, value);
-        }
-
-        private string _reason;
-        public string Reason
-        {
-            get => _reason;
+            get => _lineReason;
             set
             {
-                if (SetProperty(ref _reason, value))
+                if (SetProperty(ref _lineReason, value))
                 {
-                    SaveCommand.RaiseCanExecuteChanged();
+                    ValidateLineReason();
+                    RefreshCommands();
                 }
-                ValidateReason();
-
             }
         }
-        #endregion
 
-        #region Commands
-        public RelayCommand RefreshCommand { get; }
+        private StockAdjustmentLine _selectedLine;
+        public StockAdjustmentLine SelectedLine
+        {
+            get => _selectedLine;
+            set => SetProperty(ref _selectedLine, value);
+        }
+
+        private bool _isBusy;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                if (SetProperty(ref _isBusy, value))
+                {
+                    OnPropertyChanged(nameof(IsOverlayVisible));
+                    RefreshCommands();
+                }
+            }
+        }
+
+        public bool IsOverlayVisible
+        {
+            get => IsBusy;
+            set => IsBusy = value;
+        }
+
+        public ICommand AddLineCommand { get; }
+        public ICommand RemoveLineCommand { get; }
+        public ICommand ClearCommand { get; }
+        public ICommand RefreshCommand { get; }
+        public ICommand SearchCommand { get; }
         public AsyncRelayCommand SaveCommand { get; }
-        #endregion
 
-        #region Methods
+        public bool CanAddLine => !IsBusy
+            && SelectedLocation != null
+            && SelectedProduct != null
+            && !string.IsNullOrWhiteSpace(SelectedAddOrDeduct)
+            && decimal.TryParse(AdjustmentQuantity, out var quantity)
+            && quantity > 0
+            && !string.IsNullOrWhiteSpace(LineReason)
+            && !HasErrors;
+
+        private bool CanExecuteSave()
+        {
+            return !IsBusy
+                && SelectedLocation != null
+                && StockAdjustmentLines.Any()
+                && !HasErrors;
+        }
+
+        private async Task LoadDependenciesAsync()
+        {
+            try
+            {
+                var branchId = _userSessionService.BranchId;
+                var locations = await _inventoryRepository.GetLocationsByBranchAsync(branchId);
+                var products = await _productRepository.GetAllAsync();
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Locations.Clear();
+                    foreach (var location in locations)
+                    {
+                        Locations.Add(location);
+                    }
+
+                    Products.Clear();
+                    foreach (var product in products)
+                    {
+                        Products.Add(product);
+                    }
+
+                    if (SelectedLocation == null && Locations.Any())
+                    {
+                        SelectedLocation = Locations.First();
+                    }
+
+                    if (HistoryLocationId <= 0 && Locations.Any())
+                    {
+                        HistoryLocationId = Locations.First().Id;
+                    }
+                });
+
+                await SearchAdjustmentHistoryAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load stock adjustment data: {ex.Message}", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private async Task LoadCurrentStockAsync()
         {
             try
@@ -200,163 +282,270 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
                 var list = await _stockAdjustmentRepository.GetAvailableQty(SelectedLocation.Id, SelectedProduct.ProductId);
                 var match = list?.FirstOrDefault();
-
-                // Fix 3: Update the Display Property, NOT the Input Property
                 CurrentStock = match != null ? match.Quantity : 0;
-
-                // Optional: Reset the input field when product changes
-                AdjustmentQuantity = string.Empty;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}");
+                CurrentStock = 0;
+                MessageBox.Show($"Failed to load current stock: {ex.Message}", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private async Task LoadProductsAsync()
+
+        private void AddLine()
         {
-            var allProducts = await _productRepository.GetAllAsync();
-            Products = new ObservableCollection<Product>(allProducts);
+            if (!CanAddLine)
+                return;
+
+            var inputQuantity = decimal.Parse(AdjustmentQuantity);
+            var signedQuantity = string.Equals(SelectedAddOrDeduct, "REDUCE", StringComparison.OrdinalIgnoreCase)
+                ? -inputQuantity
+                : inputQuantity;
+
+            var existingLine = StockAdjustmentLines.FirstOrDefault(x => x.ProductId == SelectedProduct.ProductId);
+            if (existingLine != null)
+            {
+                MessageBox.Show("This product is already in the adjustment list. Remove the existing line before adding it again.", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            StockAdjustmentLines.Add(new StockAdjustmentLine
+            {
+                ProductId = SelectedProduct.ProductId,
+                ProductName = SelectedProduct.ProductName,
+                ProductCode = SelectedProduct.ProductCode,
+                CurrentStock = CurrentStock,
+                AdjustmentQuantity = inputQuantity,
+                Quantity = signedQuantity,
+                Action = SelectedAddOrDeduct,
+                Reason = LineReason?.Trim()
+            });
+
+            ClearItemEntry();
+            RefreshCommands();
         }
-        private async Task LoadAvailableQuantityAsync()
+
+        private void RemoveLine(StockAdjustmentLine line)
         {
+            if (line == null)
+                return;
+
+            StockAdjustmentLines.Remove(line);
+            RefreshCommands();
+        }
+
+        private async Task ExecuteSaveAsync()
+        {
+            if (!CanExecuteSave())
+                return;
+
+            long stockAdjustmentId = 0;
+            string reportPath = null;
+
             try
             {
-                if (SelectedProduct == null || SelectedLocation == null)
-                {
-                    Quantity = 0;
-                    return;
-                }
-                ;
-
-                var list = await _stockAdjustmentRepository.GetAvailableQty(SelectedLocation.Id, SelectedProduct.ProductId);
-
-                var match = list?.FirstOrDefault();
-
-                if (match != null)
-                {
-                    Quantity = match.Quantity;
-                }
-                else
-                {
-                    Quantity = 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error: {ex.Message}");
-            }
-        }
-
-        private async Task LoadDependenciesAsync()
-        {
-            try
-            {
-                var branchId = _userSessionService.BranchId;
-
-                var locations = await _inventoryRepository.GetLocationsByBranchAsync(branchId);
-                Locations = new ObservableCollection<Location>(locations);
-
-                if (Locations.Any())
-                {
-                    SelectedLocation = Locations.First();
-                }
-                await LoadProductsAsync();
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"Failed to load locations: {ex.Message}";
-            }
-        }
-
-        private async Task LoadAdjustmentsAsync()
-        {
-            try
-            {
-                // Using the GetAllAsync method we created earlier
-                var data = await _stockAdjustmentRepository.GetAllAsync();
-
-                // Apply local filtering if a search term exists
-                if (!string.IsNullOrWhiteSpace(Reason))
-                {
-                    data = data.Where(x => x.Reason != null && x.Reason.IndexOf(Reason, StringComparison.OrdinalIgnoreCase) >= 0);
-                }
-
-                StockAdjustments = new ObservableCollection<StockAdjustment>(data);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to load stock adjustments: {ex.Message}");
-            }
-        }
-
-        private bool CanExecuteSave()
-        {
-            return SelectedLocation != null
-            && SelectedProduct != null
-            && !string.IsNullOrEmpty(SelectedAddOrDeduct)
-            && decimal.TryParse(AdjustmentQuantity, out decimal q) && q > 0
-            && !string.IsNullOrWhiteSpace(Reason);
-        }
-        private async Task ExecuteSave()
-        {
-            try
-            {
-                // Double check parsing (though CanExecute covers it)
-                if (!decimal.TryParse(AdjustmentQuantity, out decimal quantityInput) || quantityInput <= 0)
-                    return;
-
-                decimal finalQuantity = SelectedAddOrDeduct == "REDUCE" ? -quantityInput : quantityInput;
+                IsBusy = true;
 
                 var stockAdjustment = new StockAdjustment
                 {
                     BranchId = _userSessionService.BranchId,
                     UserId = _userSessionService.UserId,
                     LocationId = SelectedLocation.Id,
-                    ProductId = SelectedProduct.ProductId, // Ensure this property is synced
-                    Quantity = finalQuantity,
-                    Reason = Reason.Trim()
+                    AdjustDate = AdjustDate,
+                    Reason = Note?.Trim(),
+                    Note = Note?.Trim(),
+                    Lines = StockAdjustmentLines.ToList()
                 };
 
-                await _stockAdjustmentRepository.CreateAsync(stockAdjustment);
+                stockAdjustmentId = await _stockAdjustmentRepository.CreateAsync(stockAdjustment);
+                reportPath = PromptForReportPath(stockAdjustmentId);
 
-                await LoadAdjustmentsAsync();
-                await LoadCurrentStockAsync(); // Refresh the "Current Stock" display
+                if (string.IsNullOrWhiteSpace(reportPath))
+                {
+                    MessageBox.Show("Stock adjustment saved successfully. Report export was cancelled.", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ClearAll();
+                    return;
+                }
 
-                ResetForm();
-                MessageBox.Show($"Successfully saved. New Stock: {CurrentStock}");
+                await ExportStockAdjustmentReportAsync(stockAdjustmentId, reportPath);
+
+                if (!File.Exists(reportPath))
+                {
+                    MessageBox.Show("Stock adjustment saved, but the report file was not created.", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ClearAll();
+                    return;
+                }
+
+                var openResult = MessageBox.Show(
+                    "Report saved successfully. Do you want to open the file now?",
+                    "Stock Adjustment",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+
+                if (openResult == MessageBoxResult.Yes)
+                {
+                    OpenReportFile(reportPath);
+                }
+
+                ClearAll();
+                await SearchAdjustmentHistoryAsync();
             }
             catch (Exception ex)
             {
-                // ErrorMessage = ex.Message; // Assuming you have an ErrorMessage property
-                MessageBox.Show(ex.Message);
+                var context = stockAdjustmentId > 0
+                    ? "Stock adjustment saved, but report processing failed"
+                    : "Failed to save stock adjustment";
+
+                MessageBox.Show($"{context}: {ex.Message}", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 
-        private void ResetForm()
+        public Task ExportStockAdjustmentReportAsync(long stockAdjustmentId, string filePath)
         {
-            AdjustmentQuantity = string.Empty; // Clear input
-            Reason = string.Empty;
+            return Task.CompletedTask;
+        }
 
+        private string PromptForReportPath(long stockAdjustmentId)
+        {
+            try
+            {
+                var saveDialog = new SaveFileDialog
+                {
+                    Filter = "PDF Files (*.pdf)|*.pdf",
+                    FileName = $"StockAdjustment_{stockAdjustmentId}_{DateTime.Now:yyyyMMdd_HHmm}.pdf",
+                    Title = "Save Stock Adjustment Report"
+                };
+
+                return saveDialog.ShowDialog() == true ? saveDialog.FileName : null;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open save dialog: {ex.Message}", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;
+            }
+        }
+
+        private void OpenReportFile(string filePath)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Report was saved, but could not be opened: {ex.Message}", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void ClearItemEntry()
+        {
+            SelectedProduct = null;
+            CurrentStock = 0;
+            AdjustmentQuantity = string.Empty;
+            LineReason = string.Empty;
+            SelectedAddOrDeduct = AddorDeduct.FirstOrDefault();
+            ClearErrors(nameof(AdjustmentQuantity));
+            ClearErrors(nameof(LineReason));
+        }
+
+        private void ClearAll()
+        {
+            StockAdjustmentLines.Clear();
+            Note = string.Empty;
+            AdjustDate = DateTime.Today;
+            ClearItemEntry();
             ClearAllErrors();
+            RefreshCommands();
         }
 
-        #endregion
-
-        #region Validation
-        private void ValidateReason()
+        private void RefreshCommands()
         {
-            ClearErrors(nameof(Reason));
+            (AddLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (RemoveLineCommand as RelayCommand<StockAdjustmentLine>)?.RaiseCanExecuteChanged();
+            (ClearCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (RefreshCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (SearchCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+            SaveCommand?.RaiseCanExecuteChanged();
+        }
 
-            if (string.IsNullOrWhiteSpace(Reason))
+        private async Task SearchAdjustmentHistoryAsync()
+        {
+            if (SearchDateTo.Date < SearchDateFrom.Date)
             {
-                AddError(nameof(Reason), "Reason name is required.");
+                MessageBox.Show("To Date cannot be earlier than From Date.", "Adjustment History", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
-            else if (!Regex.IsMatch(Reason, @"^[-a-zA-Z0-9""%,.&/()\s+\[\]\\]+$"))
+
+            try
             {
-                AddError(nameof(Reason), "Cannot contain this character.");
+                IsBusy = true;
+
+                var items = await _stockAdjustmentRepository.GetHistoryAsync(
+                    SearchDateFrom,
+                    SearchDateTo,
+                    HistoryLocationId);
+
+                AdjustmentHistory.Clear();
+                foreach (var item in items)
+                {
+                    AdjustmentHistory.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading stock adjustment history: {ex.Message}", "Adjustment History", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
-        #endregion
+
+        private void ValidateQuantity()
+        {
+            ClearErrors(nameof(AdjustmentQuantity));
+
+            if (string.IsNullOrWhiteSpace(AdjustmentQuantity))
+                return;
+
+            if (!Regex.IsMatch(AdjustmentQuantity, @"^\d*\.?\d{0,3}$"))
+            {
+                AddError(nameof(AdjustmentQuantity), "Invalid format (max 3 decimals).");
+                return;
+            }
+
+            if (decimal.TryParse(AdjustmentQuantity, out var quantity) && quantity <= 0)
+            {
+                AddError(nameof(AdjustmentQuantity), "Quantity must be greater than zero.");
+            }
+        }
+
+        private void ValidateNote()
+        {
+            ClearErrors(nameof(Note));
+
+            if (!string.IsNullOrWhiteSpace(Note)
+                && !Regex.IsMatch(Note, @"^[-a-zA-Z0-9""%,.&/()\s+\[\]\\]+$"))
+            {
+                AddError(nameof(Note), "Cannot contain this character.");
+            }
+        }
+
+        private void ValidateLineReason()
+        {
+            ClearErrors(nameof(LineReason));
+
+            if (string.IsNullOrWhiteSpace(LineReason))
+            {
+                AddError(nameof(LineReason), "Line reason is required.");
+            }
+            else if (!Regex.IsMatch(LineReason, @"^[-a-zA-Z0-9""%,.&/()\s+\[\]\\]+$"))
+            {
+                AddError(nameof(LineReason), "Cannot contain this character.");
+            }
+        }
     }
 }
-
