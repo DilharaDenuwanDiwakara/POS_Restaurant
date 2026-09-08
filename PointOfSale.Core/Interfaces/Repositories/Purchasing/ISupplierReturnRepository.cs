@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Models.Purchasing;
 
 namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
@@ -9,6 +10,8 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
     public interface ISupplierReturnRepository
     {
         Task<int> CreateAsync(SupplierReturn supplierReturn);
+
+        Task<List<SupplierReturnFlatDto>> GetSupplierReturnsAsync(DateTime? fromDate, DateTime? toDate, int supplierId = 0);
 
         Task<IEnumerable<SupplierReturn>> GetAllAsync(int? supplierId, DateTime? dateFrom, DateTime? dateTo);
 
@@ -25,6 +28,5 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
         Task<IEnumerable<ReturnReasonModel>> GetActiveReturnReasonsAsync();
 
         Task<OriginalGrnReturnLine> GetOriginalGrnLineForBatchAsync(long batchId);
-
     }
 }

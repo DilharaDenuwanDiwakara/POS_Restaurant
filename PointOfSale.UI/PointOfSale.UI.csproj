@@ -453,6 +453,7 @@
     <Compile Include="ViewModels\Purchasing\GoodsReceiveNoteApprovalViewModel.cs" />
     <Compile Include="ViewModels\Purchasing\GoodsReceiveNoteViewModel.cs" />
     <Compile Include="ViewModels\Purchasing\SupplierReturnApprovalViewModel.cs" />
+    <Compile Include="ViewModels\Purchasing\SupplierReturnModel.cs" />
     <Compile Include="ViewModels\Purchasing\SupplierReturnViewModel.cs" />
     <Compile Include="ViewModels\Purchasing\SupplierViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\MenuCategoryViewModel.cs" />

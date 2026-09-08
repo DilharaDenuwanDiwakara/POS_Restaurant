@@ -244,6 +244,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                     while (await reader.ReadAsync())
                     {
                         list.Add(new SalesReturnFlatDto
+
                         {
                             ReturnNo = GetStringOrDefault(reader, returnNoOrdinal),
                             InvoiceNo = GetStringOrDefault(reader, invoiceNoOrdinal),

@@ -66,6 +66,19 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public ObservableCollection<Location> Locations { get; } = new ObservableCollection<Location>();
         public ObservableCollection<ReturnReasonModel> ReturnReasons { get; } = new ObservableCollection<ReturnReasonModel>();
 
+        private bool _isBusy;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                if (SetProperty(ref _isBusy, value))
+                {
+                    (SearchCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
         private int _locationId;
         public int LocationId
         {
@@ -314,11 +327,33 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         #endregion
 
         #region Search Properties (Simple Implementation)
-        private ObservableCollection<SupplierReturn> _historyList = new ObservableCollection<SupplierReturn>();
-        public ObservableCollection<SupplierReturn> HistoryList
+        private SupplierReturnModel _selectedHistoryReturn;
+        public SupplierReturnModel SelectedHistoryReturn
+        {
+            get => _selectedHistoryReturn;
+            set { _selectedHistoryReturn = value; OnPropertyChanged(); }
+        }
+
+        private ObservableCollection<SupplierReturnModel> _historyList = new ObservableCollection<SupplierReturnModel>();
+        public ObservableCollection<SupplierReturnModel> HistoryList
         {
             get => _historyList;
             set => SetProperty(ref _historyList, value);
+        }
+
+        private decimal _totalNetAmount;
+        public decimal TotalNetAmount
+        {
+            get => _totalNetAmount;
+            set => SetProperty(ref _totalNetAmount, value);
+        }
+
+        private ObservableCollection<SupplierReturnLine> _supplierReturnLine;
+
+        public ObservableCollection<SupplierReturnLine> SupplierReturnLine
+        {
+            get => _supplierReturnLine;
+            set => SetProperty(ref _supplierReturnLine, value);
         }
 
         private ObservableCollection<Supplier> _searchSuppliers;
@@ -663,16 +698,72 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         }
 
         // Search Logic
-        private async Task SearchReturnAsync()
+        private async Task SearchReturnAsync(object obj = null)
         {
             try
             {
-                int? suppId = FilterSupplierId == -1 ? (int?)null : FilterSupplierId;
-                var results = await _supplierReturnRepository.GetAllAsync(suppId, SearchDateFrom, SearchDateTo);
-                HistoryList = new ObservableCollection<SupplierReturn>(results);
-                if (!HistoryList.Any()) MessageBox.Show("No records found.");
+                IsBusy = true;
+                ErrorMessage = string.Empty;
+                HistoryList.Clear();
+
+                var from = SearchDateFrom?.Date ?? DateTime.Today;
+                var to = (SearchDateTo?.Date ?? DateTime.Today).AddDays(1).AddSeconds(-1);
+
+                if (_userSessionService.BranchId <= 0)
+                {
+                    ErrorMessage = "Current user branch is not assigned.";
+                    return;
+                }
+
+                int supplierId = FilterSupplierId > 0 ? FilterSupplierId : 0;
+
+                var flatResults = await _supplierReturnRepository.GetSupplierReturnsAsync(from, to, supplierId);
+
+                if (flatResults != null)
+                {
+                    var groupedResults = flatResults
+                        .GroupBy(item => new
+                        {
+                            item.SupplierReturnId,
+                            item.ReturnNumber,
+                            item.ReturnDate,
+                            item.SupplierName,
+                            item.ReturnedBy,
+                            item.NetAmount
+                        })
+                        .Select(group => new SupplierReturnModel(
+                            group.Key.SupplierReturnId,
+                            group.Key.ReturnNumber,
+                            group.Key.ReturnDate,
+                            string.Join(", ", group
+                                .Select(line => line.InvoiceNo)
+                                .Where(invoiceNo => !string.IsNullOrWhiteSpace(invoiceNo))
+                                .Distinct()),
+                            string.Join(", ", group
+                                .Where(line => line.InvoiceDate.HasValue)
+                                .Select(line => line.InvoiceDate.Value.ToString("dd/MM/yyyy"))
+                                .Distinct()),
+                            group.Key.SupplierName,
+                            group.Key.ReturnedBy,
+                            group.Key.NetAmount,
+                            group));
+
+                    foreach (var historyModel in groupedResults)
+                    {
+                        HistoryList.Add(historyModel);
+                    }
+                }
+
+                TotalNetAmount = HistoryList.Sum(x => x.NetAmount);
             }
-            catch (Exception ex) { MessageBox.Show(ex.Message); }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         #endregion

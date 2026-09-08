@@ -401,35 +401,237 @@
                         </StackPanel>
                     </Border>
 
-                    <DataGrid Grid.Row="1" Margin="0 4" 
-                              ItemsSource="{Binding HistoryList}"
-                              SelectedItem="{Binding SelectedHistoryReturn}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              GridLinesVisibility="Horizontal"
-                              Style="{StaticResource DataGridStyle}">
+                    <DataGrid
+    x:Name="ReturnsDataGrid"
+    Grid.Row="1"
+    Margin="0,4"
+    AutoGenerateColumns="False"
+    CanUserAddRows="False"
+    HorizontalScrollBarVisibility="Disabled"
+    IsReadOnly="True"
+    ItemsSource="{Binding HistoryList}"
+    SelectedItem="{Binding SelectedHistoryReturn}"
+    SelectionMode="Single"
+    Style="{StaticResource DataGridStyle}"
+    VerticalScrollBarVisibility="Auto">
+
+                        <DataGrid.RowStyle>
+                            <Style BasedOn="{StaticResource Style.DataGrid.Row}" TargetType="DataGridRow">
+                                <Setter Property="Height" Value="Auto" />
+                                <Setter Property="MinHeight" Value="42" />
+                                <Setter Property="DetailsVisibility" Value="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}" />
+                            </Style>
+                        </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Return ID" Binding="{Binding SupplierReturnId}" Width="100" Visibility="Collapsed"/>
-                            <DataGridTextColumn Header="Return #" Binding="{Binding ReturnNumber}" Width="120"/>
-                            <DataGridTextColumn Header="Date" Binding="{Binding ReturnDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
-                            <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="*"/>
-                            <DataGridTextColumn Header="Returned By" Binding="{Binding ReturnedBy}" Width="100"/>
-                            <DataGridTemplateColumn Header="Net Amount" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                            <!--  Expand / Collapse Button  -->
+                            <DataGridTemplateColumn Width="44">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding NetAmount, StringFormat='Rs. {0:N2}'}" TextAlignment="Right" HorizontalAlignment="Right" />
+                                        <ToggleButton
+                        Width="28"
+                        Height="28"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        ToolTip="Expand return details">
+                                            <ToggleButton.Style>
+                                                <Style TargetType="ToggleButton">
+                                                    <Setter Property="Content" Value="&gt;" />
+                                                    <Setter Property="FontFamily" Value="Segoe UI" />
+                                                    <Setter Property="FontSize" Value="12" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Setter Property="Foreground" Value="#334155" />
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="BorderThickness" Value="0" />
+                                                    <Setter Property="Cursor" Value="Hand" />
+                                                    <Setter Property="Focusable" Value="False" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter Property="Content" Value="v" />
+                                                            <Setter Property="ToolTip" Value="Collapse return details" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#E5E7EB" />
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ToggleButton.Style>
+                                        </ToggleButton>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!--  Parent Row Columns  -->
+                            <DataGridTextColumn
+            Width="100"
+            Binding="{Binding SupplierReturnId}"
+            Header="Return ID"
+            Visibility="Collapsed" />
+
+                            <DataGridTextColumn
+            Width="120"
+            Binding="{Binding ReturnNumber}"
+            Header="Return #" />
+
+                            <DataGridTextColumn
+            Width="120"
+            Binding="{Binding ReturnDate, StringFormat='{}{0:dd/MM/yyyy}'}"
+            Header="Date" />
+                            <DataGridTextColumn
+            Width="120"
+            Binding="{Binding InvoiceNo}"
+            Header="Invoice No" />
+                            <DataGridTextColumn
+            Width="120"
+            Binding="{Binding InvoiceDate}"
+            Header="Invoice Date" />
+
+                            <DataGridTextColumn
+            Width="*"
+            Binding="{Binding SupplierName}"
+            Header="Supplier" />
+
+                            <DataGridTextColumn
+            Width="100"
+            Binding="{Binding ReturnedBy}"
+            Header="Returned By" />
+
+                            <DataGridTemplateColumn
+            Width="120"
+            Header="Net Amount"
+            HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                        HorizontalAlignment="Right"
+                        Text="{Binding NetAmount, StringFormat='Rs. {0:N2}'}"
+                        TextAlignment="Right" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
 
+                        <!--  Child Row Details (Expanded Area)  -->
+                        <DataGrid.RowDetailsTemplate>
+                            <DataTemplate>
+                                <Border
+                Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                Margin="0,12,0,12"
+                Padding="40,0,12,0"
+                HorizontalAlignment="Stretch"
+                Background="#F4F6F8"
+                BorderBrush="#D8DEE6"
+                BorderThickness="0,1,0,1"
+                Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid>
+                                        <Border Margin="0,10,0,10" HorizontalAlignment="Stretch">
+
+                                            <!--  Child DataGrid  -->
+                                            <DataGrid
+                            MinHeight="50"
+                            HorizontalAlignment="Stretch"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            HeadersVisibility="Column"
+                            HorizontalScrollBarVisibility="Auto"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding ReturnLines}"
+                            Style="{StaticResource DataGridStyle}"
+                            VerticalScrollBarVisibility="Disabled">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding ProductName}"
+                                    Header="Product Name" />
+
+                                                    <DataGridTextColumn
+                                    Width="120"
+                                    Binding="{Binding GRNNo}"
+                                    Header="GRN No" />
+
+                                                    <DataGridTextColumn
+                                    Width="120"
+                                    Binding="{Binding InvoiceNo}"
+                                    Header="Invoice No" />
+
+                                                    <DataGridTextColumn
+                                    Width="110"
+                                    Binding="{Binding InvoiceDate, StringFormat='{}{0:dd/MM/yyyy}'}"
+                                    Header="Invoice Date" />
+
+                                                    <DataGridTextColumn
+                                    Width="100"
+                                    Binding="{Binding QtyReturn, StringFormat=N2}"
+                                    ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                    Header="Return Qty"
+                                    HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
+
+                                                    <DataGridTextColumn
+                                    Width="150"
+                                    Binding="{Binding ReturnReason}"
+                                    Header="Reason" />
+
+                                                    <DataGridCheckBoxColumn
+                                    Width="80"
+                                    Binding="{Binding IsWastage}"
+                                    Header="Wastage" />
+
+                                                    <DataGridTextColumn
+                                    Width="140"
+                                    Binding="{Binding RefundAmount, StringFormat='Rs. {0:N2}'}"
+                                    ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                    Header="Refund Amount"
+                                    HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </DataGrid.RowDetailsTemplate>
                     </DataGrid>
 
-                    <Border Grid.Row="2" Style="{StaticResource PanelCardStyle}" Margin="0">
-                        <TextBlock Text="{Binding ResultCountMessage}" HorizontalAlignment="Right" Foreground="Gray"/>
+  
+                    <Border
+    Grid.Row="2"
+    Margin="0"
+    Style="{StaticResource PanelCardStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="{Binding HistoryList.Count, StringFormat='{}{0} return(s)'}" HorizontalAlignment="Right" Foreground="Gray"/>
+
+
+                            <StackPanel
+            Grid.Column="2"
+            VerticalAlignment="Center"
+            Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource LabelStyle}" Text="Total Refund Amount: " />
+                                <TextBlock
+                Margin="4,0,10,0"
+                FontWeight="Bold"
+                Foreground="{StaticResource BrandBrush}"
+                Style="{StaticResource LabelStyle}"
+                Text="{Binding TotalNetAmount, StringFormat='{} {0:N2}'}" />
+                            </StackPanel>
+                        </Grid>
                     </Border>
+
                 </Grid>
             </TabItem>
 

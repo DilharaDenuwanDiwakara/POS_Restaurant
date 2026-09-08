@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="Common\FileUploadConstraints.cs" />
     <Compile Include="DTOs\SalesReturnFlatDto.cs" />
+    <Compile Include="DTOs\SupplierReturnFlatDto.cs" />
     <Compile Include="Enums\GoodsReceiveNoteStatus.cs" />
     <Compile Include="Enums\PurchaseOrderStatus.cs" />
     <Compile Include="Enums\SupplierReturnStatus.cs" />

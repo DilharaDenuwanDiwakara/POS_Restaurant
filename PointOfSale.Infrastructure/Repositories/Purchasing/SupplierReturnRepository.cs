@@ -1,10 +1,11 @@
-﻿using System;
+﻿using PointOfSale.Core.DTOs;
+using PointOfSale.Core.Interfaces.Repositories.Purchasing;
+using PointOfSale.Core.Models.Purchasing;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
-using PointOfSale.Core.Interfaces.Repositories.Purchasing;
-using PointOfSale.Core.Models.Purchasing;
 
 namespace PointOfSale.Infrastructure.Repositories.Purchasing
 {
@@ -493,6 +494,80 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
 
             return false;
         }
+
+        public async Task<List<SupplierReturnFlatDto>> GetSupplierReturnsAsync(DateTime? fromDate, DateTime? toDate, int supplierId = 0)
+        {
+            var flatList = new List<SupplierReturnFlatDto>();
+
+            using (var connection = GetConnection())
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.CommandText = "[Purchasing].[uspGetSupplierReturnsWithDetails]";
+
+                command.Parameters.AddWithValue("@FromDate", (object)fromDate ?? DBNull.Value);
+                command.Parameters.AddWithValue("@ToDate", (object)toDate ?? DBNull.Value);
+                command.Parameters.AddWithValue("@SupplierId", supplierId);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    var returnIdOrdinal = reader.GetOrdinal("SupplierReturnId");
+                    var returnNoOrdinal = reader.GetOrdinal("ReturnNumber");
+                    var returnDateOrdinal = reader.GetOrdinal("ReturnDate");
+                    var supplierNameOrdinal = reader.GetOrdinal("SupplierName");
+                    var returnedByOrdinal = reader.GetOrdinal("ReturnedBy");
+                    var netAmountOrdinal = reader.GetOrdinal("NetAmount");
+
+                    var productNameOrdinal = reader.GetOrdinal("ProductName");
+                    var qtyReturnOrdinal = reader.GetOrdinal("QtyReturn");
+                    var refundAmountOrdinal = reader.GetOrdinal("RefundAmount");
+                    var returnReasonOrdinal = reader.GetOrdinal("ReturnReason");
+                    var isWastageOrdinal = reader.GetOrdinal("IsWastage");
+
+                    var grnNoOrdinal = reader.GetOrdinal("GRNNo");
+                    var invoiceNoOrdinal = reader.GetOrdinal("InvoiceNo");
+                    var invoiceDateOrdinal = reader.GetOrdinal("InvoiceDate");
+
+                    while (await reader.ReadAsync())
+                    {
+                        flatList.Add(new SupplierReturnFlatDto
+                        {
+                            SupplierReturnId = reader.GetInt32(returnIdOrdinal),
+                            ReturnNumber = GetStringOrDefault(reader, returnNoOrdinal),
+                            ReturnDate = reader.GetDateTime(returnDateOrdinal),
+                            SupplierName = GetStringOrDefault(reader, supplierNameOrdinal),
+                            ReturnedBy = GetStringOrDefault(reader, returnedByOrdinal),
+                            NetAmount = GetDecimalOrDefault(reader, netAmountOrdinal),
+
+                            ProductName = GetStringOrDefault(reader, productNameOrdinal),
+                            QtyReturn = GetDecimalOrDefault(reader, qtyReturnOrdinal),
+                            RefundAmount = GetDecimalOrDefault(reader, refundAmountOrdinal),
+                            ReturnReason = GetStringOrDefault(reader, returnReasonOrdinal),
+                            IsWastage = !reader.IsDBNull(isWastageOrdinal) && reader.GetBoolean(isWastageOrdinal),
+
+                            GRNNo = GetStringOrDefault(reader, grnNoOrdinal),
+                            InvoiceNo = GetStringOrDefault(reader, invoiceNoOrdinal),
+                            InvoiceDate = reader.IsDBNull(invoiceDateOrdinal) ? (DateTime?)null : reader.GetDateTime(invoiceDateOrdinal)
+                        });
+                    }
+                }
+            }
+
+            return flatList;
+        }
+
+        private string GetStringOrDefault(SqlDataReader reader, int ordinal)
+        {
+            return reader.IsDBNull(ordinal) ? string.Empty : reader.GetString(ordinal);
+        }
+
+        private decimal GetDecimalOrDefault(SqlDataReader reader, int ordinal)
+        {
+            return reader.IsDBNull(ordinal) ? 0m : reader.GetDecimal(ordinal);
+        }
+
         #endregion
     }
 }
