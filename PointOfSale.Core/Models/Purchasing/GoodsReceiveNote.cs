@@ -1,10 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace PointOfSale.Core.Models.Purchasing
 {
-    public class GoodsReceiveNote
+    public class GoodsReceiveNote : INotifyPropertyChanged
     {
+        private bool _isExpanded;
+        private bool _isLoadingLineItems;
+        private bool _hasLoadedLineItems;
+
         public long GoodsReceiveNoteId { get; set; }
         public long PurchaseOrderId { get; set; }
         public int BranchId { get; set; }
@@ -47,5 +54,37 @@ namespace PointOfSale.Core.Models.Purchasing
                         : "N/A";
 
         public List<GoodsReceiveNoteLine> Lines { get; set; } = new List<GoodsReceiveNoteLine>();
+        public ObservableCollection<GoodsReceiveNoteLineModel> GrnLines { get; } = new ObservableCollection<GoodsReceiveNoteLineModel>();
+
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set => SetProperty(ref _isExpanded, value);
+        }
+
+        public bool IsLoadingLineItems
+        {
+            get => _isLoadingLineItems;
+            set => SetProperty(ref _isLoadingLineItems, value);
+        }
+
+        public bool HasLoadedLineItems
+        {
+            get => _hasLoadedLineItems;
+            set => SetProperty(ref _hasLoadedLineItems, value);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (Equals(storage, value))
+            {
+                return;
+            }
+
+            storage = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

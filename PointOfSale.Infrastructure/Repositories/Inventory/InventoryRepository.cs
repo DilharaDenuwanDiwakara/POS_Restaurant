@@ -16,42 +16,55 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
 
         public async Task<long> CreateStockTransferAsync(StockTransfer transfer)
         {
-            using (var connection = GetConnection()) // Assumes you have a BaseRepository
+            try
             {
-                using (var command = CreateCommand(connection, "[Inventory].[uspInsertStockTransfer]"))
+                using (var connection = GetConnection()) // Assumes you have a BaseRepository
                 {
-                    // Add Header Parameters
-                    command.Parameters.AddWithValue("@BranchId", transfer.BranchId);
-                    command.Parameters.AddWithValue("@FromLocationId", transfer.FromLocationId);
-                    command.Parameters.AddWithValue("@ToLocationId", transfer.ToLocationId);
-                    command.Parameters.AddWithValue("@TransferDate", transfer.TransferDate);
-                    command.Parameters.AddWithValue("@Note", (object)transfer.Note ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@CreatedBy", transfer.CreatedBy); // Usually from UserSession
-
-                    // Add Lines Parameter (Table Valued Parameter)
-                    var linesTable = CreateLinesDataTable(transfer.Lines);
-                    var linesParam = command.Parameters.AddWithValue("@Lines", linesTable);
-                    linesParam.SqlDbType = SqlDbType.Structured;
-                    linesParam.TypeName = "[Inventory].[StockTransferLineType]";
-
-                    // Output Parameter for the new Transfer ID
-                    var outParam = new SqlParameter("@TransferId", SqlDbType.BigInt)
+                    using (var command = CreateCommand(connection, "[Inventory].[uspInsertStockTransfer]"))
                     {
-                        Direction = ParameterDirection.Output
-                    };
-                    command.Parameters.Add(outParam);
+                        command.CommandTimeout = 120;
 
-                    await connection.OpenAsync();
-                    await command.ExecuteNonQueryAsync();
+                        // Add Header Parameters
+                        command.Parameters.AddWithValue("@BranchId", transfer.BranchId);
+                        command.Parameters.AddWithValue("@FromLocationId", transfer.FromLocationId);
+                        command.Parameters.AddWithValue("@ToLocationId", transfer.ToLocationId);
+                        command.Parameters.AddWithValue("@TransferDate", transfer.TransferDate);
+                        command.Parameters.AddWithValue("@Note", (object)transfer.Note ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@CreatedBy", transfer.CreatedBy); // Usually from UserSession
 
-                    var transferIdValue = command.Parameters["@TransferId"].Value;
-                    if (transferIdValue == null || transferIdValue == DBNull.Value)
-                    {
-                        throw new InvalidOperationException("Stock transfer was saved, but the database did not return a TransferId.");
+                        // Add Lines Parameter (Table Valued Parameter)
+                        var linesTable = CreateLinesDataTable(transfer.Lines);
+                        var linesParam = command.Parameters.AddWithValue("@Lines", linesTable);
+                        linesParam.SqlDbType = SqlDbType.Structured;
+                        linesParam.TypeName = "[Inventory].[StockTransferLineType]";
+
+                        // Output Parameter for the new Transfer ID
+                        var outParam = new SqlParameter("@TransferId", SqlDbType.BigInt)
+                        {
+                            Direction = ParameterDirection.Output
+                        };
+                        command.Parameters.Add(outParam);
+
+                        await connection.OpenAsync();
+                        await command.ExecuteNonQueryAsync();
+
+                        var transferIdValue = command.Parameters["@TransferId"].Value;
+                        if (transferIdValue == null || transferIdValue == DBNull.Value)
+                        {
+                            throw new InvalidOperationException("Stock transfer was saved, but the database did not return a TransferId.");
+                        }
+
+                        return Convert.ToInt64(transferIdValue);
                     }
-
-                    return Convert.ToInt64(transferIdValue);
                 }
+            }
+            catch (SqlException ex) when (ex.Number == -2)
+            {
+                throw new InvalidOperationException("Save failed due to network timeout. Please try again.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("Save failed due to a database error. Please try again.", ex);
             }
         }
         public async Task ImportOpeningStockAsync(List<OpenStockItemDto> items, int userId, int locationId = 1)

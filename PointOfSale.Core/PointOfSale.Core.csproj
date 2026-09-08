@@ -217,6 +217,7 @@
     <Compile Include="Models\Purchasing\GoodsPurchaseNoteLine.cs" />
     <Compile Include="Models\Purchasing\GoodsReceiveNote.cs" />
     <Compile Include="Models\Purchasing\GoodsReceiveNoteLine.cs" />
+    <Compile Include="Models\Purchasing\GoodsReceiveNoteLineModel.cs" />
     <Compile Include="Models\Purchasing\OriginalGrnReturnLine.cs" />
     <Compile Include="Models\Purchasing\ReturnReasonModel.cs" />
     <Compile Include="Models\Purchasing\Supplier.cs" />

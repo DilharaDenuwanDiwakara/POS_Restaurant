@@ -13,6 +13,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
 
         Task<IEnumerable<GoodsReceiveNote>> GetAllAsync(int? supplierId, DateTime? dateFrom, DateTime? dateTo);
         Task<IEnumerable<GoodsReceiveNote>> GetPendingApprovalsAsync(int branchId, int? supplierId, DateTime? dateFrom, DateTime? dateTo);
+        Task<List<GoodsReceiveNoteLineModel>> GetGoodsReceiveNoteLines(long grnId);
         Task<IEnumerable<GoodsReceiveNoteLine>> GetLinesByGRNIdAsync(long goodsReceiveNoteId);
         Task<DataTable> GetGoodsReceiveNoteReportDataAsync(long goodsReceiveNoteId);
         Task ApproveRejectAsync(long goodsReceiveNoteId, bool isApproved, int actionBy, string remarks);

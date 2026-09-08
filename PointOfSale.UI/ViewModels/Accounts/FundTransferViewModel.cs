@@ -11,7 +11,6 @@ using CrystalDecisions.CrystalReports.Engine;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Repositories.Accounts;
-using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Accounts.Entities;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;

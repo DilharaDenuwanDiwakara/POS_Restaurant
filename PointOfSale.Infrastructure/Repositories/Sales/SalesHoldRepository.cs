@@ -95,6 +95,8 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             {
                 using (var command = CreateCommand(connection, "[Sales].[uspHoldSale]"))
                 {
+                    command.CommandTimeout = 60;
+
                     command.Parameters.AddWithValue("@LocationId", hold.LocationId);
                     command.Parameters.AddWithValue("@HoldDate", hold.HoldDate);
                     command.Parameters.AddWithValue("@ReferenceNote", (object)hold.ReferenceNote ?? DBNull.Value);
