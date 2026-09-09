@@ -11,5 +11,6 @@ namespace PointOfSale.Core.Interfaces.Repositories.Inventory
         Task<IEnumerable<StockAdjustment>> GetAllAsync();
         Task<IEnumerable<AvailableQuantityDto>> GetAvailableQty(int locationId, int productId);
         Task<List<StockAdjustmentHeaderDto>> GetHistoryAsync(global::System.DateTime? fromDate, global::System.DateTime? toDate, int? locationId);
+        Task<global::System.Data.DataTable> GetStockAdjustmentReportAsync(long stockAdjustmentId);
     }
 }

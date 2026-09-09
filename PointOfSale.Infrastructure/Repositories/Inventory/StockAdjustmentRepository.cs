@@ -157,6 +157,34 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
                 throw new InvalidOperationException("A database error occurred while loading stock adjustment history.", ex);
             }
         }
+
+        public async Task<DataTable> GetStockAdjustmentReportAsync(long stockAdjustmentId)
+        {
+            if (stockAdjustmentId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(stockAdjustmentId), "A valid stock adjustment ID is required.");
+
+            var reportTable = new DataTable("uspGetStockAdjustmentReport");
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[uspGetStockAdjustmentReport]"))
+                using (var adapter = new SqlDataAdapter(command))
+                {
+                    command.Parameters.Add("@StockAdjustmentId", SqlDbType.BigInt).Value = stockAdjustmentId;
+
+                    await connection.OpenAsync();
+                    adapter.Fill(reportTable);
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(
+                    $"A database error occurred while loading Stock Adjustment Report data for StockAdjustmentId {stockAdjustmentId}.", ex);
+            }
+
+            return reportTable;
+        }
         #endregion
 
         #region Private Methods
