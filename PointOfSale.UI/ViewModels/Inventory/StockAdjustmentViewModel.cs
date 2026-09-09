@@ -1,12 +1,12 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CrystalDecisions.Shared;
 using Microsoft.Win32;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
@@ -14,6 +14,7 @@ using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using StockAdjustmentReport = PointOfSale.UI.Reports.StockAdjustment;
 
 namespace PointOfSale.UI.ViewModels.Inventory
 {
@@ -339,7 +340,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 return;
 
             long stockAdjustmentId = 0;
-            string reportPath = null;
 
             try
             {
@@ -357,37 +357,18 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 };
 
                 stockAdjustmentId = await _stockAdjustmentRepository.CreateAsync(stockAdjustment);
-                reportPath = PromptForReportPath(stockAdjustmentId);
-
-                if (string.IsNullOrWhiteSpace(reportPath))
-                {
-                    MessageBox.Show("Stock adjustment saved successfully. Report export was cancelled.", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Information);
-                    ClearAll();
-                    return;
-                }
-
-                await ExportStockAdjustmentReportAsync(stockAdjustmentId, reportPath);
-
-                if (!File.Exists(reportPath))
-                {
-                    MessageBox.Show("Stock adjustment saved, but the report file was not created.", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    ClearAll();
-                    return;
-                }
-
-                var openResult = MessageBox.Show(
-                    "Report saved successfully. Do you want to open the file now?",
-                    "Stock Adjustment",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Information);
-
-                if (openResult == MessageBoxResult.Yes)
-                {
-                    OpenReportFile(reportPath);
-                }
-
+                //MessageBox.Show("Stock adjustment saved successfully.", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Information);
                 ClearAll();
                 await SearchAdjustmentHistoryAsync();
+
+                try
+                {
+                    await GenerateStockAdjustmentReportAsync(stockAdjustmentId);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Stock adjustment saved, but the report could not be generated: {ex.Message}", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
             catch (Exception ex)
             {
@@ -403,40 +384,63 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
-        public Task ExportStockAdjustmentReportAsync(long stockAdjustmentId, string filePath)
+        private async Task GenerateStockAdjustmentReportAsync(long stockAdjustmentId)
         {
-            return Task.CompletedTask;
+            if (stockAdjustmentId <= 0)
+            {
+                throw new InvalidOperationException($"Invalid StockAdjustmentId returned from save operation: {stockAdjustmentId}.");
+            }
+
+            var reportData = await _stockAdjustmentRepository.GetStockAdjustmentReportAsync(stockAdjustmentId);
+            if (reportData == null || reportData.Rows.Count == 0)
+            {
+                throw new Exception("The report query returned 0 rows. Check the StockAdjustmentId parameter.");
+            }
+
+            var saveDialog = new SaveFileDialog
+            {
+                Filter = "PDF Files (*.pdf)|*.pdf",
+                FileName = $"StockAdjustment_{stockAdjustmentId}_{DateTime.Now:yyyyMMdd_HHmm}.pdf",
+                Title = "Save Stock Adjustment Report"
+            };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                await Task.Run(() => ExportStockAdjustmentReportToDisk(
+                    reportData, saveDialog.FileName, stockAdjustmentId));
+            }
         }
 
-        private string PromptForReportPath(long stockAdjustmentId)
+        private void ExportStockAdjustmentReportToDisk(
+            System.Data.DataTable reportData,
+            string filePath,
+            long stockAdjustmentId)
         {
-            try
+            using (var reportDocument = new StockAdjustmentReport())
             {
-                var saveDialog = new SaveFileDialog
+                reportDocument.SetDataSource(reportData);
+                TrySetStockAdjustmentIdParameter(reportDocument, stockAdjustmentId);
+                reportDocument.ExportToDisk(ExportFormatType.PortableDocFormat, filePath);
+            }
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (MessageBox.Show("Report saved. Open now?", "Success", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    Filter = "PDF Files (*.pdf)|*.pdf",
-                    FileName = $"StockAdjustment_{stockAdjustmentId}_{DateTime.Now:yyyyMMdd_HHmm}.pdf",
-                    Title = "Save Stock Adjustment Report"
-                };
-
-                return saveDialog.ShowDialog() == true ? saveDialog.FileName : null;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Unable to open save dialog: {ex.Message}", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Error);
-                return null;
-            }
+                    Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                }
+            });
         }
 
-        private void OpenReportFile(string filePath)
+        private static void TrySetStockAdjustmentIdParameter(StockAdjustmentReport reportDocument, long stockAdjustmentId)
         {
             try
             {
-                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                reportDocument.SetParameterValue("@StockAdjustmentId", stockAdjustmentId);
             }
-            catch (Exception ex)
+            catch
             {
-                MessageBox.Show($"Report was saved, but could not be opened: {ex.Message}", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // The report is already bound to the retrieved data when no runtime parameter is exposed.
             }
         }
 
