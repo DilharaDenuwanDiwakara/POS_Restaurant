@@ -140,6 +140,19 @@ namespace PointOfSale.Core.Models.Sales
             }
         }
 
+        private bool _isManualDiscountApplied;
+        public bool IsManualDiscountApplied
+        {
+            get => _isManualDiscountApplied;
+            set
+            {
+                if (SetProperty(ref _isManualDiscountApplied, value))
+                {
+                    OnPropertyChanged(nameof(OfferDisplay));
+                }
+            }
+        }
+
         public decimal LineDiscount
         {
             get => BaseDiscountAmount + ManualDiscount + PromoDiscount;
@@ -147,10 +160,40 @@ namespace PointOfSale.Core.Models.Sales
             {
                 var maxDiscount = UnitPrice * Quantity;
                 var clamped = value < 0 ? 0 : (value > maxDiscount ? maxDiscount : value);
+                var isManualDiscountApplied = clamped > 0;
 
-                BaseDiscountPerUnit = 0;
-                ManualDiscount = clamped;
-                PromoDiscount = 0;
+                var baseDiscountChanged = _baseDiscountPerUnit != 0;
+                var manualDiscountChanged = _manualDiscount != clamped;
+                var promoDiscountChanged = _promoDiscount != 0;
+                var manualFlagChanged = _isManualDiscountApplied != isManualDiscountApplied;
+
+                _isManualDiscountApplied = isManualDiscountApplied;
+                _baseDiscountPerUnit = 0;
+                _manualDiscount = clamped;
+                _promoDiscount = 0;
+                ClearAutoRuleName();
+
+                if (manualFlagChanged)
+                    OnPropertyChanged(nameof(IsManualDiscountApplied));
+
+                if (baseDiscountChanged)
+                    OnPropertyChanged(nameof(BaseDiscountPerUnit));
+
+                if (manualDiscountChanged)
+                    OnPropertyChanged(nameof(ManualDiscount));
+
+                if (promoDiscountChanged)
+                    OnPropertyChanged(nameof(PromoDiscount));
+
+                if (baseDiscountChanged)
+                    OnPropertyChanged(nameof(BaseDiscountAmount));
+
+                if (baseDiscountChanged || manualDiscountChanged || promoDiscountChanged)
+                {
+                    OnPropertyChanged(nameof(LineDiscount));
+                    OnPropertyChanged(nameof(Amount));
+                    OnPropertyChanged(nameof(OfferDisplay));
+                }
             }
         }
 

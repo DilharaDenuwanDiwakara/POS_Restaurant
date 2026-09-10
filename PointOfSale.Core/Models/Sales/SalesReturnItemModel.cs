@@ -16,6 +16,7 @@ namespace PointOfSale.Core.Models.Sales
         private string _productName;
         private decimal _soldQty;
         private decimal _unitPrice;
+        private decimal _lineTotal;
         private decimal _returnQty;
         private int _returnReasonId;
         private bool _isWastage;
@@ -35,7 +36,14 @@ namespace PointOfSale.Core.Models.Sales
         public decimal SoldQty
         {
             get => _soldQty;
-            set => SetProperty(ref _soldQty, value);
+            set
+            {
+                if (SetProperty(ref _soldQty, value))
+                {
+                    OnPropertyChanged(nameof(NetUnitRefund));
+                    OnPropertyChanged(nameof(RefundAmount));
+                }
+            }
         }
 
         public decimal UnitPrice
@@ -43,8 +51,18 @@ namespace PointOfSale.Core.Models.Sales
             get => _unitPrice;
             set
             {
-                if (SetProperty(ref _unitPrice, value))
+                SetProperty(ref _unitPrice, value);
+            }
+        }
+
+        public decimal LineTotal
+        {
+            get => _lineTotal;
+            set
+            {
+                if (SetProperty(ref _lineTotal, value))
                 {
+                    OnPropertyChanged(nameof(NetUnitRefund));
                     OnPropertyChanged(nameof(RefundAmount));
                 }
             }
@@ -77,7 +95,9 @@ namespace PointOfSale.Core.Models.Sales
             set => SetProperty(ref _isWastage, value);
         }
 
-        public decimal RefundAmount => ReturnQty * UnitPrice;
+        public decimal NetUnitRefund => SoldQty <= 0 ? 0 : decimal.Round(LineTotal / SoldQty, 2);
+
+        public decimal RefundAmount => decimal.Round(ReturnQty * NetUnitRefund, 2);
 
         protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
         {

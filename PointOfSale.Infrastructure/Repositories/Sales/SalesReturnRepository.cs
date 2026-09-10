@@ -61,6 +61,9 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                                         ProductName = GetValue<string>(reader, "ProductName"),
                                         SoldQty = GetValue<decimal>(reader, "SoldQty"), // This is now the "Remaining Qty"
                                         UnitPrice = GetValue<decimal>(reader, "UnitPrice"),
+                                        LineTotal = HasColumn(reader, "LineTotal")
+                                            ? GetValue<decimal>(reader, "LineTotal")
+                                            : GetValue<decimal>(reader, "SoldQty") * GetValue<decimal>(reader, "UnitPrice"),
                                         ReturnQty = 0,
                                         ReturnReasonId = 0,
                                         IsWastage = false
@@ -210,6 +213,19 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             return reader.IsDBNull(ordinal)
                 ? defaultValue
                 : reader.GetValue(ordinal).ToString();
+        }
+
+        private static bool HasColumn(IDataRecord record, string columnName)
+        {
+            for (var i = 0; i < record.FieldCount; i++)
+            {
+                if (string.Equals(record.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public async Task<List<SalesReturnFlatDto>> GetSalesReturnsAsync(DateTime from, DateTime to)

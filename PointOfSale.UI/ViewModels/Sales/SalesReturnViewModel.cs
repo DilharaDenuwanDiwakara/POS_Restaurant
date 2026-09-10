@@ -290,7 +290,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private void CalculateTotal()
         {
-            TotalRefund = ReturnLines?.Sum(l => l.RefundAmount) ?? 0;
+            TotalRefund = ReturnLines?.Sum(l => decimal.Round(l.NetUnitRefund * l.ReturnQty, 2)) ?? 0;
         }
 
         private void ResetOrder()

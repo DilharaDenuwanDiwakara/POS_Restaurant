@@ -99,7 +99,7 @@
                         </DataGridTextColumn.HeaderStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, StringFormat=N2}" Width="*" IsReadOnly="True">
+                    <DataGridTextColumn Header="Refund" Binding="{Binding NetUnitRefund, StringFormat=N2}" Width="*" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource ReadOnlyCellTextStyle}">
                                 <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -157,7 +157,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="Refund" Binding="{Binding RefundAmount, StringFormat=N2}" Width="*" IsReadOnly="True">
+                    <DataGridTextColumn Header="Total Refund" Binding="{Binding RefundAmount, StringFormat=N2}" Width="*" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource ReadOnlyCellTextStyle}">
                                 <Setter Property="HorizontalAlignment" Value="Right"/>

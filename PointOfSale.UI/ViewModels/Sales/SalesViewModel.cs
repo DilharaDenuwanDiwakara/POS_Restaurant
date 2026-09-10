@@ -80,6 +80,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         private bool _isRefreshingAutoDiscountRules;
         private bool _isCalculatingTotals;
         private bool _isUpdatingCart;
+        private bool _isRecallingBill;
         private bool _isApplyingCustomerSelection;
         private bool _isDataLoaded;
         private bool _isLoadingData;
@@ -950,7 +951,9 @@ namespace PointOfSale.UI.ViewModels.Sales
         private void CartItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             // If Quantity changes in the Grid, recalculate the whole invoice
-            if (e.PropertyName == nameof(SalesLine.Quantity) || e.PropertyName == nameof(SalesLine.ManualDiscount))
+            if (e.PropertyName == nameof(SalesLine.Quantity) ||
+                e.PropertyName == nameof(SalesLine.ManualDiscount) ||
+                e.PropertyName == nameof(SalesLine.LineDiscount))
             {
                 if (!_isUpdatingCart)
                     CalculateTotals();
@@ -1029,6 +1032,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                     Note = "",
                     UnitPrice = SellingPrice,
                     ManualDiscount = Discount,
+                    IsManualDiscountApplied = Discount > 0,
                     BaseDiscountPerUnit = Math.Max(0, productToAdd.DiscountAmount ?? 0),
                     BaseDiscountLabel = (productToAdd.DiscountAmount ?? 0) > 0 ? "Item off" : null,
                     AvailableQuantity = maxStock,
@@ -1357,7 +1361,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             try
             {
                 var hasImportedRestaurantOrder = CartItems.Any(x => x.IsImportedOrderLine);
-                if (!hasImportedRestaurantOrder)
+                var shouldApplyAutoPricing = !hasImportedRestaurantOrder && !_isRecallingBill && CurrentOpenSalesId <= 0;
+                if (shouldApplyAutoPricing)
                     QueueActiveAutoDiscountRulesRefresh(CalculateAutoDiscountRuleSubTotal());
 
                 ApplyAutoPromotions();
@@ -1793,42 +1798,50 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private void LoadRecalledSaleIntoCart(RecalledSaleDto sale)
         {
-            ExecuteCancelInvoice();
-
-            CurrentOpenSalesId = Convert.ToInt32(sale.SalesId);
-            InvoiceNumber = sale.InvoiceNumber;
-            SelectedCustomer = sale.CustomerId.HasValue
-                ? Customers.FirstOrDefault(customer => customer.Id == sale.CustomerId.Value)
-                : Customers.FirstOrDefault(customer => customer.Id == 0);
-            IsTaxEnabled = sale.TaxAmount > 0;
-            IsServiceChargeEnabled = sale.ServiceChargeAmount > 0;
-
-            var lineNumber = 1;
-            foreach (var line in sale.Lines)
+            _isRecallingBill = true;
+            try
             {
-                var product = Products.FirstOrDefault(x => x.VariantId == line.ProductId);
-                CartItems.Add(new SalesLine
+                ExecuteCancelInvoice();
+
+                CurrentOpenSalesId = Convert.ToInt32(sale.SalesId);
+                InvoiceNumber = sale.InvoiceNumber;
+                SelectedCustomer = sale.CustomerId.HasValue
+                    ? Customers.FirstOrDefault(customer => customer.Id == sale.CustomerId.Value)
+                    : Customers.FirstOrDefault(customer => customer.Id == 0);
+                IsTaxEnabled = sale.TaxAmount > 0;
+                IsServiceChargeEnabled = sale.ServiceChargeAmount > 0;
+
+                var lineNumber = 1;
+                foreach (var line in sale.Lines)
                 {
-                    Number = lineNumber++,
-                    ProductId = line.ProductId,
-                    MenuCategoryId = product?.MenuCategoryId,
-                    ProductName = product?.DisplayName ?? MenuVariantDto.RemoveStandardVariantSuffix(line.ProductName),
-                    UnitPrice = line.UnitPrice,
-                    Quantity = line.Quantity,
-                    ManualDiscount = line.DiscountAmount,
-                    TaxAmount = line.TaxAmount,
-                    TaxIds = product?.TaxIds?.ToList() ?? new List<int>(),
-                    AvailableQuantity = decimal.MaxValue,
-                    Note = string.Empty
-                });
+                    var product = Products.FirstOrDefault(x => x.VariantId == line.ProductId);
+                    CartItems.Add(new SalesLine
+                    {
+                        Number = lineNumber++,
+                        ProductId = line.ProductId,
+                        MenuCategoryId = product?.MenuCategoryId,
+                        ProductName = product?.DisplayName ?? MenuVariantDto.RemoveStandardVariantSuffix(line.ProductName),
+                        UnitPrice = line.UnitPrice,
+                        Quantity = line.Quantity,
+                        ManualDiscount = line.DiscountAmount,
+                        TaxAmount = line.TaxAmount,
+                        TaxIds = product?.TaxIds?.ToList() ?? new List<int>(),
+                        AvailableQuantity = decimal.MaxValue,
+                        Note = string.Empty
+                    });
+                }
+
+                LineDiscountPercent = sale.TotalAmount > 0
+                    ? Math.Round((sale.Discount / sale.TotalAmount) * 100m, 2, MidpointRounding.AwayFromZero)
+                    : 0m;
+
+                CalculateTotals();
+                RaiseSaveCommandState();
             }
-
-            LineDiscountPercent = sale.TotalAmount > 0
-                ? Math.Round((sale.Discount / sale.TotalAmount) * 100m, 2, MidpointRounding.AwayFromZero)
-                : 0m;
-
-            CalculateTotals();
-            RaiseSaveCommandState();
+            finally
+            {
+                _isRecallingBill = false;
+            }
         }
 
         private SalesListDto ShowRecallBillPicker(IList<SalesListDto> unpaidSales)
@@ -2227,7 +2240,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 return 0m;
 
             var subTotal = CartItems
-                .Where(x => !x.IsAutoGeneratedPromotionLine)
+                .Where(x => !x.IsAutoGeneratedPromotionLine && !x.IsManualDiscountApplied)
                 .Sum(x =>
                 {
                     var lineAmountBeforeAutoDiscount = (x.UnitPrice * x.Quantity) - x.BaseDiscountAmount - x.ManualDiscount;
@@ -2498,6 +2511,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 return;
 
             var eligibleLines = targetLines
+                .Where(x => !x.IsManualDiscountApplied)
                 .Select(x => new
                 {
                     Line = x,
@@ -2553,6 +2567,9 @@ namespace PointOfSale.UI.ViewModels.Sales
             if (CartItems.Any(x => x.IsImportedOrderLine))
                 return;
 
+            if (_isRecallingBill || CurrentOpenSalesId > 0)
+                return;
+
             if (HasAppliedDiscountCode || HasAppliedLoyaltyPoints || LineDiscountPercent > 0)
                 return;
 
@@ -2571,7 +2588,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 if (promotionType == "BOGO_SAME_FREE" || promotionType == "BOGO_SAME_PERCENT")
                 {
                     var line = requestedLines.FirstOrDefault(x => x.ProductId == rule.BuyProductId);
-                    if (line == null || line.Quantity <= 0 || line.UnitPrice <= 0)
+                    if (line == null || line.IsManualDiscountApplied || line.Quantity <= 0 || line.UnitPrice <= 0)
                         continue;
 
                     int buyQty = rule.BuyQuantity <= 0 ? 1 : rule.BuyQuantity;
@@ -2603,7 +2620,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 else if (promotionType == "BUY_A_GET_B_FREE")
                 {
                     var buyLine = requestedLines.FirstOrDefault(x => x.ProductId == rule.BuyProductId);
-                    if (buyLine == null || buyLine.Quantity <= 0)
+                    if (buyLine == null || buyLine.IsManualDiscountApplied || buyLine.Quantity <= 0)
                         continue;
 
                     var getProductId = rule.GetProductId ?? 0;
@@ -2620,7 +2637,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                         continue;
 
                     int actualGetQty = 0;
-                    if (getLine != null && getLine.Quantity > 0 && getLine.UnitPrice > 0)
+                    if (getLine != null && !getLine.IsManualDiscountApplied && getLine.Quantity > 0 && getLine.UnitPrice > 0)
                     {
                         actualGetQty = Math.Min((int)Math.Floor(getLine.Quantity), eligibleGetQty);
                         if (actualGetQty > 0)
@@ -2663,7 +2680,10 @@ namespace PointOfSale.UI.ViewModels.Sales
                         continue;
 
                     var targetLines = CartItems
-                        .Where(x => x.MenuCategoryId.HasValue && x.MenuCategoryId.Value == discount.TargetMenuCategoryId.Value)
+                        .Where(x =>
+                            !x.IsManualDiscountApplied &&
+                            x.MenuCategoryId.HasValue &&
+                            x.MenuCategoryId.Value == discount.TargetMenuCategoryId.Value)
                         .ToList();
 
                     if (!targetLines.Any())
@@ -2682,7 +2702,9 @@ namespace PointOfSale.UI.ViewModels.Sales
                 }
             }
 
-            var discountedSubTotal = CartItems.Sum(x => x.Amount);
+            var discountedSubTotal = CartItems
+                .Where(x => !x.IsManualDiscountApplied)
+                .Sum(x => x.Amount);
             var bestAutoBillRule = _activeAutoDiscountRules
                 .Where(x => string.Equals(x.ApplyScope, "BILL", StringComparison.OrdinalIgnoreCase))
                 .Select(x => new { Rule = x, Amount = CalculateDiscountAmount(discountedSubTotal, x) })
