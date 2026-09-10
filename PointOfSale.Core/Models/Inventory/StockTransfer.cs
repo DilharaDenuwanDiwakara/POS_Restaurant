@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace PointOfSale.Core.Models.Inventory
 {
@@ -14,6 +16,7 @@ namespace PointOfSale.Core.Models.Inventory
         public string Status { get; set; } = "Completed"; // Default status
         public string Note { get; set; }
         public int CreatedBy { get; set; }
+        public DateTime CreatedDate { get; set; }
 
         // Display properties (populated by history queries)
         public string FromLocationName { get; set; }
@@ -22,5 +25,30 @@ namespace PointOfSale.Core.Models.Inventory
 
         // List of items to save
         public List<StockTransferLine> Lines { get; set; } = new List<StockTransferLine>();
+
+
+        private bool _isExpanded;
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set => SetProperty(ref _isExpanded, value);
+        }
+
+
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
+            storage = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
     }
 }

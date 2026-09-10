@@ -58,7 +58,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             AddLineCommand = new AsyncRelayCommand(async _ => await AddLineAsync(), _ => CanAddLine);
             RemoveLineCommand = new RelayCommand<StockTransferLine>(RemoveLine);
             ClearCommand = new RelayCommand(_ => ClearAll());
-            SearchHistoryCommand = new AsyncRelayCommand(async _ => await SearchHistoryAsync());
+            SearchHistoryCommand = new AsyncRelayCommand(async _ => await SearchStockTransferAsync(null));
 
             // Load Initial Data
             _ = LoadInitialDataAsync();
@@ -138,6 +138,20 @@ namespace PointOfSale.UI.ViewModels.Inventory
         #endregion
 
         #region Properties
+
+        private bool _isBusy;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                if (SetProperty(ref _isBusy, value))
+                {
+                    (SearchHistoryCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
 
         private string _barcode;
         public string Barcode
@@ -649,21 +663,84 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
         }
 
-        private async Task SearchHistoryAsync()
+        private async Task SearchStockTransferAsync(object obj)
         {
             try
             {
-                var results = await _inventoryRepository.GetAllStockTransfersAsync(
-                    _sessionService.BranchId, HistoryDateFrom, HistoryDateTo);
+                IsBusy = true;
+                HistoryList.Clear();
 
-                HistoryList = new ObservableCollection<StockTransfer>(results);
+                var from = HistoryDateFrom?.Date;
+                var to = HistoryDateTo?.Date.AddDays(1).AddSeconds(-1);
 
-                if (HistoryList.Count == 0)
-                    MessageBox.Show("No records found for the selected date range.");
+                if (_sessionService.BranchId <= 0)
+                {
+                    ErrorMessage = "Current user branch is not assigned.";
+                    return;
+                }
+
+                var flatResults = await _inventoryRepository.GetAllStockTransfers(_sessionService.BranchId, from, to);
+
+                var groupedResults = flatResults
+                    .GroupBy(t => new
+                    {
+                        t.Id,
+                        t.TransferNumber,
+                        t.BranchId,
+                        t.FromLocationId,
+                        t.FromLocationName,
+                        t.ToLocationId,
+                        t.ToLocationName,
+                        t.TransferDate,
+                        t.Note,
+                        t.Status,
+                        t.CreatedBy,
+                        t.Username,
+                        t.CreatedDate
+                    })
+                    .Select(g => new StockTransfer
+                    {
+                        TransferId = g.Key.Id,
+                        TransferNumber = g.Key.TransferNumber,
+                        BranchId = g.Key.BranchId,
+                        FromLocationId = g.Key.FromLocationId,
+                        FromLocationName = g.Key.FromLocationName,
+                        ToLocationId = g.Key.ToLocationId,
+                        ToLocationName = g.Key.ToLocationName,
+                        TransferDate = g.Key.TransferDate,
+                        Note = g.Key.Note,
+                        Status = g.Key.Status,
+                        CreatedBy = g.Key.CreatedBy,
+                        Username = g.Key.Username,
+                        CreatedDate = g.Key.CreatedDate,
+                        IsExpanded = false,
+                        Lines = g.Where(line => line.ProductName != null).Select(line => new StockTransferLine
+                        {
+                            TransferLineId = line.LineId,
+                            TransferId = g.Key.Id,
+                            ProductId = line.ProductId,
+                            ProductName = line.ProductName,
+                            ProductCode = line.ProductCode,
+                            BatchId = line.BatchId,
+                            Quantity = line.Qty,
+                            UnitMeasureId = line.UnitMeasureId,
+                            UnitMeasureName = line.UnitMeasureName,
+                            UnitMeasureCode = line.UnitMeasureCode
+                        }).ToList()
+                    });
+
+                foreach (var item in groupedResults)
+                {
+                    HistoryList.Add(item);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading transfer history: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 

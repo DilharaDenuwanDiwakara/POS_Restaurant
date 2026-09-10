@@ -12,6 +12,7 @@ namespace PointOfSale.Core.Models.Inventory
         public decimal Quantity { get; set; }
         public int UnitMeasureId { get; set; }
 
+
         // UI Display Properties (Not saved to TransferLine table, but useful for Grid/Reports)
         // You can populate these from the SelectedProduct/SelectedBatch in the ViewModel
         public string ProductName { get; set; }

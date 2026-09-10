@@ -594,5 +594,129 @@ ORDER BY p.Name;";
 
             return table;
         }
+
+
+
+        public async Task<List<StockTransferFlatDto>> GetAllStockTransfers(int branchId, DateTime? dateFrom, DateTime? dateTo)
+        {
+            var list = new List<StockTransferFlatDto>();
+
+            using (var connection = GetConnection())
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.CommandText = "[Inventory].[uspGetAllStockTransfers]";
+
+                // Parameters
+                command.Parameters.AddWithValue("@BranchId", branchId);
+                command.Parameters.AddWithValue("@DateFrom", (object)dateFrom ?? DBNull.Value);
+                command.Parameters.AddWithValue("@DateTo", (object)dateTo ?? DBNull.Value);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    var idOrdinal = reader.GetOrdinal("Id");
+                    var transferNumberOrdinal = reader.GetOrdinal("TransferNumber");
+                    var branchIdOrdinal = reader.GetOrdinal("BranchId");
+                    var fromLocationIdOrdinal = reader.GetOrdinal("FromLocationId");
+                    var fromLocationNameOrdinal = reader.GetOrdinal("FromLocationName");
+                    var toLocationIdOrdinal = reader.GetOrdinal("ToLocationId");
+                    var toLocationNameOrdinal = reader.GetOrdinal("ToLocationName");
+                    var transferDateOrdinal = reader.GetOrdinal("TransferDate");
+                    var noteOrdinal = reader.GetOrdinal("Note");
+                    var statusOrdinal = reader.GetOrdinal("Status");
+                    var createdByOrdinal = reader.GetOrdinal("CreatedBy");
+                    var usernameOrdinal = reader.GetOrdinal("Username");
+                    var createdDateOrdinal = reader.GetOrdinal("CreatedDate");
+
+                    while (await reader.ReadAsync())
+                    {
+                        list.Add(new StockTransferFlatDto
+                        {
+                            Id = reader.GetInt64(idOrdinal),
+                            TransferNumber = GetStringOrDefault(reader, transferNumberOrdinal),
+                            BranchId = reader.GetInt32(branchIdOrdinal),
+                            FromLocationId = reader.GetInt32(fromLocationIdOrdinal),
+                            FromLocationName = GetStringOrDefault(reader, fromLocationNameOrdinal),
+                            ToLocationId = reader.GetInt32(toLocationIdOrdinal),
+                            ToLocationName = GetStringOrDefault(reader, toLocationNameOrdinal),
+                            TransferDate = reader.GetDateTime(transferDateOrdinal),
+                            Note = GetStringOrDefault(reader, noteOrdinal),
+                            Status = GetStringOrDefault(reader, statusOrdinal),
+                            CreatedBy = reader.GetInt32(createdByOrdinal),
+                            Username = GetStringOrDefault(reader, usernameOrdinal),
+                            CreatedDate = reader.GetDateTime(createdDateOrdinal)
+                        });
+                    }
+
+                    if (await reader.NextResultAsync())
+                    {
+                        var lineIdOrdinal = reader.GetOrdinal("Id");
+                        var lineTransferIdOrdinal = reader.GetOrdinal("TransferId");
+                        var productIdOrdinal = reader.GetOrdinal("ProductId");
+                        var productNameOrdinal = reader.GetOrdinal("ProductName");
+                        var productCodeOrdinal = reader.GetOrdinal("ProductCode");
+                        var batchIdOrdinal = reader.GetOrdinal("BatchId");
+                        var quantityOrdinal = reader.GetOrdinal("Quantity");
+                        var unitMeasureIdOrdinal = reader.GetOrdinal("UnitMeasureId");
+                        var unitMeasureNameOrdinal = reader.GetOrdinal("UnitMeasureName");
+                        var unitMeasureCodeOrdinal = reader.GetOrdinal("UnitMeasureCode");
+
+                        while (await reader.ReadAsync())
+                        {
+                            var transferId = reader.GetInt64(lineTransferIdOrdinal);
+                            var parent = list.FirstOrDefault(x => x.Id == transferId);
+
+                            if (parent != null)
+                            {
+        
+                                var flatRow = new StockTransferFlatDto
+                                {
+                                    Id = parent.Id,
+                                    BranchId = parent.BranchId,
+                                    TransferNumber = parent.TransferNumber,
+                                    FromLocationId = parent.FromLocationId,
+                                    FromLocationName = parent.FromLocationName,
+                                    ToLocationId = parent.ToLocationId,
+                                    ToLocationName = parent.ToLocationName,
+                                    TransferDate = parent.TransferDate,
+                                    Note = parent.Note,
+                                    Status = parent.Status,
+                                    CreatedBy = parent.CreatedBy,
+                                    Username = parent.Username,
+                                    CreatedDate = parent.CreatedDate,
+
+                                    LineId = reader.GetInt64(lineIdOrdinal),
+                                    ProductId = reader.GetInt32(productIdOrdinal),
+                                    ProductName = GetStringOrDefault(reader, productNameOrdinal),
+                                    ProductCode = GetStringOrDefault(reader, productCodeOrdinal),
+                                    BatchId = reader.GetInt64(batchIdOrdinal),
+                                    Qty = GetDecimalOrDefault(reader, quantityOrdinal),
+                                    UnitMeasureId = !reader.IsDBNull(unitMeasureIdOrdinal) ? reader.GetInt32(unitMeasureIdOrdinal) : 0,
+                                    UnitMeasureName = GetStringOrDefault(reader, unitMeasureNameOrdinal),
+                                    UnitMeasureCode = GetStringOrDefault(reader, unitMeasureCodeOrdinal)
+                                };
+
+                                list.Add(flatRow);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return list;
+        }
+        private string GetStringOrDefault(SqlDataReader reader, int ordinal)
+        {
+            return reader.IsDBNull(ordinal) ? string.Empty : reader.GetString(ordinal);
+        }
+
+        private decimal GetDecimalOrDefault(SqlDataReader reader, int ordinal)
+        {
+            return reader.IsDBNull(ordinal) ? 0m : reader.GetDecimal(ordinal);
+        }
+
+
     }
 }

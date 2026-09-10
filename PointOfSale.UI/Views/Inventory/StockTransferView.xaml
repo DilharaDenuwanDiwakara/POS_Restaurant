@@ -1,202 +1,246 @@
-<UserControl x:Class="PointOfSale.UI.Views.Inventory.StockTransferView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:PointOfSale.UI.Views.Inventory"
-             mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800">
+<UserControl
+    x:Class="PointOfSale.UI.Views.Inventory.StockTransferView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:PointOfSale.UI.Views.Inventory"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
     <Grid>
         <TabControl Style="{StaticResource TabControlStyle}">
 
-            <!-- ============================================================ -->
-            <!-- TAB 1 : New Transfer                                         -->
-            <!-- ============================================================ -->
+            <!--  ============================================================  -->
+            <!--  TAB 1 : New Transfer  -->
+            <!--  ============================================================  -->
             <TabItem Header=" 🔄 New Transfer " Style="{StaticResource TabItemStyle}">
                 <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="285"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="285" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Border Margin="0,0,8,0" Style="{StaticResource PanelCardStyle}">
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                             <StackPanel>
-                                <TextBlock Text="Transfer Details" Style="{StaticResource SubHeaderTextStyle}"/>
+                                <TextBlock Style="{StaticResource SubHeaderTextStyle}" Text="Transfer Details" />
 
-                                <TextBlock Text="Transfer Date:" Style="{StaticResource LabelStyle}"/>
-                                <DatePicker SelectedDate="{Binding TransferDate, UpdateSourceTrigger=PropertyChanged}"
-                                            IsTodayHighlighted="True"
-                                            Style="{StaticResource DatePickerStyle}"
-                                            PreviewKeyDown="MoveFocusOnEnter"/>
+                                <TextBlock Style="{StaticResource LabelStyle}" Text="Transfer Date:" />
+                                <DatePicker
+                                    IsTodayHighlighted="True"
+                                    PreviewKeyDown="MoveFocusOnEnter"
+                                    SelectedDate="{Binding TransferDate, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource DatePickerStyle}" />
 
-                                <TextBlock Text="From (Source):" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox ItemsSource="{Binding Locations}"
-                                          SelectedValue="{Binding FromLocationId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                          DisplayMemberPath="Name"
-                                          SelectedValuePath="Id"
-                                          SelectedIndex="0"
-                                          Style="{StaticResource ComboBoxStyle}"
-                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
-                                          PreviewKeyDown="MoveFocusOnEnter"/>
+                                <TextBlock Style="{StaticResource LabelStyle}" Text="From (Source):" />
+                                <ComboBox
+                                    DisplayMemberPath="Name"
+                                    ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                    ItemsSource="{Binding Locations}"
+                                    PreviewKeyDown="MoveFocusOnEnter"
+                                    SelectedIndex="0"
+                                    SelectedValue="{Binding FromLocationId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                    SelectedValuePath="Id"
+                                    Style="{StaticResource ComboBoxStyle}" />
 
-                                <TextBlock Text="To (Destination):" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox ItemsSource="{Binding Locations}"
-                                          SelectedValue="{Binding ToLocationId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                          DisplayMemberPath="Name"
-                                          SelectedValuePath="Id"
-                                          SelectedIndex="1"
-                                          Style="{StaticResource ComboBoxStyle}"
-                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
-                                          PreviewKeyDown="MoveFocusOnEnter"/>
+                                <TextBlock Style="{StaticResource LabelStyle}" Text="To (Destination):" />
+                                <ComboBox
+                                    DisplayMemberPath="Name"
+                                    ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                    ItemsSource="{Binding Locations}"
+                                    PreviewKeyDown="MoveFocusOnEnter"
+                                    SelectedIndex="1"
+                                    SelectedValue="{Binding ToLocationId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                    SelectedValuePath="Id"
+                                    Style="{StaticResource ComboBoxStyle}" />
 
-                                <TextBlock Text="Reference / Note:" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
-                                         MaxLength="500"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         Height="80"
-                                         VerticalContentAlignment="Top"
-                                         Style="{StaticResource TextBoxStyle}"
-                                         PreviewKeyDown="MoveFocusOnEnter"/>
+                                <TextBlock Style="{StaticResource LabelStyle}" Text="Reference / Note:" />
+                                <TextBox
+                                    Height="80"
+                                    VerticalContentAlignment="Top"
+                                    AcceptsReturn="True"
+                                    MaxLength="500"
+                                    PreviewKeyDown="MoveFocusOnEnter"
+                                    Style="{StaticResource TextBoxStyle}"
+                                    Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
+                                    TextWrapping="Wrap" />
 
-                                <StackPanel Orientation="Horizontal" Margin="0,20,0,0" HorizontalAlignment="Center">
-                                    <Button Content="Process Transfer"
-                                            Command="{Binding SaveTransferCommand}"
-                                            Style="{StaticResource PrimaryButtonStyle}"
-                                            Width="140"
-                                            Margin="0,0,10,0"/>
+                                <StackPanel
+                                    Margin="0,20,0,0"
+                                    HorizontalAlignment="Center"
+                                    Orientation="Horizontal">
+                                    <Button
+                                        Width="140"
+                                        Margin="0,0,10,0"
+                                        Command="{Binding SaveTransferCommand}"
+                                        Content="Process Transfer"
+                                        Style="{StaticResource PrimaryButtonStyle}" />
 
-                                    <Button Content="Clear"
-                                            Command="{Binding ClearCommand}"
-                                            Style="{StaticResource SecondaryButtonStyle}"
-                                            Width="100"
-                                            Focusable="False"/>
+                                    <Button
+                                        Width="100"
+                                        Command="{Binding ClearCommand}"
+                                        Content="Clear"
+                                        Focusable="False"
+                                        Style="{StaticResource SecondaryButtonStyle}" />
                                 </StackPanel>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>
 
-                    <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                    <Border
+                        Grid.Column="1"
+                        Margin="0"
+                        Style="{StaticResource PanelCardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <Border Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1"
-                                    CornerRadius="6" Padding="8" Margin="0,0,0,4">
+                            <Border
+                                Margin="0,0,0,4"
+                                Padding="8"
+                                Background="#F8F9FA"
+                                BorderBrush="#E1E8ED"
+                                BorderThickness="1"
+                                CornerRadius="6">
                                 <Grid>
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Text="Add Items" Style="{StaticResource SubHeaderTextStyle}" VerticalAlignment="Center"/>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Style="{StaticResource SubHeaderTextStyle}"
+                                        Text="Add Items" />
 
                                     <Grid Grid.Row="1">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="150"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="80"/>
-                                            <ColumnDefinition Width="100"/>
-                                            <ColumnDefinition Width="100"/>
-                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="150" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="100" />
                                         </Grid.ColumnDefinitions>
 
-                                        <StackPanel Margin="0 0 8 0">
-                                            <TextBlock Text="Code / Barcode:" Style="{StaticResource LabelStyle}"/>
-                                            <TextBox x:Name="BarcodeTextBox"
-                                                     Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                                                     Style="{StaticResource TextBoxStyle}"
-                                                     PreviewKeyDown="MoveFocusOnEnter"/>
+                                        <StackPanel Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="Code / Barcode:" />
+                                            <TextBox
+                                                x:Name="BarcodeTextBox"
+                                                PreviewKeyDown="MoveFocusOnEnter"
+                                                Style="{StaticResource TextBoxStyle}"
+                                                Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="1" Margin="0 0 8 0">
-                                            <TextBlock Text="Product:" Style="{StaticResource LabelStyle}"/>
-                                            <ComboBox x:Name="ProductCombobox"
-                                                      ItemsSource="{Binding Products}"
-                                                      SelectedItem="{Binding SelectedProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                      DisplayMemberPath="ProductName"
-                                                      IsEditable="True"
-                                                      IsTextSearchEnabled="True"
-                                                      IsTabStop="False"
-                                                      PreviewKeyDown="MoveFocusOnEnter"
-                                                      Style="{StaticResource ComboBoxStyle}"
-                                                      Validation.ErrorTemplate="{StaticResource ErrorTemplate}"/>
+                                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="Product:" />
+                                            <ComboBox
+                                                x:Name="ProductCombobox"
+                                                DisplayMemberPath="ProductName"
+                                                IsEditable="True"
+                                                IsTabStop="False"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding Products}"
+                                                PreviewKeyDown="MoveFocusOnEnter"
+                                                SelectedItem="{Binding SelectedProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Style="{StaticResource ComboBoxStyle}"
+                                                Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="2" Margin="0 0 8 0">
-                                            <TextBlock Text="UOM:" Style="{StaticResource LabelStyle}"/>
-                                            <ComboBox ItemsSource="{Binding AllowedUOMs}"
-                                                      SelectedItem="{Binding SelectedUOM, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                      DisplayMemberPath="DisplayName"
-                                                      Style="{StaticResource ComboBoxStyle}"
-                                                      ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
-                                                      PreviewKeyDown="MoveFocusOnEnter"/>
+                                        <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="UOM:" />
+                                            <ComboBox
+                                                DisplayMemberPath="DisplayName"
+                                                ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                                ItemsSource="{Binding AllowedUOMs}"
+                                                PreviewKeyDown="MoveFocusOnEnter"
+                                                SelectedItem="{Binding SelectedUOM, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Style="{StaticResource ComboBoxStyle}" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="3" Margin="0 0 8 0">
-                                            <TextBlock Text="Available:" Style="{StaticResource LabelStyle}"/>
-                                            <TextBox Text="{Binding SelectedBatch.AvailableQuantity, StringFormat=N3, FallbackValue='-'}"
-                                                     Style="{StaticResource ReadOnlyTextBoxStyle}"
-                                                     IsReadOnly="True"
-                                                     FontWeight="Bold"
-                                                     Foreground="{StaticResource SuccessBrush}"
-                                                     TextAlignment="Center"/>
+                                        <StackPanel Grid.Column="3" Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="Available:" />
+                                            <TextBox
+                                                FontWeight="Bold"
+                                                Foreground="{StaticResource SuccessBrush}"
+                                                IsReadOnly="True"
+                                                Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                                Text="{Binding SelectedBatch.AvailableQuantity, StringFormat=N3, FallbackValue='-'}"
+                                                TextAlignment="Center" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="4" Margin="0 0 8 0">
-                                            <TextBlock Text="Quantity:" Style="{StaticResource LabelStyle}"/>
-                                            <TextBox x:Name="QtyTextBox"
-                                                     Text="{Binding TransferQuantity, UpdateSourceTrigger=PropertyChanged}"
-                                                     Style="{StaticResource TextBoxStyle}"
-                                                     Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
-                                                     GotKeyboardFocus="SelectAllText_GotFocus"
-                                                     PreviewKeyDown="MoveFocusOnEnter"
-                                                     TextAlignment="Center"/>
+                                        <StackPanel Grid.Column="4" Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="Quantity:" />
+                                            <TextBox
+                                                x:Name="QtyTextBox"
+                                                GotKeyboardFocus="SelectAllText_GotFocus"
+                                                PreviewKeyDown="MoveFocusOnEnter"
+                                                Style="{StaticResource TextBoxStyle}"
+                                                Text="{Binding TransferQuantity, UpdateSourceTrigger=PropertyChanged}"
+                                                TextAlignment="Center"
+                                                Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="5">
-                                            <Button x:Name="AddButton"
-                                                    Content="Add"
-                                                    Command="{Binding AddLineCommand}"
-                                                    Style="{StaticResource PrimaryButtonStyle}"
-                                                    Click="AddButton_Click"
-                                                    Width="100" Height="32"
-                                                    Margin="0 20 0 0"/>
+                                            <Button
+                                                x:Name="AddButton"
+                                                Width="100"
+                                                Height="32"
+                                                Margin="0,20,0,0"
+                                                Click="AddButton_Click"
+                                                Command="{Binding AddLineCommand}"
+                                                Content="Add"
+                                                Style="{StaticResource PrimaryButtonStyle}" />
                                         </StackPanel>
                                     </Grid>
                                 </Grid>
                             </Border>
 
-                            <DataGrid Grid.Row="1"
-                                      ItemsSource="{Binding TransferLines}"
-                                      SelectedItem="{Binding SelectedLine}"
-                                      Style="{StaticResource DataGridStyle}"
-                                      Margin="0,4,0,0"
-                                      AutoGenerateColumns="False"
-                                      CanUserAddRows="False"
-                                      IsReadOnly="True">
+                            <DataGrid
+                                Grid.Row="1"
+                                Margin="0,4,0,0"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                IsReadOnly="True"
+                                ItemsSource="{Binding TransferLines}"
+                                SelectedItem="{Binding SelectedLine}"
+                                Style="{StaticResource DataGridStyle}">
 
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="*"/>
+                                    <DataGridTextColumn
+                                        Width="*"
+                                        Binding="{Binding ProductName}"
+                                        Header="Product Name" />
 
-                                    <DataGridTextColumn Header="UOM" Binding="{Binding UnitMeasureName}" Width="100"/>
+                                    <DataGridTextColumn
+                                        Width="100"
+                                        Binding="{Binding UnitMeasureName}"
+                                        Header="UOM" />
 
-                                    <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat=N3}" Width="120" FontWeight="Bold">
+                                    <DataGridTextColumn
+                                        Width="120"
+                                        Binding="{Binding Quantity, StringFormat=N3}"
+                                        FontWeight="Bold"
+                                        Header="Quantity">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="HorizontalAlignment" Value="Left"/>
+                                                <Setter Property="HorizontalAlignment" Value="Left" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Cost Price" Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                    <DataGridTextColumn
+                                        Width="120"
+                                        Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}"
+                                        Header="Cost Price"
+                                        HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                <Setter Property="HorizontalAlignment" Value="Center" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -204,22 +248,35 @@
                                     <DataGridTemplateColumn Width="80" Header="Action">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource DeleteButtonStyle}"
-                                                        ToolTip="Remove line"/>
+                                                <Button
+                                                    Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource DeleteButtonStyle}"
+                                                    ToolTip="Remove line" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
 
-                            <Border Grid.Row="2" Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1"
-                                    CornerRadius="6" Padding="8" Margin="0,4,0,0">
+                            <Border
+                                Grid.Row="2"
+                                Margin="0,4,0,0"
+                                Padding="8"
+                                Background="#F8F9FA"
+                                BorderBrush="#E1E8ED"
+                                BorderThickness="1"
+                                CornerRadius="6">
                                 <Grid>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Total Items:" Style="{StaticResource LabelStyle}" Margin="0,0,5,0"/>
-                                        <TextBlock Text="{Binding TransferLines.Count}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                        <TextBlock
+                                            Margin="0,0,5,0"
+                                            Style="{StaticResource LabelStyle}"
+                                            Text="Total Items:" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontWeight="Bold"
+                                            Text="{Binding TransferLines.Count}" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -230,66 +287,387 @@
                 </Grid>
             </TabItem>
 
-            <!-- ============================================================ -->
-            <!-- TAB 2 : Transfer History                                     -->
-            <!-- ============================================================ -->
+            <!--  ============================================================  -->
+            <!--  TAB 2 : Transfer History  -->
+            <!--  ============================================================  -->
             <TabItem Header=" 📋 Transfer History " Style="{StaticResource TabItemStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <!-- Filter Bar -->
-                    <Border Style="{StaticResource PanelCardStyle}" Margin="0 4 0 0">
+                    <!--  Filter Bar  -->
+                    <Border Margin="0,4,0,0" Style="{StaticResource PanelCardStyle}">
                         <StackPanel Orientation="Horizontal">
 
                             <StackPanel Margin="0,0,20,0">
-                                <TextBlock Text="From Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
-                                <DatePicker SelectedDate="{Binding HistoryDateFrom}"
-                                            Style="{StaticResource DatePickerStyle}"
-                                            Width="150" Margin="0"/>
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    Style="{StaticResource LabelStyle}"
+                                    Text="From Date" />
+                                <DatePicker
+                                    Width="150"
+                                    Margin="0"
+                                    SelectedDate="{Binding HistoryDateFrom}"
+                                    Style="{StaticResource DatePickerStyle}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,0,20,0">
-                                <TextBlock Text="To Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
-                                <DatePicker SelectedDate="{Binding HistoryDateTo}"
-                                            Style="{StaticResource DatePickerStyle}"
-                                            Width="150" Margin="0"/>
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    Style="{StaticResource LabelStyle}"
+                                    Text="To Date" />
+                                <DatePicker
+                                    Width="150"
+                                    Margin="0"
+                                    SelectedDate="{Binding HistoryDateTo}"
+                                    Style="{StaticResource DatePickerStyle}" />
                             </StackPanel>
 
-                            <Button Command="{Binding SearchHistoryCommand}"
-                                    Margin="0,16,12,0"
-                                    Style="{StaticResource SearchButtonStyle}"
-                                    Width="80" Height="30"/>
+                            <Button
+                                Width="80"
+                                Height="30"
+                                Margin="0,16,12,0"
+                                Command="{Binding SearchHistoryCommand}"
+                                Style="{StaticResource SearchButtonStyle}" />
                         </StackPanel>
                     </Border>
 
-                    <!-- History DataGrid -->
-                    <DataGrid Grid.Row="1" Margin="0 4"
-                              ItemsSource="{Binding HistoryList}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              GridLinesVisibility="All"
-                              Style="{StaticResource DataGridStyle}">
+
+                    <!--<DataGrid
+                        Grid.Row="1"
+                        Margin="0,4"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        GridLinesVisibility="All"
+                        HorizontalScrollBarVisibility="Disabled"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding HistoryList}"
+                        SelectionMode="Single"
+                        Style="{StaticResource DataGridStyle}">
+
+                        <DataGrid.RowStyle>
+                            <Style BasedOn="{StaticResource Style.DataGrid.Row}" TargetType="DataGridRow">
+                                <Setter Property="Height" Value="Auto" />
+                                <Setter Property="MinHeight" Value="42" />
+                                <Setter Property="DetailsVisibility" Value="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}" />
+                            </Style>
+                        </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Transfer #"   Binding="{Binding TransferNumber}"                          Width="130"/>
-                            <DataGridTextColumn Header="From"         Binding="{Binding FromLocationName}"                        Width="160"/>
-                            <DataGridTextColumn Header="To"           Binding="{Binding ToLocationName}"                          Width="160"/>
-                            <DataGridTextColumn Header="Transfer Date" Binding="{Binding TransferDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="130">
+                    -->
+                    <!--  Expand / Collapse Button  -->
+                    <!--
+                            <DataGridTemplateColumn Width="44">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton
+                                            Width="28"
+                                            Height="28"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTip="Expand transfer details">
+                                            <ToggleButton.Style>
+                                                <Style TargetType="ToggleButton">
+                                                    <Setter Property="Content" Value="&gt;" />
+                                                    <Setter Property="FontFamily" Value="Segoe UI" />
+                                                    <Setter Property="FontSize" Value="12" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Setter Property="Foreground" Value="#334155" />
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="BorderThickness" Value="0" />
+                                                    <Setter Property="Cursor" Value="Hand" />
+                                                    <Setter Property="Focusable" Value="False" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter Property="Content" Value="v" />
+                                                            <Setter Property="ToolTip" Value="Collapse transfer details" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#E5E7EB" />
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ToggleButton.Style>
+                                        </ToggleButton>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                    -->
+                    <!--  Original Columns  -->
+                    <!--
+                            <DataGridTextColumn
+                                Width="130"
+                                Binding="{Binding TransferNumber}"
+                                Header="Transfer #" />
+                            <DataGridTextColumn
+                                Width="160"
+                                Binding="{Binding FromLocationName}"
+                                Header="From" />
+                            <DataGridTextColumn
+                                Width="160"
+                                Binding="{Binding ToLocationName}"
+                                Header="To" />
+                            <DataGridTextColumn
+                                Width="130"
+                                Binding="{Binding TransferDate, StringFormat='{}{0:dd/MM/yyyy}'}"
+                                Header="Transfer Date">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Note"         Binding="{Binding Note}"                                    Width="*"/>
-                            <DataGridTextColumn Header="Status"       Binding="{Binding Status}"                                  Width="110"/>
-                            <DataGridTextColumn Header="Created By"   Binding="{Binding Username}"                                Width="120"/>
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Note}"
+                                Header="Note" />
+                            <DataGridTextColumn
+                                Width="110"
+                                Binding="{Binding Status}"
+                                Header="Status" />
+                            <DataGridTextColumn
+                                Width="120"
+                                Binding="{Binding Username}"
+                                Header="Created By" />
                         </DataGrid.Columns>
 
+                    -->
+                    <!--  Child Row Details (Expanded Area)  -->
+                    <!--
+                        <DataGrid.RowDetailsTemplate>
+                            <DataTemplate>
+                                <Border
+                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    Margin="0,12,0,12"
+                                    Padding="40,0,12,0"
+                                    HorizontalAlignment="Stretch"
+                                    Background="#F4F6F8"
+                                    BorderBrush="#D8DEE6"
+                                    BorderThickness="0,1,0,1"
+                                    Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid>
+                                        <Border Margin="0,10,0,10" HorizontalAlignment="Stretch">
+
+                    -->
+                    <!--  Child DataGrid (Update ItemsSource and Columns to match Transfer Items model)  -->
+                    <!--
+                                            <DataGrid
+                                                MinHeight="50"
+                                                HorizontalAlignment="Stretch"
+                                                AutoGenerateColumns="False"
+                                                CanUserAddRows="False"
+                                                HeadersVisibility="Column"
+                                                HorizontalScrollBarVisibility="Disabled"
+                                                IsReadOnly="True"
+                                                ItemsSource="{Binding TransferLines}"
+                                                Style="{StaticResource DataGridStyle}"
+                                                VerticalScrollBarVisibility="Disabled">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn
+                                                        Width="*"
+                                                        Binding="{Binding ProductName}"
+                                                        Header="Product Name" />
+                                                    <DataGridTextColumn
+                                                        Width="100"
+                                                        Binding="{Binding Qty, StringFormat=N2}"
+                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                                        Header="Quantity"
+                                                        HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </DataGrid.RowDetailsTemplate>
+                    </DataGrid>-->
+
+
+                    <DataGrid
+                        Grid.Row="1"
+                        Margin="0,4"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        GridLinesVisibility="All"
+                        HorizontalScrollBarVisibility="Auto"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding HistoryList}"
+                        SelectionMode="Single"
+                        Style="{StaticResource DataGridStyle}">
+
+                        <DataGrid.RowStyle>
+                            <Style BasedOn="{StaticResource Style.DataGrid.Row}" TargetType="DataGridRow">
+                                <Setter Property="Height" Value="Auto" />
+                                <Setter Property="MinHeight" Value="42" />
+                                <Setter Property="DetailsVisibility" Value="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}" />
+                            </Style>
+                        </DataGrid.RowStyle>
+
+                        <DataGrid.Columns>
+                            <!--  Expand / Collapse Button  -->
+                            <DataGridTemplateColumn Width="44">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton
+                                            Width="28"
+                                            Height="28"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTip="Expand transfer details">
+                                            <ToggleButton.Style>
+                                                <Style TargetType="ToggleButton">
+                                                    <Setter Property="Content" Value="&gt;" />
+                                                    <Setter Property="FontFamily" Value="Segoe UI" />
+                                                    <Setter Property="FontSize" Value="12" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Setter Property="Foreground" Value="#334155" />
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="BorderThickness" Value="0" />
+                                                    <Setter Property="Cursor" Value="Hand" />
+                                                    <Setter Property="Focusable" Value="False" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter Property="Content" Value="v" />
+                                                            <Setter Property="ToolTip" Value="Collapse transfer details" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#E5E7EB" />
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ToggleButton.Style>
+                                        </ToggleButton>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!--  Parent Columns (StockTransfer)  -->
+                            <DataGridTextColumn
+                                Width="Auto"
+                                Binding="{Binding TransferId}"
+                                Header="ID"
+                                Visibility="Collapsed"/>
+                            <DataGridTextColumn
+                                Width="130"
+                                Binding="{Binding TransferNumber}"
+                                Header="Transfer #" />
+                            <DataGridTextColumn
+                                Width="160"
+                                Binding="{Binding FromLocationName}"
+                                Header="From" />
+                            <DataGridTextColumn
+                                Width="160"
+                                Binding="{Binding ToLocationName}"
+                                Header="To" />
+                            <DataGridTextColumn
+                                Width="130"
+                                Binding="{Binding TransferDate, StringFormat='{}{0:dd/MM/yyyy}'}"
+                                Header="Transfer Date">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Note}"
+                                Header="Note" />
+                            <DataGridTextColumn
+                                Width="110"
+                                Binding="{Binding Status}"
+                                Header="Status" />
+                            <DataGridTextColumn
+                                Width="120"
+                                Binding="{Binding Username}"
+                                Header="Created By" />
+                        </DataGrid.Columns>
+
+                        <!--  Child Row Details (StockTransferLine Items with Unit Measure Name)  -->
+                        <DataGrid.RowDetailsTemplate>
+                            <DataTemplate>
+                                <Border
+                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    Margin="0,12,0,12"
+                                    Padding="40,0,12,0"
+                                    HorizontalAlignment="Stretch"
+                                    Background="#F4F6F8"
+                                    BorderBrush="#D8DEE6"
+                                    BorderThickness="0,1,0,1"
+                                    Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid>
+                                        <Border Margin="0,10,0,10" HorizontalAlignment="Stretch">
+                                            <DataGrid
+                                                MinHeight="50"
+                                                HorizontalAlignment="Stretch"
+                                                AutoGenerateColumns="False"
+                                                CanUserAddRows="False"
+                                                HeadersVisibility="Column"
+                                                HorizontalScrollBarVisibility="Disabled"
+                                                IsReadOnly="True"
+                                                ItemsSource="{Binding Lines}"
+                                                Style="{StaticResource DataGridStyle}"
+                                                VerticalScrollBarVisibility="Disabled">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn
+                                                        Width="Auto"
+                                                        Binding="{Binding TransferLineId}"
+                                                        Header="Line ID" 
+                                                        Visibility="Collapsed"/>
+                                                    <DataGridTextColumn
+                                                        Width="Auto"
+                                                        Binding="{Binding TransferId}"
+                                                        Header="Transfer ID" 
+                                                        Visibility="Collapsed"/>
+                                                    <DataGridTextColumn
+                                                        Width="*"
+                                                        Binding="{Binding ProductName}"
+                                                        Header="Product Name" />
+                                                    <DataGridTextColumn
+                                                        Width="150"
+                                                        Binding="{Binding ProductCode}"
+                                                        Header="Product Name" />
+                                                    <DataGridTextColumn
+                                                        Width="110"
+                                                        Binding="{Binding Quantity, StringFormat=N2}"
+                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                                        Header="Quantity"
+                                                        HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
+                                                    <DataGridTextColumn
+                                                        Width="130"
+                                                        Binding="{Binding UnitMeasureName}"
+                                                        Header="Unit Measure" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </DataGrid.RowDetailsTemplate>
                     </DataGrid>
                 </Grid>
             </TabItem>
