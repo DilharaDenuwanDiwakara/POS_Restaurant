@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PointOfSale.Core.DTOs
 {
-    // 1. Updated StockTransferFlatDto
+
     public class StockTransferFlatDto
     {
         // StockTransfer fields
