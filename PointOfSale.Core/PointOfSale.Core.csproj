@@ -83,6 +83,7 @@
     <Compile Include="DTOs\CategoryTreeNode.cs" />
     <Compile Include="DTOs\CategoryValueDto.cs" />
     <Compile Include="DTOs\DashboardOverviewDto.cs" />
+    <Compile Include="DTOs\DiscountDefinitionDto.cs" />
     <Compile Include="DTOs\FinalizeSaleRequestDto.cs" />
     <Compile Include="DTOs\HoldSaleRequestDto.cs" />
     <Compile Include="DTOs\InventoryStockReportModel.cs" />
@@ -164,6 +165,7 @@
     <Compile Include="Interfaces\Services\IBarcodeService.cs" />
     <Compile Include="Interfaces\Services\IConfigurationService.cs" />
     <Compile Include="Interfaces\Services\IDialogService.cs" />
+    <Compile Include="Interfaces\Services\IDiscountProductCatalogService.cs" />
     <Compile Include="Interfaces\Services\IExcelService.cs" />
     <Compile Include="Interfaces\Services\IReportService.cs" />
     <Compile Include="Interfaces\Services\IUOMConversionService.cs" />

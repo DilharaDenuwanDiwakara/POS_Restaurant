@@ -184,72 +184,97 @@
             </Border>
 
             <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                <TabControl Style="{StaticResource TabControlStyle}">
+                    <TabItem Header="Excluded Items" Style="{StaticResource TabItemStyle}">
+                        <DataGrid ItemsSource="{Binding CategoryProducts}"
+                                  Style="{StaticResource DataGridStyle}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Product Code"
+                                                    Binding="{Binding ProductCode}"
+                                                    IsReadOnly="True"
+                                                    Width="140"/>
+                                <DataGridTextColumn Header="Product Name"
+                                                    Binding="{Binding ProductName}"
+                                                    IsReadOnly="True"
+                                                    Width="*"/>
+                                <DataGridCheckBoxColumn Header="Exclude from Discount"
+                                                        Binding="{Binding IsExcluded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        Width="170"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
 
-                    <Border Background="#F1F2F6" Padding="12,8">
+                    <TabItem Header="Discount Codes List" Style="{StaticResource TabItemStyle}">
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
 
-                            <TextBlock Text="Discount Codes" Style="{StaticResource SubHeaderTextStyle}" VerticalAlignment="Center" Margin="0"/>
+                            <Border Background="#F1F2F6" Padding="12,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                            <Button Grid.Column="1"
-                                    Command="{Binding LoadCommand}"
-                                    Style="{StaticResource RefreshButtonStyle}"
-                                    ToolTip="Refresh"
-                                    Margin="10,0,0,0"/>
+                                    <TextBlock Text="Discount Codes" Style="{StaticResource SubHeaderTextStyle}" VerticalAlignment="Center" Margin="0"/>
 
-                            <Button Grid.Column="3"
-                                    Command="{Binding ToggleActiveCommand}"
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    Content="Toggle Active"/>
+                                    <Button Grid.Column="1"
+                                            Command="{Binding LoadCommand}"
+                                            Style="{StaticResource RefreshButtonStyle}"
+                                            ToolTip="Refresh"
+                                            Margin="10,0,0,0"/>
+
+                                    <Button Grid.Column="3"
+                                            Command="{Binding ToggleActiveCommand}"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Content="Toggle Active"/>
+                                </Grid>
+                            </Border>
+
+                            <DataGrid Grid.Row="1"
+                                      Margin="0,4,0,0"
+                                      ItemsSource="{Binding DiscountList}"
+                                      SelectedItem="{Binding SelectedDiscount, UpdateSourceTrigger=PropertyChanged}"
+                                      Style="{StaticResource DataGridStyle}"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      IsReadOnly="True">
+
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="100"/>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding DiscountType}" Width="90"/>
+                                    <DataGridTextColumn Header="Value" Binding="{Binding DiscountValue, StringFormat=N2}" Width="80">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="MinimumBillAmount" Binding="{Binding MinimumBillAmount, StringFormat='Rs. {0:N2}'}" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="Auto" Binding="{Binding IsAutoApply}" Width="80"/>
+                                    <DataGridTextColumn Header="Scope" Binding="{Binding ApplyScope}" Width="85"/>
+                                    <DataGridTextColumn Header="Category" Binding="{Binding TargetMenuCategoryId}" Width="80"/>
+                                    <DataGridTextColumn Header="DayMask" Binding="{Binding DayOfWeekMask}" Width="70"/>
+                                    <DataGridTextColumn Header="Time" Binding="{Binding StartTime}" Width="85"/>
+                                    <DataGridTextColumn Header="Active" Binding="{Binding IsActive}" Width="65"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
                         </Grid>
-                    </Border>
-
-                    <DataGrid Grid.Row="1"
-                              Margin="0,4,0,0"
-                              ItemsSource="{Binding DiscountList}"
-                              SelectedItem="{Binding SelectedDiscount, UpdateSourceTrigger=PropertyChanged}"
-                              Style="{StaticResource DataGridStyle}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              IsReadOnly="True">
-
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="100"/>
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-                            <DataGridTextColumn Header="Type" Binding="{Binding DiscountType}" Width="90"/>
-                            <DataGridTextColumn Header="Value" Binding="{Binding DiscountValue, StringFormat=N2}" Width="80">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-                            <DataGridTextColumn Header="MinimumBillAmount" Binding="{Binding MinimumBillAmount, StringFormat='Rs. {0:N2}'}" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-                            <DataGridTextColumn Header="Auto" Binding="{Binding IsAutoApply}" Width="80"/>
-                            <DataGridTextColumn Header="Scope" Binding="{Binding ApplyScope}" Width="85"/>
-                            <DataGridTextColumn Header="Category" Binding="{Binding TargetMenuCategoryId}" Width="80"/>
-                            <DataGridTextColumn Header="DayMask" Binding="{Binding DayOfWeekMask}" Width="70"/>
-                            <DataGridTextColumn Header="Time" Binding="{Binding StartTime}" Width="85"/>
-                            <DataGridTextColumn Header="Active" Binding="{Binding IsActive}" Width="65"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
+                    </TabItem>
+                </TabControl>
             </Border>
         </Grid>
     </Grid>

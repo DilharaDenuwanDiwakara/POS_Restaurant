@@ -151,6 +151,7 @@
     <Compile Include="Repositories\System\CompanyRepository.cs" />
     <Compile Include="Repositories\System\TaxConfigurationRepository.cs" />
     <Compile Include="Service\BarcodeService.cs" />
+    <Compile Include="Service\DiscountProductCatalogService.cs" />
     <Compile Include="Service\ExcelService.cs" />
     <Compile Include="Service\PrintService.cs" />
     <Compile Include="Service\UOMConversionService.cs" />

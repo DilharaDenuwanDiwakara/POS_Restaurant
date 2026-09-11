@@ -68,12 +68,12 @@ namespace PointOfSale.UI.ViewModels.Sales
         private bool _suppressProductSelectionTrigger;
         private long? _currentRestaurantOrderId;
         private List<PromotionRule> _activePromotionRules = new List<PromotionRule>();
-        private List<DiscountDefinition> _activeAutoDiscountRules = new List<DiscountDefinition>();
+        private List<DiscountDefinitionDto> _activeAutoDiscountRules = new List<DiscountDefinitionDto>();
         private decimal _autoBillDiscountAmount;
         private decimal _appliedDiscountAmount;
         private decimal _appliedDiscountPercent;
         private string _appliedAutoBillDiscountName;
-        private DiscountDefinition _appliedAutoBillDiscountRule;
+        private DiscountDefinitionDto _appliedAutoBillDiscountRule;
         private string _appliedAutoDiscountName;
         private decimal? _activeAutoDiscountRulesSubTotal;
         private decimal? _pendingAutoDiscountRulesSubTotal;
@@ -2170,7 +2170,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             return decimal.Round(amount, 2);
         }
 
-        private decimal CalculateDiscountAmount(decimal baseAmount, DiscountDefinition discount)
+        private decimal CalculateDiscountAmount(decimal baseAmount, DiscountDefinitionDto discount)
         {
             if (discount == null || baseAmount <= 0)
                 return 0;
@@ -2224,7 +2224,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             return decimal.Round((discountAmount / baseAmount) * 100m, 2);
         }
 
-        private static string GetDiscountDisplayCode(DiscountDefinition discount)
+        private static string GetDiscountDisplayCode(DiscountDefinitionDto discount)
         {
             if (discount == null)
                 return string.Empty;
@@ -2365,6 +2365,9 @@ namespace PointOfSale.UI.ViewModels.Sales
                     if (!discount.TargetMenuCategoryId.HasValue || discount.TargetMenuCategoryId.Value != product.MenuCategoryId)
                         continue;
 
+                    if (discount.ExcludedProductIds != null && discount.ExcludedProductIds.Contains(product.VariantId))
+                        continue;
+
                     hints.Add(BuildProductDiscountHint(discount));
                 }
 
@@ -2426,7 +2429,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             return string.Empty;
         }
 
-        private string BuildProductDiscountHint(DiscountDefinition discount)
+        private string BuildProductDiscountHint(DiscountDefinitionDto discount)
         {
             if (discount == null)
                 return string.Empty;
@@ -2679,11 +2682,13 @@ namespace PointOfSale.UI.ViewModels.Sales
                     if (!discount.TargetMenuCategoryId.HasValue)
                         continue;
 
+                    var excludedProductIds = discount.ExcludedProductIds ?? new List<int>();
                     var targetLines = CartItems
                         .Where(x =>
                             !x.IsManualDiscountApplied &&
                             x.MenuCategoryId.HasValue &&
-                            x.MenuCategoryId.Value == discount.TargetMenuCategoryId.Value)
+                            x.MenuCategoryId.Value == discount.TargetMenuCategoryId.Value &&
+                            !excludedProductIds.Contains(x.ProductId))
                         .ToList();
 
                     if (!targetLines.Any())
