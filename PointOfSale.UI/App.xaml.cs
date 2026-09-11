@@ -140,6 +140,7 @@ namespace PointOfSale.UI
             services.AddSingleton<IUOMConversionService, PointOfSale.Infrastructure.Service.UOMConversionService>();
             services.AddSingleton<IExcelService, ExcelService>();
             services.AddSingleton<IBarcodeService, BarcodeService>();
+            services.AddSingleton<IDiscountProductCatalogService, DiscountProductCatalogService>();
             services.AddSingleton<CloudStorageService>();
 
             // Other ViewModels are Transient: a new one is created each time you navigate to it.

@@ -469,6 +469,7 @@
     <Compile Include="ViewModels\Sales\CashInOutViewModel.cs" />
     <Compile Include="ViewModels\Sales\CloseShiftDialogViewModel.cs" />
     <Compile Include="ViewModels\Sales\CustomerViewModel.cs" />
+    <Compile Include="ViewModels\Sales\DiscountProductSelectionViewModel.cs" />
     <Compile Include="ViewModels\Sales\DiscountViewModel.cs" />
     <Compile Include="ViewModels\Sales\MainSalesReturnViewModel.cs" />
     <Compile Include="ViewModels\Sales\OpenShiftDialogViewModel.cs" />

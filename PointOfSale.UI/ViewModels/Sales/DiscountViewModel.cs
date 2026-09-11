@@ -1,15 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Restaurant;
 using PointOfSale.Core.Interfaces.Repositories.Sales;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Restaurant;
-using PointOfSale.Core.Models.Sales;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
 
@@ -19,17 +21,24 @@ namespace PointOfSale.UI.ViewModels.Sales
     {
         private readonly IDiscountRepository _discountRepository;
         private readonly IMenuCategoryRepository _menuCategoryRepository;
+        private readonly IDiscountProductCatalogService _discountProductCatalogService;
         private readonly IUserSessionService _userSessionService;
+        private readonly IDialogService _dialogService;
+        private int _categoryLoadVersion;
         private const string TimeFormat = @"hh\:mm";
 
         public DiscountViewModel(
             IDiscountRepository discountRepository,
             IMenuCategoryRepository menuCategoryRepository,
-            IUserSessionService userSessionService)
+            IDiscountProductCatalogService discountProductCatalogService,
+            IUserSessionService userSessionService,
+            IDialogService dialogService)
         {
             _discountRepository = discountRepository;
             _menuCategoryRepository = menuCategoryRepository;
+            _discountProductCatalogService = discountProductCatalogService;
             _userSessionService = userSessionService;
+            _dialogService = dialogService;
 
             DiscountTypes = new ObservableCollection<string> { "PERCENT", "FLAT" };
             ApplyScopes = new ObservableCollection<string> { "BILL", "CATEGORY" };
@@ -42,8 +51,10 @@ namespace PointOfSale.UI.ViewModels.Sales
                 new DayOption{ Name = "Sunday", Mask = 1 }
             };
 
-            DiscountList = new ObservableCollection<DiscountDefinition>();
+            DiscountList = new ObservableCollection<DiscountDefinitionDto>();
             MenuCategories = new ObservableCollection<MenuCategory>();
+            CategoryProducts = new ObservableCollection<DiscountProductSelectionViewModel>();
+            ExcludedProductIds = new List<int>();
 
             SaveCommand = new AsyncRelayCommand(async _ => await SaveAsync(), _ => CanSave);
             LoadCommand = new AsyncRelayCommand(async _ => await LoadAsync());
@@ -59,14 +70,16 @@ namespace PointOfSale.UI.ViewModels.Sales
             _ = LoadAsync();
         }
 
-        public ObservableCollection<DiscountDefinition> DiscountList { get; }
+        public ObservableCollection<DiscountDefinitionDto> DiscountList { get; }
         public ObservableCollection<string> DiscountTypes { get; }
         public ObservableCollection<string> ApplyScopes { get; }
         public ObservableCollection<DayOption> DayOptions { get; }
         public ObservableCollection<MenuCategory> MenuCategories { get; }
+        public ObservableCollection<DiscountProductSelectionViewModel> CategoryProducts { get; }
+        public List<int> ExcludedProductIds { get; }
 
-        private DiscountDefinition _selectedDiscount;
-        public DiscountDefinition SelectedDiscount
+        private DiscountDefinitionDto _selectedDiscount;
+        public DiscountDefinitionDto SelectedDiscount
         {
             get => _selectedDiscount;
             set
@@ -295,6 +308,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             {
                 if (SetProperty(ref _selectedMenuCategoryId, value))
                 {
+                    ReplaceExcludedProductIds(Enumerable.Empty<int>());
+                    _ = LoadCategoryProductsAsync(value);
                     ValidateMenuCategory();
                     RaiseCanExecuteChanged();
                 }
@@ -381,7 +396,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to load menu categories: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogService.ShowMessage($"Failed to load menu categories: {ex.Message}", "Error", DialogMessageType.Error);
             }
 
             try
@@ -393,7 +408,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to load discounts: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogService.ShowMessage($"Failed to load discounts: {ex.Message}", "Error", DialogMessageType.Error);
             }
         }
 
@@ -404,13 +419,13 @@ namespace PointOfSale.UI.ViewModels.Sales
                 ValidateAll();
                 if (HasErrors || !CanSave)
                 {
-                    MessageBox.Show("Please correct the errors before saving.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    _dialogService.ShowMessage("Please correct the errors before saving.", "Validation", DialogMessageType.Warning);
                     return;
                 }
 
                 if (!TryParseRuleTimes(out var startTime, out var endTime, out var parseError))
                 {
-                    MessageBox.Show(parseError, "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    _dialogService.ShowMessage(parseError, "Validation", DialogMessageType.Warning);
                     return;
                 }
 
@@ -420,12 +435,12 @@ namespace PointOfSale.UI.ViewModels.Sales
                 {
                     model.DiscountId = DiscountId;
                     await _discountRepository.UpdateAsync(model);
-                    MessageBox.Show("Discount updated successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _dialogService.ShowMessage("Discount updated successfully.", "Success");
                 }
                 else
                 {
                     await _discountRepository.CreateAsync(model);
-                    MessageBox.Show("Discount created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _dialogService.ShowMessage("Discount created successfully.", "Success");
                 }
 
                 await LoadAsync();
@@ -433,7 +448,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to save discount: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogService.ShowMessage($"Failed to save discount: {ex.Message}", "Error", DialogMessageType.Error);
             }
         }
 
@@ -451,18 +466,18 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to update status: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogService.ShowMessage($"Failed to update status: {ex.Message}", "Error", DialogMessageType.Error);
             }
         }
 
-        private DiscountDefinition BuildFormModel(TimeSpan? startTime, TimeSpan? endTime)
+        private DiscountDefinitionDto BuildFormModel(TimeSpan? startTime, TimeSpan? endTime)
         {
             TryGetDecimal(DiscountValue, out var discountValue);
             TryGetDecimal(MinimumBillAmount, out var minimumBillAmount);
             TryGetOptionalDecimal(MaximumDiscountAmount, out var maximumDiscountAmount);
             TryGetOptionalInt(MaxRedemptionCount, out var maxRedemptionCount);
 
-            return new DiscountDefinition
+            return new DiscountDefinitionDto
             {
                 Code = (Code ?? string.Empty).Trim().ToUpperInvariant(),
                 Name = (Name ?? string.Empty).Trim(),
@@ -479,6 +494,9 @@ namespace PointOfSale.UI.ViewModels.Sales
                 IsAutoApply = IsAutoApply,
                 ApplyScope = IsAutoApply ? SelectedApplyScope : null,
                 TargetMenuCategoryId = IsCategorySelectionVisible ? SelectedMenuCategoryId : null,
+                ExcludedProductIds = IsCategorySelectionVisible
+                    ? ExcludedProductIds.Where(id => id > 0).Distinct().ToList()
+                    : new List<int>(),
                 DayOfWeekMask = IsAutoApply ? SelectedDayOption?.Mask : null,
                 StartTime = IsAutoApply ? startTime : null,
                 EndTime = IsAutoApply ? endTime : null,
@@ -531,6 +549,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             IsAutoApply = false;
             SelectedApplyScope = "BILL";
             SelectedMenuCategoryId = null;
+            ReplaceExcludedProductIds(Enumerable.Empty<int>());
             SelectedDayOption = DayOptions.FirstOrDefault();
             StartTimeText = string.Empty;
             EndTimeText = string.Empty;
@@ -567,12 +586,105 @@ namespace PointOfSale.UI.ViewModels.Sales
             IsAutoApply = SelectedDiscount.IsAutoApply;
             SelectedApplyScope = string.IsNullOrWhiteSpace(SelectedDiscount.ApplyScope) ? "BILL" : SelectedDiscount.ApplyScope;
             SelectedMenuCategoryId = SelectedDiscount.TargetMenuCategoryId;
+            ReplaceExcludedProductIds(SelectedDiscount.ExcludedProductIds);
+            SynchronizeCategoryProductSelections();
             SelectedDayOption = DayOptions.FirstOrDefault(x => x.Mask == (SelectedDiscount.DayOfWeekMask ?? 127)) ?? DayOptions.FirstOrDefault();
             StartTimeText = SelectedDiscount.StartTime.HasValue ? SelectedDiscount.StartTime.Value.ToString(@"hh\:mm") : string.Empty;
             EndTimeText = SelectedDiscount.EndTime.HasValue ? SelectedDiscount.EndTime.Value.ToString(@"hh\:mm") : string.Empty;
 
             OnPropertyChanged(nameof(IsAutoRuleVisible));
             OnPropertyChanged(nameof(IsCategorySelectionVisible));
+        }
+
+        private async Task LoadCategoryProductsAsync(int? menuCategoryId)
+        {
+            var loadVersion = ++_categoryLoadVersion;
+            ClearCategoryProducts();
+
+            if (!menuCategoryId.HasValue || menuCategoryId.Value <= 0)
+                return;
+
+            try
+            {
+                var products = await _discountProductCatalogService
+                    .GetByMenuCategoryAsync(menuCategoryId.Value);
+
+                if (loadVersion != _categoryLoadVersion || SelectedMenuCategoryId != menuCategoryId)
+                    return;
+
+                var excludedIds = new HashSet<int>(ExcludedProductIds);
+                foreach (var product in products ?? Enumerable.Empty<ProductLiteDto>())
+                {
+                    var selection = new DiscountProductSelectionViewModel
+                    {
+                        ProductId = product.ProductId,
+                        ProductCode = product.ProductCode,
+                        ProductName = product.ProductName,
+                        IsExcluded = excludedIds.Contains(product.ProductId)
+                    };
+
+                    selection.PropertyChanged += OnCategoryProductPropertyChanged;
+                    CategoryProducts.Add(selection);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (loadVersion == _categoryLoadVersion)
+                {
+                    _dialogService.ShowMessage(
+                        $"Failed to load products for the selected category: {ex.Message}",
+                        "Error",
+                        DialogMessageType.Error);
+                }
+            }
+        }
+
+        private void ClearCategoryProducts()
+        {
+            foreach (var product in CategoryProducts)
+                product.PropertyChanged -= OnCategoryProductPropertyChanged;
+
+            CategoryProducts.Clear();
+        }
+
+        private void OnCategoryProductPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(DiscountProductSelectionViewModel.IsExcluded) ||
+                !(sender is DiscountProductSelectionViewModel product))
+            {
+                return;
+            }
+
+            if (product.IsExcluded)
+            {
+                if (!ExcludedProductIds.Contains(product.ProductId))
+                    ExcludedProductIds.Add(product.ProductId);
+            }
+            else
+            {
+                ExcludedProductIds.RemoveAll(productId => productId == product.ProductId);
+            }
+
+            ExcludedProductIds.Sort();
+            OnPropertyChanged(nameof(ExcludedProductIds));
+        }
+
+        private void ReplaceExcludedProductIds(IEnumerable<int> productIds)
+        {
+            ExcludedProductIds.Clear();
+            ExcludedProductIds.AddRange(
+                (productIds ?? Enumerable.Empty<int>())
+                    .Where(productId => productId > 0)
+                    .Distinct()
+                    .OrderBy(productId => productId));
+            OnPropertyChanged(nameof(ExcludedProductIds));
+        }
+
+        private void SynchronizeCategoryProductSelections()
+        {
+            var excludedIds = new HashSet<int>(ExcludedProductIds);
+            foreach (var product in CategoryProducts)
+                product.IsExcluded = excludedIds.Contains(product.ProductId);
         }
 
         #region Validation

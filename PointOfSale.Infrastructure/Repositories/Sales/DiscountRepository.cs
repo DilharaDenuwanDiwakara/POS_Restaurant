@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Sales;
 using PointOfSale.Core.Models.Sales;
 
@@ -12,9 +14,9 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
     {
         public DiscountRepository(DatabaseConnection dbConnection) : base(dbConnection) { }
 
-        public async Task<IEnumerable<DiscountDefinition>> GetAllAsync()
+        public async Task<IEnumerable<DiscountDefinitionDto>> GetAllAsync()
         {
-            var list = new List<DiscountDefinition>();
+            var list = new List<DiscountDefinitionDto>();
 
             using (var connection = GetConnection())
             using (var command = CreateCommand(connection, "[Sales].[uspGetAllDiscounts]"))
@@ -27,12 +29,14 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                         list.Add(MapDiscount(reader));
                     }
                 }
+
+                await PopulateExcludedProductIdsAsync(connection, list);
             }
 
             return list;
         }
 
-        public async Task<int> CreateAsync(DiscountDefinition discount)
+        public async Task<int> CreateAsync(DiscountDefinitionDto discount)
         {
             using (var connection = GetConnection())
             using (var command = CreateCommand(connection, "[Sales].[uspInsertDiscount]"))
@@ -49,7 +53,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             }
         }
 
-        public async Task UpdateAsync(DiscountDefinition discount)
+        public async Task UpdateAsync(DiscountDefinitionDto discount)
         {
             using (var connection = GetConnection())
             using (var command = CreateCommand(connection, "[Sales].[uspUpdateDiscount]"))
@@ -102,9 +106,9 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             }
         }
 
-        public async Task<IEnumerable<DiscountDefinition>> GetActiveAutoDiscountsAsync(int branchId, decimal subTotal)
+        public async Task<IEnumerable<DiscountDefinitionDto>> GetActiveAutoDiscountsAsync(int branchId, decimal subTotal)
         {
-            var list = new List<DiscountDefinition>();
+            var list = new List<DiscountDefinitionDto>();
 
             try
             {
@@ -126,6 +130,8 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                             list.Add(MapDiscount(reader));
                         }
                     }
+
+                    await PopulateExcludedProductIdsAsync(connection, list);
                 }
             }
             catch (SqlException ex) when (ex.Number == 2812) // Procedure not found
@@ -160,7 +166,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             }
         }
 
-        private void AddDiscountParameters(SqlCommand command, DiscountDefinition discount)
+        private void AddDiscountParameters(SqlCommand command, DiscountDefinitionDto discount)
         {
             command.Parameters.Add("@Code", SqlDbType.NVarChar, 50).Value = discount.Code;
             command.Parameters.Add("@DiscountName", SqlDbType.NVarChar, 150).Value = discount.Name;
@@ -190,11 +196,25 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             command.Parameters.Add("@StartTime", SqlDbType.Time).Value = (object)discount.StartTime ?? DBNull.Value;
             command.Parameters.Add("@EndTime", SqlDbType.Time).Value = (object)discount.EndTime ?? DBNull.Value;
             command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = discount.CreatedBy;
+
+            var excludedProductsTable = new DataTable();
+            excludedProductsTable.Columns.Add("ProductId", typeof(int));
+
+            foreach (var productId in (discount.ExcludedProductIds ?? new List<int>())
+                .Where(id => id > 0)
+                .Distinct())
+            {
+                excludedProductsTable.Rows.Add(productId);
+            }
+
+            var excludedProductsParameter = command.Parameters.Add("@ExcludedProductIds", SqlDbType.Structured);
+            excludedProductsParameter.TypeName = "Sales.ExcludedProductListType";
+            excludedProductsParameter.Value = excludedProductsTable;
         }
 
-        private DiscountDefinition MapDiscount(IDataRecord record)
+        private DiscountDefinitionDto MapDiscount(IDataRecord record)
         {
-            return new DiscountDefinition
+            return new DiscountDefinitionDto
             {
                 DiscountId = GetValue<int>(record, "DiscountId"),
                 Code = GetValue<string>(record, "Code"),
@@ -219,6 +239,59 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 CreatedBy = GetValue<int>(record, "CreatedBy"),
                 CreatedAt = GetValue<DateTime>(record, "CreatedAt")
             };
+        }
+
+        private async Task PopulateExcludedProductIdsAsync(
+            SqlConnection connection,
+            IList<DiscountDefinitionDto> discounts)
+        {
+            if (discounts == null || discounts.Count == 0)
+                return;
+
+            var discountsById = discounts
+                .Where(discount => discount != null && discount.DiscountId > 0)
+                .GroupBy(discount => discount.DiscountId)
+                .ToDictionary(group => group.Key, group => group.First());
+
+            if (discountsById.Count == 0)
+                return;
+
+            using (var command = connection.CreateCommand())
+            {
+                var parameterNames = discountsById.Keys
+                    .Select((discountId, index) => new
+                    {
+                        DiscountId = discountId,
+                        Name = "@DiscountId" + index
+                    })
+                    .ToList();
+
+                command.CommandType = CommandType.Text;
+                command.CommandText = $@"
+                    SELECT DiscountId, ProductId
+                    FROM [Sales].[DiscountExcludedProduct]
+                    WHERE DiscountId IN ({string.Join(", ", parameterNames.Select(parameter => parameter.Name))})
+                    ORDER BY DiscountId, ProductId;";
+
+                foreach (var parameter in parameterNames)
+                    command.Parameters.Add(parameter.Name, SqlDbType.Int).Value = parameter.DiscountId;
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var discountId = GetValue<int>(reader, "DiscountId");
+                        var productId = GetValue<int>(reader, "ProductId");
+
+                        if (productId > 0 &&
+                            discountsById.TryGetValue(discountId, out var discount) &&
+                            !discount.ExcludedProductIds.Contains(productId))
+                        {
+                            discount.ExcludedProductIds.Add(productId);
+                        }
+                    }
+                }
+            }
         }
 
         private T GetOptionalValue<T>(IDataRecord record, string columnName, T defaultValue)
