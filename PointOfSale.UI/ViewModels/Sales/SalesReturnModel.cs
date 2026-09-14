@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Models.Sales;
 
 namespace PointOfSale.UI.ViewModels.Sales
