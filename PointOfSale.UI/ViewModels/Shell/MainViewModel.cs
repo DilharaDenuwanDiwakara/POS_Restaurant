@@ -210,6 +210,8 @@ namespace PointOfSale.UI.ViewModels.Shell
         public ICommand NavigateToDiscountCommand { get; private set; }
         public ICommand NavigateToPromotionCommand { get; private set; }
         public ICommand NavigateToSalesReturnCommand { get; private set; }
+        public ICommand NavigateToSalesPersonCommand { get; private set; }
+
         public ICommand NavigateToMainSalesReturnCommand { get; private set; }
         public ICommand NavigateToAccountsPayableCommand { get; private set; }
         public ICommand NavigateToAccountsReceivableCommand { get; private set; }
@@ -345,6 +347,9 @@ namespace PointOfSale.UI.ViewModels.Shell
 
             NavigateToSalesReturnCommand = new RelayCommand(_ =>
                 NavigateTo<SalesReturnViewModel>("Sales  →  Sales Return"));
+
+            NavigateToSalesPersonCommand = new RelayCommand(_ =>
+                NavigateTo<SalesPersonViewModel>("Sales  →  Sales Person"));
 
             NavigateToMainSalesReturnCommand = new RelayCommand(_ =>
                 NavigateTo<MainSalesReturnViewModel>("Sales  →  Sales Return"));

@@ -397,9 +397,39 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Style="{StaticResource DetailsLabelStyle}" Text="Date" />
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+
+                            <TextBlock
+                                Margin="0,0,0,0"
+                                Style="{StaticResource DetailsFieldHeaderStyle}"
+                                Text="Select Sales Person" />
+
+                            <ComboBox
+                                Grid.Row="1"
+                                Margin="0"
+                                ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                ItemsSource="{Binding SalesPeople}"
+                                DisplayMemberPath="Name"
+                                SelectedItem="{Binding SelectedSalesPerson, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                IsEnabled="{Binding IsProcessing, Converter={StaticResource InverseBooleanConverter}}"
+                                Style="{StaticResource ComboBoxStyle}" />
+
+
                             <TextBlock
                                 Grid.Column="1"
+                                Margin="10,0,0,0"
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource DetailsFieldHeaderStyle}"
+                                Text="Date -" />
+
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
                                 Style="{StaticResource DetailsValueStyle}"
                                 Text="{Binding CurrentDateTime, StringFormat='{}{0:dddd, dd/MM/yyyy}'}" />
                         </Grid>

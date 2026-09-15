@@ -218,6 +218,10 @@
                 <viewsales:CustomerView />
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelsales:SalesPersonViewModel}">
+                <viewsales:SalesPersonView />
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type viewmodelsales:CashInOutViewModel}">
                 <viewsalesdialog:CashInOutWindow />
             </DataTemplate>

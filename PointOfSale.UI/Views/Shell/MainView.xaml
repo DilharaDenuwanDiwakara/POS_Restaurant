@@ -378,6 +378,15 @@
                                     </StackPanel>
                                 </RadioButton>
 
+                                <RadioButton
+                                    Command="{Binding NavigateToSalesPersonCommand}"
+                                    Style="{StaticResource Style.Nav.RadioButton}"
+                                    Visibility="{Binding CanNavCustomer, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Sales Person" />
+                                    </StackPanel>
+                                </RadioButton>
+
                             </StackPanel>
                         </Expander>
 
@@ -762,10 +771,13 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                
-                <TextBlock Grid.Column="2" Style="{StaticResource Style.Text.Status}" Margin="20,0,0,0">
-                    <Run Text="v1.3.2 | "/>
-                    <Run Text="{Binding CurrentDateTime, StringFormat='dd/MM/yyyy - HH:mm:ss'}"/>
+
+                <TextBlock
+                    Grid.Column="2"
+                    Margin="20,0,0,0"
+                    Style="{StaticResource Style.Text.Status}">
+                    <Run Text="v1.3.2 | " />
+                    <Run Text="{Binding CurrentDateTime, StringFormat='dd/MM/yyyy - HH:mm:ss'}" />
                 </TextBlock>
 
             </Grid>

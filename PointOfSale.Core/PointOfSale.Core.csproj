@@ -149,6 +149,7 @@
     <Compile Include="Interfaces\Repositories\Restaurant\ITableRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\ICashInOutRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\ICustomerRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Sales\ISalesPersonRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\IDashboardRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\IDiscountRepository.cs" />
     <Compile Include="Interfaces\Repositories\Sales\IPromotionRepository.cs" />
@@ -251,6 +252,7 @@
     <Compile Include="Models\Sales\SalesHoldLine.cs" />
     <Compile Include="Models\Sales\ReturnReasonModel.cs" />
     <Compile Include="Models\Sales\SalesLine.cs" />
+    <Compile Include="Models\Sales\SalesPerson.cs" />
     <Compile Include="Models\Sales\SalesReturnItemModel.cs" />
     <Compile Include="Models\Sales\SalesReturnLineModel.cs" />
     <Compile Include="Models\Security\PermissionGroup.cs" />

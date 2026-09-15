@@ -25,6 +25,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         private readonly IUserSessionService _userSessionService;
         private readonly IDialogService _dialogService;
         private int _categoryLoadVersion;
+        private int _selectedDiscountLoadVersion;
         private const string TimeFormat = @"hh\:mm";
 
         public DiscountViewModel(
@@ -54,6 +55,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             DiscountList = new ObservableCollection<DiscountDefinitionDto>();
             MenuCategories = new ObservableCollection<MenuCategory>();
             CategoryProducts = new ObservableCollection<DiscountProductSelectionViewModel>();
+            SelectedDiscountProducts = new ObservableCollection<DiscountProductSelectionViewModel>();
             ExcludedProductIds = new List<int>();
 
             SaveCommand = new AsyncRelayCommand(async _ => await SaveAsync(), _ => CanSave);
@@ -76,7 +78,25 @@ namespace PointOfSale.UI.ViewModels.Sales
         public ObservableCollection<DayOption> DayOptions { get; }
         public ObservableCollection<MenuCategory> MenuCategories { get; }
         public ObservableCollection<DiscountProductSelectionViewModel> CategoryProducts { get; }
+        public ObservableCollection<DiscountProductSelectionViewModel> SelectedDiscountProducts { get; }
         public List<int> ExcludedProductIds { get; }
+
+        private int _selectedTabIndex;
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set => SetProperty(ref _selectedTabIndex, value);
+        }
+
+        public string SelectedDiscountProductsTitle => SelectedDiscount == null
+            ? "Category Products"
+            : $"Category Products - {SelectedDiscount.Code}";
+
+        public string SelectedDiscountProductsMessage => SelectedDiscount == null
+            ? "Select a discount to view its category products."
+            : (SelectedDiscount.TargetMenuCategoryId ?? 0) <= 0
+                ? "This discount has no specific menu category."
+                : string.Empty;
 
         private DiscountDefinitionDto _selectedDiscount;
         public DiscountDefinitionDto SelectedDiscount
@@ -87,6 +107,9 @@ namespace PointOfSale.UI.ViewModels.Sales
                 if (SetProperty(ref _selectedDiscount, value))
                 {
                     SetEditMode(false);
+                    OnPropertyChanged(nameof(SelectedDiscountProductsTitle));
+                    OnPropertyChanged(nameof(SelectedDiscountProductsMessage));
+                    _ = LoadSelectedDiscountProductsAsync(value);
                     RaiseCanExecuteChanged();
                 }
             }
@@ -594,6 +617,47 @@ namespace PointOfSale.UI.ViewModels.Sales
 
             OnPropertyChanged(nameof(IsAutoRuleVisible));
             OnPropertyChanged(nameof(IsCategorySelectionVisible));
+            SelectedTabIndex = 0;
+        }
+
+        private async Task LoadSelectedDiscountProductsAsync(DiscountDefinitionDto discount)
+        {
+            var loadVersion = ++_selectedDiscountLoadVersion;
+            SelectedDiscountProducts.Clear();
+
+            if (discount == null || (discount.TargetMenuCategoryId ?? 0) <= 0)
+                return;
+
+            try
+            {
+                var products = await _discountProductCatalogService
+                    .GetByMenuCategoryAsync(discount.TargetMenuCategoryId.Value);
+
+                if (loadVersion != _selectedDiscountLoadVersion || SelectedDiscount != discount)
+                    return;
+
+                var excludedIds = new HashSet<int>(discount.ExcludedProductIds ?? new List<int>());
+                foreach (var product in products ?? Enumerable.Empty<ProductLiteDto>())
+                {
+                    SelectedDiscountProducts.Add(new DiscountProductSelectionViewModel
+                    {
+                        ProductId = product.ProductId,
+                        ProductCode = product.ProductCode,
+                        ProductName = product.ProductName,
+                        IsExcluded = excludedIds.Contains(product.ProductId)
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                if (loadVersion == _selectedDiscountLoadVersion && SelectedDiscount == discount)
+                {
+                    _dialogService.ShowMessage(
+                        $"Failed to load products for the selected discount: {ex.Message}",
+                        "Error",
+                        DialogMessageType.Error);
+                }
+            }
         }
 
         private async Task LoadCategoryProductsAsync(int? menuCategoryId)

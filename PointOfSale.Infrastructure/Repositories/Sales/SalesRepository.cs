@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -15,15 +15,14 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
         public SalesRepository(DatabaseConnection dbConnection) : base(dbConnection) { }
 
         #region Public method
+
         public async Task<long> CreateAsync(Sale sale)
         {
             if (sale.Lines != null && sale.Lines.Any())
             {
                 sale.TaxAmount = sale.Lines.Sum(l => l.TaxAmount);
-
-                // If you also added SSCL property to your Sale object, sum it here too:
-                // sale.SsclAmount = sale.Lines.Sum(l => l.SsclAmount); 
             }
+
             using (var connection = GetConnection())
             using (var command = connection.CreateCommand())
             {
@@ -67,10 +66,13 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 command.Parameters.Add(outputParam);
 
                 await connection.OpenAsync();
+
+                // Assuming your [Sales].[uspHoldSale] SP is now updated to accept @SalesPersonId, 
+                // we don't need the manual UPDATE statement here anymore. It's much cleaner!
                 await command.ExecuteNonQueryAsync();
 
                 var salesIdValue = outputParam.Value;
-                if (salesIdValue == DBNull.Value || Convert.ToInt32(salesIdValue) <= 0)
+                if (salesIdValue == null || salesIdValue == DBNull.Value || Convert.ToInt32(salesIdValue) <= 0)
                     throw new InvalidOperationException("The sale was not held. The database did not return a valid sales id.");
 
                 return Convert.ToInt32(salesIdValue);
@@ -152,6 +154,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                         SalesId = GetValue<long>(reader, "SalesId"),
                         InvoiceNumber = GetValue<string>(reader, "InvoiceNumber"),
                         CustomerId = GetValue<int?>(reader, "CustomerId"),
+                        SalesPersonId = GetSalesPersonId(reader), // Reads SalesPersonId
                         TotalAmount = GetValue<decimal>(reader, "TotalAmount"),
                         Discount = GetValue<decimal>(reader, "Discount"),
                         TaxAmount = GetValue<decimal>(reader, "TaxAmount"),
@@ -227,12 +230,10 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 command.CommandType = CommandType.StoredProcedure;
                 command.CommandText = "[Sales].[uspGetSalesList]";
 
-                // Parameters
                 command.Parameters.AddWithValue("@FromDate", from);
                 command.Parameters.AddWithValue("@ToDate", to);
                 command.Parameters.AddWithValue("@BranchId", (object)branchId ?? DBNull.Value);
 
-                // Handle "All" or null logic for PaymentType
                 object pType = string.IsNullOrEmpty(paymentType) || paymentType == "All"
                                ? (object)DBNull.Value
                                : NormalizePaymentTypeFilter(paymentType);
@@ -263,7 +264,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                             InvoiceNumber = GetStringOrDefault(reader, invoiceNumberOrdinal),
                             SalesDate = reader.GetDateTime(salesDateOrdinal),
                             CustomerName = GetStringOrDefault(reader, customerNameOrdinal, "Walk-in"),
-                            SalesPerson = GetStringOrDefault(reader, salesPersonOrdinal),
+                            SalesPerson = GetStringOrDefault(reader, salesPersonOrdinal), // Populated here
                             TotalAmount = GetDecimalOrDefault(reader, totalAmountOrdinal),
                             Discount = GetDecimalOrDefault(reader, discountOrdinal),
                             TaxAmount = GetDecimalOrDefault(reader, taxAmountOrdinal),
@@ -297,11 +298,8 @@ SELECT
         CONCAT('Item #', CAST(sl.[ProductId] AS NVARCHAR(20)))) AS ItemName,
     CAST(sl.[Quantity] AS DECIMAL(18, 3)) AS Quantity,
     CAST(sl.[UnitPrice] AS DECIMAL(18, 2)) AS UnitPrice,
-    
-    -- ALUTHIN ADD KARAPU COLUMNS 2KA:
     CAST(ISNULL(sl.[DiscountAmount], 0) AS DECIMAL(18, 2)) AS Discount,
     CAST(ISNULL(sl.[TaxAmount], 0) AS DECIMAL(18, 2)) AS TaxAmount,
-
     CAST(ISNULL(sl.[LineTotal], (sl.[UnitPrice] * sl.[Quantity]) - ISNULL(sl.[DiscountAmount], 0)) AS DECIMAL(18, 2)) AS LineTotal
 FROM [Sales].[SalesLine] sl
 LEFT JOIN [Restaurant].[Variant] v ON v.[Id] = sl.[ProductId]
@@ -328,7 +326,6 @@ ORDER BY TRY_CAST(v.[ItemCode] AS INT) ASC, v.[ItemCode] ASC, sl.[Id] ASC;";
                             Quantity = GetValue<decimal>(reader, "Quantity"),
                             UnitPrice = GetValue<decimal>(reader, "UnitPrice"),
                             LineTotal = GetValue<decimal>(reader, "LineTotal"),
-
                             Discount = GetValue<decimal>(reader, "Discount"),
                             TaxAmount = GetValue<decimal>(reader, "TaxAmount"),
                         });
@@ -342,10 +339,25 @@ ORDER BY TRY_CAST(v.[ItemCode] AS INT) ASC, v.[ItemCode] ASC, sl.[Id] ASC;";
         #endregion
 
         #region Private method
+
+        private int? GetSalesPersonId(IDataRecord record)
+        {
+            for (var index = 0; index < record.FieldCount; index++)
+            {
+                if (string.Equals(record.GetName(index), "SalesPersonId", StringComparison.OrdinalIgnoreCase))
+                    return GetValue<int?>(record, "SalesPersonId");
+            }
+            return null;
+        }
+
         private void AddMainParameters(SqlCommand command, Sale sale)
         {
             command.Parameters.AddWithValue("@BranchId", sale.BranchId);
             command.Parameters.AddWithValue("@CustomerId", (object)sale.CustomerId ?? DBNull.Value);
+
+            // ---- FIX: Added SalesPersonId here to match the Sales table schema ----
+            command.Parameters.AddWithValue("@SalesPersonId", (object)sale.SalesPersonId ?? DBNull.Value);
+
             command.Parameters.AddWithValue("@TotalAmount", sale.TotalAmount);
             command.Parameters.AddWithValue("@Discount", sale.Discount);
             command.Parameters.AddWithValue("@CashGiven", sale.CashGiven);
@@ -357,7 +369,6 @@ ORDER BY TRY_CAST(v.[ItemCode] AS INT) ASC, v.[ItemCode] ASC, sl.[Id] ASC;";
             command.Parameters.AddWithValue("@TaxAmount", sale.TaxAmount);
             command.Parameters.AddWithValue("@ServiceChargeAmount", sale.ServiceChargeAmount);
             command.Parameters.AddWithValue("@ShiftId", (object)sale.ShiftId ?? DBNull.Value);
-            // command.Parameters.AddWithValue("@RestaurantOrderId", (object)sale.LinkedOrderId ?? DBNull.Value);
         }
 
         private void AddHoldSaleParameters(SqlCommand command, HoldSaleRequestDto dto)
@@ -365,6 +376,10 @@ ORDER BY TRY_CAST(v.[ItemCode] AS INT) ASC, v.[ItemCode] ASC, sl.[Id] ASC;";
             command.Parameters.AddWithValue("@CurrentSalesId", dto.SalesId ?? (object)DBNull.Value);
             command.Parameters.Add("@BranchId", SqlDbType.Int).Value = dto.BranchId;
             command.Parameters.Add("@CustomerId", SqlDbType.Int).Value = (object)dto.CustomerId ?? DBNull.Value;
+
+            // ---- FIX: Passed SalesPersonId directly to the Hold procedure ----
+            command.Parameters.Add("@SalesPersonId", SqlDbType.Int).Value = (object)dto.SalesPersonId ?? DBNull.Value;
+
             command.Parameters.Add("@TotalAmount", SqlDbType.Decimal).Value = dto.TotalAmount;
             command.Parameters.Add("@Discount", SqlDbType.Decimal).Value = dto.Discount;
             command.Parameters.Add("@IsTaxInvoice", SqlDbType.Bit).Value = dto.IsTaxInvoice;
@@ -427,7 +442,6 @@ ORDER BY TRY_CAST(v.[ItemCode] AS INT) ASC, v.[ItemCode] ASC, sl.[Id] ASC;";
         private void AddLineItemsParameter(SqlCommand command, IEnumerable<SalesLine> lines)
         {
             var table = new DataTable();
-            // MATCH THIS EXACTLY TO YOUR SQL TYPE [Sales].[SalesLineType]
             table.Columns.Add("ProductId", typeof(int));
             table.Columns.Add("Quantity", typeof(decimal));
             table.Columns.Add("UnitPrice", typeof(decimal));
@@ -437,10 +451,10 @@ ORDER BY TRY_CAST(v.[ItemCode] AS INT) ASC, v.[ItemCode] ASC, sl.[Id] ASC;";
             foreach (var line in lines)
             {
                 table.Rows.Add(
-                    line.ProductId,       // This is the VariantId
+                    line.ProductId,
                     line.Quantity,
                     line.UnitPrice,
-                    line.LineDiscount,    // Mapped to DiscountAmount
+                    line.LineDiscount,
                     line.TaxAmount
                 );
             }
@@ -499,6 +513,7 @@ ORDER BY TRY_CAST(v.[ItemCode] AS INT) ASC, v.[ItemCode] ASC, sl.[Id] ASC;";
 
             return table;
         }
+
         private void AddOutputParameter(SqlCommand command)
         {
             var outputParam = new SqlParameter("@SalesId", SqlDbType.BigInt)

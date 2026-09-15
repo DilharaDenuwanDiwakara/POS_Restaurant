@@ -133,6 +133,7 @@
     <Compile Include="Repositories\Restaurant\TableRepository.cs" />
     <Compile Include="Repositories\Sales\CashInOutRepository.cs" />
     <Compile Include="Repositories\Sales\CustomerRepository.cs" />
+    <Compile Include="Repositories\Sales\SalesPersonRepository.cs" />
     <Compile Include="Repositories\Sales\DashboardRepository.cs" />
     <Compile Include="Repositories\Sales\DiscountRepository.cs" />
     <Compile Include="Repositories\Sales\PaymentTerminalRepository.cs" />

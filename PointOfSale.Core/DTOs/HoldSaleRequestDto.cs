@@ -7,6 +7,7 @@ namespace PointOfSale.Core.DTOs
         public int? SalesId { get; set; }
         public int BranchId { get; set; }
         public int? CustomerId { get; set; }
+        public int? SalesPersonId { get; set; }
         public decimal TotalAmount { get; set; }
         public decimal Discount { get; set; }
         public bool IsTaxInvoice { get; set; }

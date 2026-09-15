@@ -33,6 +33,7 @@ BEGIN
         s.[Id] AS SalesId,
         s.[InvoiceNumber],
         s.[CustomerId],
+        s.[SalesPersonId],
         CAST(ISNULL(s.[SubTotal], 0) AS DECIMAL(18, 2)) AS TotalAmount,
         CAST(ISNULL(s.[DiscountAmount], 0) AS DECIMAL(18, 2)) AS Discount,
         CAST(ISNULL(s.[TaxAmount], 0) AS DECIMAL(18, 2)) AS TaxAmount,

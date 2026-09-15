@@ -42,6 +42,8 @@ namespace PointOfSale.UI.ViewModels.Sales
         private readonly IPromotionRepository _promotionRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly ISalesPersonRepository _salesPersonRepository;
+        private List<SalesPerson> _allSalesPeople = new List<SalesPerson>();
         private readonly IMenuCategoryRepository _menuCategoryRepository;
         private readonly IMenuItemRepository _menuItemRepository;
         private readonly IInventoryRepository _inventoryRepository;
@@ -105,13 +107,15 @@ namespace PointOfSale.UI.ViewModels.Sales
                               IMenuItemRepository menuItemRepository,
                               IReportService reportService,
                               ITaxConfigurationRepository taxConfigurationRepository,
-                              CloudStorageService storageService)
+                              CloudStorageService storageService,
+                              ISalesPersonRepository salesPersonRepository)
         {
             _salesRepository = salesRepository;
             _discountRepository = discountRepository;
             _promotionRepository = promotionRepository;
             _orderRepository = orderRepository;
             _customerRepository = customerRepository;
+            _salesPersonRepository = salesPersonRepository ?? throw new ArgumentNullException(nameof(salesPersonRepository));
             _menuCategoryRepository = menuCategoryRepository;
             _inventoryRepository = inventoryRepository;
             _menuItemRepository = menuItemRepository;
@@ -170,6 +174,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         // --- Collections ---
         public ObservableCollection<Customer> Customers { get; private set; }
+        public ObservableCollection<SalesPerson> SalesPeople { get; } = new ObservableCollection<SalesPerson>();
         public ObservableCollection<MenuCategory> Categories { get; private set; }
         public ObservableCollection<MenuVariantDto> Products { get; private set; }
         public ObservableCollection<SalesLine> CartItems { get; private set; }
@@ -177,6 +182,13 @@ namespace PointOfSale.UI.ViewModels.Sales
         public ICollectionView FilteredProducts { get; private set; }
         public ObservableCollection<ServedOrderDto> ServedOrders { get; private set; }
         public ObservableCollection<PaymentDetail> AppliedPayments { get; } = new ObservableCollection<PaymentDetail>();
+
+        private SalesPerson _selectedSalesPerson;
+        public SalesPerson SelectedSalesPerson
+        {
+            get => _selectedSalesPerson;
+            set => SetProperty(ref _selectedSalesPerson, value);
+        }
 
         // --- Selections ---
         private string _customerSearchText;
@@ -783,6 +795,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             SelectCategoryCommand = new RelayCommand<MenuCategory>(SelectCategory, category => category != null);
             RefreshOrdersCommand = new AsyncRelayCommand(async _ =>
             {
+                await LoadSalesPeopleAsync();
                 await LoadActivePricingRulesAsync();
                 await LoadServedOrdersAsync();
             });
@@ -824,6 +837,8 @@ namespace PointOfSale.UI.ViewModels.Sales
                 FilteredCustomers.Refresh();
                 SelectedCustomer = Customers.FirstOrDefault(c => c.IsDefault);
 
+                await LoadSalesPeopleAsync();
+
                 loadStep = "loading menu categories";
                 await LoadCategoriesAsync();
 
@@ -859,6 +874,36 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
             finally { IsProcessing = false; }
         }
+        private async Task LoadSalesPeopleAsync()
+        {
+            try
+            {
+                var people = (await _salesPersonRepository.GetAllAsync()).OrderBy(person => person.Name).ToList();
+                var selectedId = SelectedSalesPerson?.Id;
+                _allSalesPeople = people;
+                SalesPeople.Clear();
+                foreach (var person in people.Where(person => person.IsActive))
+                    SalesPeople.Add(person);
+
+                RestoreSalesPersonSelection(selectedId);
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowMessage($"Failed to load sales people: {GetExceptionDetail(ex)}", "Error", DialogMessageType.Error);
+            }
+        }
+
+        private void RestoreSalesPersonSelection(int? salesPersonId)
+        {
+            var person = salesPersonId.HasValue
+                ? _allSalesPeople.FirstOrDefault(item => item.Id == salesPersonId.Value)
+                : null;
+            // Preserve the salesperson on an older bill even if they are now inactive.
+            if (person != null && !SalesPeople.Contains(person))
+                SalesPeople.Add(person);
+            SelectedSalesPerson = person;
+        }
+
         public async Task LoadServedOrdersAsync()
         {
             var orders = await _orderRepository.GetServedOrdersAsync(_userSessionService.BranchId);
@@ -1462,6 +1507,9 @@ namespace PointOfSale.UI.ViewModels.Sales
         private void ExecuteCancelInvoice()
         {
             _currentRestaurantOrderId = null;
+            SelectedSalesPerson = null;
+            foreach (var inactivePerson in SalesPeople.Where(person => !person.IsActive).ToList())
+                SalesPeople.Remove(inactivePerson);
             CartItems.Clear();
             AppliedPayments.Clear();
             CurrentOpenSalesId = 0;
@@ -1740,6 +1788,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             return new HoldSaleRequestDto
             {
                 SalesId = CurrentOpenSalesId > 0 ? (int?)CurrentOpenSalesId : null,
+                SalesPersonId = SelectedSalesPerson?.Id,
                 BranchId = CurrentUser.BranchId,
                 CustomerId = SelectedCustomer?.Id > 0 ? (int?)SelectedCustomer.Id : null,
                 TotalAmount = SubTotal,
@@ -1805,6 +1854,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
                 CurrentOpenSalesId = Convert.ToInt32(sale.SalesId);
                 InvoiceNumber = sale.InvoiceNumber;
+                RestoreSalesPersonSelection(sale.SalesPersonId);
                 SelectedCustomer = sale.CustomerId.HasValue
                     ? Customers.FirstOrDefault(customer => customer.Id == sale.CustomerId.Value)
                     : Customers.FirstOrDefault(customer => customer.Id == 0);

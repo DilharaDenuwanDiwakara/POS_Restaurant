@@ -81,6 +81,7 @@ namespace PointOfSale.UI
             services.AddSingleton<IGoodsPurchaseNoteRepository, GoodsPurchaseNoteRepository>();
             services.AddSingleton<ISupplierReturnRepository, SupplierReturnRepository>();
             services.AddSingleton<ICustomerRepository, CustomerRepository>();
+            services.AddSingleton<ISalesPersonRepository, SalesPersonRepository>();
             services.AddSingleton<IDashboardRepository, DashboardRepository>();
             services.AddSingleton<IDiscountRepository, DiscountRepository>();
             services.AddSingleton<IPromotionRepository, PromotionRepository>();
@@ -197,6 +198,7 @@ namespace PointOfSale.UI
             services.AddTransient<GoodsPurchaseNoteViewModel>();
             services.AddTransient<GoodsPurchaseNoteApprovalViewModel>();
             services.AddTransient<CustomerViewModel>();
+            services.AddTransient<SalesPersonViewModel>();
             services.AddTransient<SupplierReturnViewModel>();
             services.AddTransient<SupplierReturnApprovalViewModel>();
             services.AddTransient<BatchSelectionViewModel>();

@@ -23,6 +23,7 @@ namespace PointOfSale.Core.Models.Sales
         public decimal TaxAmount { get; set; }
         public decimal ServiceChargeAmount { get; set; }
         public int? ShiftId { get; set; }
+        public int? SalesPersonId { get; set; }
 
         public List<SalesLine> Lines { get; set; } = new List<SalesLine>();
         public List<PaymentDetail> Payments { get; set; } = new List<PaymentDetail>();
