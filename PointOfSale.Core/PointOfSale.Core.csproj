@@ -62,6 +62,7 @@
     <Compile Include="DTOs\SalesReturnFlatDto.cs" />
     <Compile Include="DTOs\StockAdjustmentHeaderDto.cs" />
     <Compile Include="DTOs\StockAdjustmentLineDto.cs" />
+    <Compile Include="DTOs\SupplierReturnLineDto.cs" />
     <Compile Include="Enums\GoodsReceiveNoteStatus.cs" />
     <Compile Include="Enums\PurchaseOrderStatus.cs" />
     <Compile Include="Enums\SupplierReturnStatus.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="DTOs\MenuVariantDto.cs" />
     <Compile Include="DTOs\SalesLineItemDto.cs" />
     <Compile Include="DTOs\SalesListDto.cs" />
+    <Compile Include="DTOs\SalesReturnReportDto.cs" />
     <Compile Include="DTOs\SalesReportRequestDto.cs" />
     <Compile Include="DTOs\SalesReportTypeDto.cs" />
     <Compile Include="DTOs\SalesReturnLookupDto.cs" />

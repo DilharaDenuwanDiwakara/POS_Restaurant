@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Models.Purchasing;
 
 namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
@@ -15,6 +16,8 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
         Task<IEnumerable<SupplierReturn>> GetPendingApprovalsAsync(int branchId, int? supplierId, DateTime? dateFrom, DateTime? dateTo);
 
         Task<IEnumerable<SupplierReturnLine>> GetLinesByReturnIdAsync(int supplierReturnId);
+
+        Task<IEnumerable<SupplierReturnLineDto>> GetLineDetailsAsync(int supplierReturnId);
 
         Task ApproveAsync(int supplierReturnId, int approvedBy);
 

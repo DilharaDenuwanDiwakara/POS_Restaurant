@@ -9,8 +9,17 @@ namespace PointOfSale.UI.Views.Sales
     /// </summary>
     public partial class SalesReportsView : UserControl
     {
-        private static readonly string[] WholeQuantityColumns = { "TotalQuantity", "Qty" };
-        private static readonly string[] HiddenGridColumns = { "CompanyName", "CompanyAddress", "CompanyContact", "CompanyContactNumber" };
+        private static readonly string[] WholeQuantityColumns = { "TotalQuantity", "Qty", "ReturnQuantity" };
+        private static readonly string[] HiddenGridColumns =
+        {
+            "CompanyName",
+            "CompanyAddress",
+            "CompanyContact",
+            "CompanyContactNumber",
+            "ReportTitle",
+            "ReportFromDate",
+            "ReportToDate"
+        };
 
         public SalesReportsView()
         {

@@ -33,6 +33,8 @@ namespace PointOfSale.UI.DataSets
             AddColumn(table, "SupplierReturnId", typeof(int));
             AddColumn(table, "SupplierReturnNumber", typeof(string));
             AddColumn(table, "CreditNoteNumber", typeof(string));
+            AddColumn(table, "OriginalInvoiceNumber", typeof(string));
+            AddColumn(table, "OriginalInvoiceDate", typeof(DateTime));
             AddColumn(table, "ReturnedDate", typeof(DateTime));
             AddColumn(table, "CreatedDate", typeof(DateTime));
             AddColumn(table, "ApprovedAt", typeof(DateTime));

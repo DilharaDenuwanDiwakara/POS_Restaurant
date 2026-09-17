@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CrystalDecisions.CrystalReports.Engine;
+using CrystalDecisions.Shared;
 using PointOfSale.Core.Interfaces.Purchasing;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Interfaces.Repositories.Purchasing;
@@ -13,6 +18,7 @@ using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Models.Purchasing;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.DataSets;
 using PointOfSale.UI.ViewModels.Inventory;
 using PointOfSale.UI.Views.Inventory;
 
@@ -52,6 +58,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             SaveSupplierReturnCommand = new AsyncRelayCommand(async _ => await OnSaveSupplierReturnAsync(), _ => CanSaveSupplierReturn());
             NewSupplierReturnCommand = new RelayCommand(_ => OnNewSupplierReturn());
             SearchCommand = new AsyncRelayCommand(async _ => await SearchReturnAsync());
+            PrintSupplierReturnCommand = new AsyncRelayCommand(async parameter => await PrintSupplierReturnAsync(parameter));
 
             OnNewSupplierReturn();
 
@@ -338,6 +345,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public AsyncRelayCommand SaveSupplierReturnCommand { get; }
         public RelayCommand NewSupplierReturnCommand { get; }
         public ICommand SearchCommand { get; }
+        public ICommand PrintSupplierReturnCommand { get; }
         #endregion
 
         #region Core Logic
@@ -669,10 +677,133 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             {
                 int? suppId = FilterSupplierId == -1 ? (int?)null : FilterSupplierId;
                 var results = await _supplierReturnRepository.GetAllAsync(suppId, SearchDateFrom, SearchDateTo);
-                HistoryList = new ObservableCollection<SupplierReturn>(results);
+                SetHistoryList(results);
                 if (!HistoryList.Any()) MessageBox.Show("No records found.");
             }
             catch (Exception ex) { MessageBox.Show(ex.Message); }
+        }
+
+        private void SetHistoryList(IEnumerable<SupplierReturn> results)
+        {
+            if (HistoryList != null)
+            {
+                foreach (var existingItem in HistoryList)
+                {
+                    existingItem.PropertyChanged -= HistorySupplierReturn_PropertyChanged;
+                }
+            }
+
+            HistoryList = new ObservableCollection<SupplierReturn>(results);
+
+            foreach (var item in HistoryList)
+            {
+                item.PropertyChanged += HistorySupplierReturn_PropertyChanged;
+            }
+        }
+
+        private void HistorySupplierReturn_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SupplierReturn.IsExpanded))
+            {
+                _ = LoadSupplierReturnLinesAsync(sender as SupplierReturn);
+            }
+        }
+
+        private async Task LoadSupplierReturnLinesAsync(object parameter)
+        {
+            var supplierReturn = parameter as SupplierReturn;
+
+            if (supplierReturn == null ||
+                !supplierReturn.IsExpanded ||
+                supplierReturn.HasLoadedLineItems ||
+                supplierReturn.IsLoadingLineItems)
+            {
+                return;
+            }
+
+            try
+            {
+                supplierReturn.IsLoadingLineItems = true;
+                supplierReturn.LineItems.Clear();
+
+                var lines = await _supplierReturnRepository.GetLineDetailsAsync(supplierReturn.SupplierReturnId);
+
+                foreach (var line in lines)
+                {
+                    supplierReturn.LineItems.Add(line);
+                }
+
+                supplierReturn.HasLoadedLineItems = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading supplier return line items: {ex.Message}", "Supplier Return", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                supplierReturn.IsLoadingLineItems = false;
+            }
+        }
+
+        private async Task PrintSupplierReturnAsync(object parameter)
+        {
+            var supplierReturnId = GetSupplierReturnId(parameter);
+
+            if (supplierReturnId <= 0)
+            {
+                return;
+            }
+
+            DataTable reportData = await _supplierReturnRepository.GetSupplierReturnReportDataAsync(supplierReturnId);
+
+            if (reportData == null || reportData.Rows.Count == 0)
+            {
+                MessageBox.Show("No data found for this Supplier Return Note.", "Print", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string tempFile = Path.Combine(Path.GetTempPath(), $"SRN_{supplierReturnId}_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
+
+            await Task.Run(() => ExportSupplierReturnReport(reportData, tempFile));
+
+            Process.Start(new ProcessStartInfo(tempFile) { UseShellExecute = true });
+        }
+
+        private static int GetSupplierReturnId(object parameter)
+        {
+            if (parameter is SupplierReturn supplierReturn)
+            {
+                return supplierReturn.SupplierReturnId;
+            }
+
+            if (parameter is int supplierReturnId)
+            {
+                return supplierReturnId;
+            }
+
+            return 0;
+        }
+
+        private void ExportSupplierReturnReport(DataTable reportData, string filePath)
+        {
+            using (var report = new ReportDocument())
+            {
+                string reportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports", "SupplierReturnNote.rpt");
+
+                if (!File.Exists(reportPath))
+                {
+                    throw new FileNotFoundException("Crystal report file not found.", reportPath);
+                }
+
+                report.Load(reportPath);
+
+                var ds = new SupplierReturnDS();
+                ds.EnforceConstraints = false;
+                ds.rptGetSupplierReturnNote.Merge(reportData);
+
+                report.SetDataSource(ds);
+                report.ExportToDisk(ExportFormatType.PortableDocFormat, filePath);
+            }
         }
 
         #endregion

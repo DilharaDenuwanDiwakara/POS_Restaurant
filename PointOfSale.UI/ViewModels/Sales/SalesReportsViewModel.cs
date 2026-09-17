@@ -195,8 +195,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 var selectedReport = await _salesReportService.GenerateReportAsync(SelectedReportType.Key, request);
 
                 ReportRows = selectedReport.DefaultView;
-                RecordCount = selectedReport.Rows.Count;
-                TotalSalesAmount = ResolveTotalAmount(selectedReport);
+                UpdateSummaryMetrics(selectedReport);
 
                 var trendSource = SelectedReportType.Key == SalesReportService.SalesSummaryKey
                     ? selectedReport
@@ -310,8 +309,8 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private void BuildDailySalesTrend(DataTable table)
         {
-            var dateColumn = FindColumn(table, "SalesDate", "SaleDate", "ReportDate", "Date", "BusinessDate");
-            var amountColumn = FindColumn(table, "NetAmount", "TotalSales", "SalesAmount", "TotalAmount", "Amount", "GrossAmount");
+            var dateColumn = FindColumn(table, "SalesDate", "SaleDate", "ReturnDate", "ReportDate", "Date", "BusinessDate");
+            var amountColumn = FindColumn(table, "NetAmount", "TotalSales", "SalesAmount", "TotalAmount", "HeaderTotalRefund", "LineRefundAmount", "Amount", "GrossAmount");
 
             if (dateColumn == null || amountColumn == null || table.Rows.Count == 0)
             {
@@ -377,9 +376,53 @@ namespace PointOfSale.UI.ViewModels.Sales
                 .ToArray();
         }
 
+        private void UpdateSummaryMetrics(DataTable table)
+        {
+            if (SelectedReportType?.Key == SalesReportService.SalesReturnDetailKey)
+            {
+                UpdateSalesReturnSummaryMetrics(table);
+                return;
+            }
+
+            RecordCount = table?.Rows.Count ?? 0;
+            TotalSalesAmount = ResolveTotalAmount(table);
+        }
+
+        private void UpdateSalesReturnSummaryMetrics(DataTable table)
+        {
+            var returnNumberColumn = FindColumn(table, "ReturnNumber");
+            var headerRefundColumn = FindColumn(table, "HeaderTotalRefund");
+
+            if (table == null || table.Rows.Count == 0 || returnNumberColumn == null)
+            {
+                RecordCount = 0;
+                TotalSalesAmount = 0m;
+                return;
+            }
+
+            var returnGroups = table.Rows.Cast<DataRow>()
+                .Where(row => row[returnNumberColumn] != DBNull.Value)
+                .GroupBy(row => Convert.ToString(row[returnNumberColumn]))
+                .Where(group => !string.IsNullOrWhiteSpace(group.Key))
+                .ToList();
+
+            RecordCount = returnGroups.Count;
+
+            if (headerRefundColumn != null)
+            {
+                TotalSalesAmount = returnGroups.Sum(group => GetDecimal(group.First(), headerRefundColumn));
+                return;
+            }
+
+            var lineRefundColumn = FindColumn(table, "LineRefundAmount");
+            TotalSalesAmount = lineRefundColumn == null
+                ? 0m
+                : table.Rows.Cast<DataRow>().Sum(row => GetDecimal(row, lineRefundColumn));
+        }
+
         private decimal ResolveTotalAmount(DataTable table)
         {
-            var amountColumn = FindColumn(table, "NetAmount", "TotalSales", "SalesAmount", "TotalAmount", "Amount", "GrossAmount");
+            var amountColumn = FindColumn(table, "NetAmount", "TotalSales", "SalesAmount", "TotalAmount", "HeaderTotalRefund", "LineRefundAmount", "Amount", "GrossAmount");
             return amountColumn == null
                 ? 0m
                 : table.Rows.Cast<DataRow>().Sum(row => GetDecimal(row, amountColumn));

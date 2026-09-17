@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Purchasing;
 using PointOfSale.Core.Models.Purchasing;
 
@@ -196,6 +197,45 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
             catch (SqlException ex)
             {
                 throw new InvalidOperationException($"A database error occured while retrieving lines for supplier return {supplierReturnId}.", ex);
+            }
+
+            return lines;
+        }
+
+        public async Task<IEnumerable<SupplierReturnLineDto>> GetLineDetailsAsync(int supplierReturnId)
+        {
+            var lines = new List<SupplierReturnLineDto>();
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Purchasing].[uspGetSupplierReturnLineDetails]"))
+                {
+                    command.Parameters.Add("@SupplierReturnId", SqlDbType.Int).Value = supplierReturnId;
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            lines.Add(new SupplierReturnLineDto
+                            {
+                                ItemName = GetValue<string>(reader, "ItemName"),
+                                ReturnedQty = GetValue<decimal>(reader, "ReturnedQty"),
+                                UnitPrice = GetValue<decimal>(reader, "UnitPrice"),
+                                Discount = GetValue<decimal>(reader, "Discount"),
+                                Tax = GetValue<decimal>(reader, "Tax"),
+                                Reason = GetValue<string>(reader, "Reason"),
+                                LineTotal = GetValue<decimal>(reader, "LineTotal")
+                            });
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException($"A database error occured while retrieving line details for supplier return {supplierReturnId}.", ex);
             }
 
             return lines;
@@ -435,6 +475,8 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 SupplierId = HasColumn(record, "SupplierId") ? GetValue<int>(record, "SupplierId") : 0,
                 ReturnNumber = GetValue<string>(record, "ReturnNoteNumber"),
                 SupplierName = GetValue<string>(record, "SupplierName"),
+                OriginalInvoiceNumbers = HasColumn(record, "OriginalInvoiceNumbers") ? GetValue<string>(record, "OriginalInvoiceNumbers") : null,
+                OriginalInvoiceDates = HasColumn(record, "OriginalInvoiceDates") ? GetValue<string>(record, "OriginalInvoiceDates") : null,
                 SubTotal = HasColumn(record, "SubTotal") ? GetValue<decimal>(record, "SubTotal") : 0m,
                 DiscountAmount = HasColumn(record, "DiscountAmount") ? GetValue<decimal>(record, "DiscountAmount") : 0m,
                 TaxAmount = HasColumn(record, "TaxAmount") ? GetValue<decimal>(record, "TaxAmount") : 0m,

@@ -116,6 +116,8 @@ namespace PointOfSale.UI.Services
                     return "uspGetSalesDetailReport";
                 case SalesReportService.PaymentModeWiseKey:
                     return "uspGetPaymentModeWiseSalesReport";
+                case SalesReportService.SalesReturnDetailKey:
+                    return "uspGetSalesReturnReport";
                 default:
                     return reportTypeKey;
             }
@@ -190,6 +192,8 @@ namespace PointOfSale.UI.Services
                     return new SalesSummaryReport();
                 case SalesReportService.SalesDetailKey:
                     return new SalesDetailsReport();
+                case SalesReportService.SalesReturnDetailKey:
+                    return new SalesReturnDetailReport();
                 case SalesReportService.PaymentModeWiseKey:
                     throw new InvalidOperationException("A print template for the Payment Mode Wise report has not been added yet.");
                 default:
