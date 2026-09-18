@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 using PointOfSale.Core.Models.Inventory;
 
@@ -15,5 +16,6 @@ namespace PointOfSale.Core.Interfaces.Repositories.Inventory
         Task<List<WastageDetailModel>> GetWastageDetailsAsync(long wastageId);
         Task ApproveWastageAsync(long wastageId, int approvedBy);
         Task RejectWastageAsync(long wastageId, int rejectedBy, string remarks);
+        Task<DataTable> GetWastageReportDataAsync(long wastageId);
     }
 }

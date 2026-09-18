@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CrystalDecisions.Shared;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.Reports;
 using PointOfSale.UI.Views.Inventory;
 
 namespace PointOfSale.UI.ViewModels.Inventory
@@ -51,6 +56,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             AddReasonCommand = new RelayCommand(ExecuteOpenWastageReason);
             SearchCommand = new AsyncRelayCommand(async _ => await SearchWastageHistoryAsync());
             RowExpandedCommand = new AsyncRelayCommand(async parameter => await LoadWastageLinesAsync(parameter as WastageModel));
+            PrintWastageCommand = new AsyncRelayCommand(async parameter => await PrintWastageAsync(parameter));
 
             Locations = new ObservableCollection<Location>();
             Products = new ObservableCollection<Product>();
@@ -279,6 +285,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public ICommand AddReasonCommand { get; }
         public ICommand SearchCommand { get; }
         public ICommand RowExpandedCommand { get; }
+        public ICommand PrintWastageCommand { get; }
         #endregion
 
         #region Logic
@@ -385,6 +392,78 @@ namespace PointOfSale.UI.ViewModels.Inventory
             finally
             {
                 wastage.IsLoadingLineItems = false;
+            }
+        }
+
+        private async Task PrintWastageAsync(object parameter)
+        {
+            var wastageId = GetWastageId(parameter);
+            if (wastageId <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await OpenWastageReportAsync(wastageId);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to print Wastage Note: {ex.Message}", "Wastage History", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private static long GetWastageId(object parameter)
+        {
+            if (parameter is WastageModel wastage)
+            {
+                return wastage.Id;
+            }
+
+            if (parameter is long wastageId)
+            {
+                return wastageId;
+            }
+
+            return 0;
+        }
+
+        private async Task OpenWastageReportAsync(long wastageId)
+        {
+            DataTable reportData = await _wastageRepository.GetWastageReportDataAsync(wastageId);
+
+            if (reportData == null || reportData.Rows.Count == 0)
+            {
+                MessageBox.Show("No data found for this Wastage Note.", "Wastage History", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string tempFile = Path.Combine(Path.GetTempPath(), $"Wastage_{wastageId}_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
+
+            await Task.Run(() => ExportWastageReport(reportData, wastageId, tempFile));
+
+            Process.Start(new ProcessStartInfo(tempFile) { UseShellExecute = true });
+        }
+
+        private void ExportWastageReport(DataTable reportData, long wastageId, string filePath)
+        {
+            using (var report = new WastageNoteReport())
+            {
+                report.SetDataSource(reportData);
+                TrySetWastageIdParameter(report, wastageId);
+                report.ExportToDisk(ExportFormatType.PortableDocFormat, filePath);
+            }
+        }
+
+        private static void TrySetWastageIdParameter(WastageNoteReport report, long wastageId)
+        {
+            try
+            {
+                report.SetParameterValue("@WastageId", wastageId);
+            }
+            catch
+            {
+                // The report is already bound to the retrieved data when no runtime parameter is exposed.
             }
         }
 

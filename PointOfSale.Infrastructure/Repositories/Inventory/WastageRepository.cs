@@ -325,5 +325,33 @@ WHERE [Id] = @WastageId
             }
         }
 
+        public async Task<DataTable> GetWastageReportDataAsync(long wastageId)
+        {
+            if (wastageId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(wastageId), "A valid wastage ID is required.");
+
+            var reportTable = new DataTable("rptGetWastageNote");
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[rptGetWastageNote]"))
+                using (var adapter = new SqlDataAdapter(command))
+                {
+                    command.Parameters.Add("@WastageId", SqlDbType.BigInt).Value = wastageId;
+
+                    await connection.OpenAsync();
+                    adapter.Fill(reportTable);
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(
+                    $"A database error occurred while loading the Wastage Note report data for WastageId {wastageId}.", ex);
+            }
+
+            return reportTable;
+        }
+
     }
 }
