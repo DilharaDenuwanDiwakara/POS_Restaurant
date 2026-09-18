@@ -695,6 +695,14 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                 var lineCost = CalculateRecipeLineCost(qty, SelectedRecipeProduct, SelectedRecipeUnit);
                 var costPerSelectedUnit = qty > 0m ? lineCost / qty : 0m;
 
+                var wastagePercentage = SelectedRecipeProduct.WastagePercentage;
+
+                var wastageQty = qty * (wastagePercentage / 100m);
+                var actualQty = qty + wastageQty;
+
+                var actualCost = actualQty * costPerSelectedUnit;
+
+
                 // 1. Check if this Product + Unit already exists in the current Variant's recipe
                 var existingLine = SelectedVariantForRecipe.RecipeLines
                     .FirstOrDefault(x => x.ProductId == SelectedRecipeProduct.ProductId &&
@@ -722,8 +730,11 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                         ProductId = SelectedRecipeProduct.ProductId,
                         UnitMeasureId = unitMeasureId,
                         ProductName = SelectedRecipeProduct.ProductName,
+                        WastagePercentage=SelectedRecipeProduct.WastagePercentage,
                         UnitName = unitCode,
                         Quantity = qty,
+                        ActualQty = actualQty,
+                        ActualCost = actualCost,
                         CostPerUnit = costPerSelectedUnit
                     };
 

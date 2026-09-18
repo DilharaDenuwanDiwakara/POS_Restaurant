@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PointOfSale.UI.Views.Restaurant"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="650" d:DesignWidth="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -408,6 +408,7 @@
                                             <DataGridTextColumn Header="Ingredient" Binding="{Binding ProductName}" Width="2*"/>
                                             <DataGridTextColumn Header="Unit Measure" Binding="{Binding UnitName}" Width="*"/>
                                             <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="*"/>
+                                            <DataGridTextColumn Header="Actual Qty" Binding="{Binding ActualQty}" Width="*"/>
 
                                             <DataGridTextColumn Header="Unit Cost (LKR)" Binding="{Binding CostPerUnit, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
@@ -417,7 +418,26 @@
                                                     </Style>
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
+
+                                            <DataGridTextColumn Header="Wastage" Binding="{Binding WastagePercentage, StringFormat='{}{0:N2}%'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                        <Setter Property="Margin" Value="0,0,8,0"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                            
                                             <DataGridTextColumn Header="Line Cost (LKR)" Binding="{Binding TotalCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                        <Setter Property="Margin" Value="0,0,8,0"/>
+                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                            <DataGridTextColumn Header="Actual Cost (LKR)" Binding="{Binding ActualCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="HorizontalAlignment" Value="Right"/>

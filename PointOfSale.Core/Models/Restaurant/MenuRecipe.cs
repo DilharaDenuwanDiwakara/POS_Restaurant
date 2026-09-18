@@ -16,6 +16,7 @@ namespace PointOfSale.Core.Models.Restaurant
         private decimal _quantity;
         private decimal _costPerUnit;
         private string _unitName;
+        private decimal _wastagePercentage;
 
         public int Id { get; set; }
         public int ProductId { get; set; }
@@ -60,6 +61,49 @@ namespace PointOfSale.Core.Models.Restaurant
                     OnPropertyChanged(nameof(TotalCost));
                 }
             }
+        }
+
+        public decimal WastagePercentage
+        {
+            get => _wastagePercentage;
+            set
+            {
+                if (_wastagePercentage != value)
+                {
+                    _wastagePercentage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+
+        private decimal _actualQty;
+        public decimal ActualQty
+        {
+            get => _actualQty;
+            set
+            {
+                if (_actualQty != value)
+                {
+                    _actualQty = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+
+        private decimal _actualCost;
+        public decimal ActualCost
+        {
+            get => _actualCost;
+            set
+            {
+                if (_actualCost != value)
+                {
+                    _actualCost = value;
+                    OnPropertyChanged();
+                }
+            }   
         }
 
         // Calculated Property
