@@ -1,13 +1,18 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CrystalDecisions.Shared;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
+using PointOfSale.UI.Reports;
 
 namespace PointOfSale.UI.ViewModels.Inventory
 {
@@ -140,11 +145,15 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             try
             {
-                await _wastageRepository.ApproveWastageAsync(SelectedWastage.WastageId, _userSessionService.UserId);
+                long approvedWastageId = SelectedWastage.WastageId;
+
+                await _wastageRepository.ApproveWastageAsync(approvedWastageId, _userSessionService.UserId);
 
                 MessageBox.Show("Wastage approved successfully.", "Wastage Approval", MessageBoxButton.OK, MessageBoxImage.Information);
                 ApprovalRemarks = string.Empty;
                 await LoadPendingAsync();
+
+                await OpenWastageReportAsync(approvedWastageId);
             }
             catch (Exception ex)
             {
@@ -173,6 +182,45 @@ namespace PointOfSale.UI.ViewModels.Inventory
             catch (Exception ex)
             {
                 MessageBox.Show($"Error rejecting wastage: {ex.Message}", "Wastage Approval", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task OpenWastageReportAsync(long wastageId)
+        {
+            DataTable reportData = await _wastageRepository.GetWastageReportDataAsync(wastageId);
+
+            if (reportData == null || reportData.Rows.Count == 0)
+            {
+                MessageBox.Show("No data found for this Wastage Note.", "Wastage Approval", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string tempFile = Path.Combine(Path.GetTempPath(), $"Wastage_{wastageId}_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
+
+            await Task.Run(() => ExportWastageReport(reportData, wastageId, tempFile));
+
+            Process.Start(new ProcessStartInfo(tempFile) { UseShellExecute = true });
+        }
+
+        private void ExportWastageReport(DataTable reportData, long wastageId, string filePath)
+        {
+            using (var report = new WastageNoteReport())
+            {
+                report.SetDataSource(reportData);
+                TrySetWastageIdParameter(report, wastageId);
+                report.ExportToDisk(ExportFormatType.PortableDocFormat, filePath);
+            }
+        }
+
+        private static void TrySetWastageIdParameter(WastageNoteReport report, long wastageId)
+        {
+            try
+            {
+                report.SetParameterValue("@WastageId", wastageId);
+            }
+            catch
+            {
+                // The report is already bound to the retrieved data when no runtime parameter is exposed.
             }
         }
 

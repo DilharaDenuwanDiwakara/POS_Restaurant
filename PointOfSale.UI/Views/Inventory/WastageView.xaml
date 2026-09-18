@@ -1,238 +1,302 @@
-<UserControl x:Class="PointOfSale.UI.Views.Inventory.WastageView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800">
+<UserControl
+    x:Class="PointOfSale.UI.Views.Inventory.WastageView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Wastage" Style="{StaticResource HeaderTextStyle}"/>
+        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Wastage" />
 
         <TabControl Grid.Row="1" Style="{StaticResource TabControlStyle}">
             <TabItem Header=" New Wastage " Style="{StaticResource TabItemStyle}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="285"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="285" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Border Margin="0,0,8,0" Style="{StaticResource PanelCardStyle}">
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                             <StackPanel>
-                                <TextBlock Text="Wastage Form" Style="{StaticResource SubHeaderTextStyle}"/>
+                                <TextBlock Style="{StaticResource SubHeaderTextStyle}" Text="Wastage Form" />
 
-                                <TextBlock Text="Wastage Date:" Style="{StaticResource LabelStyle}"/>
-                                <DatePicker SelectedDate="{Binding WastageDate, UpdateSourceTrigger=PropertyChanged}"
-                                            IsTodayHighlighted="True"
-                                            Style="{StaticResource DatePickerStyle}"
-                                            PreviewKeyDown="MoveFocusOnEnter"/>
+                                <TextBlock Style="{StaticResource LabelStyle}" Text="Wastage Date:" />
+                                <DatePicker
+                                    IsTodayHighlighted="True"
+                                    PreviewKeyDown="MoveFocusOnEnter"
+                                    SelectedDate="{Binding WastageDate, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource DatePickerStyle}" />
 
-                                <TextBlock Text="Location:" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox ItemsSource="{Binding Locations}"
-                                          SelectedValue="{Binding LocationId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                          DisplayMemberPath="Name"
-                                          SelectedValuePath="Id"
-                                          Style="{StaticResource ComboBoxStyle}"
-                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
-                                          PreviewKeyDown="MoveFocusOnEnter"/>
+                                <TextBlock Style="{StaticResource LabelStyle}" Text="Location:" />
+                                <ComboBox
+                                    DisplayMemberPath="Name"
+                                    ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                    ItemsSource="{Binding Locations}"
+                                    PreviewKeyDown="MoveFocusOnEnter"
+                                    SelectedValue="{Binding LocationId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                    SelectedValuePath="Id"
+                                    Style="{StaticResource ComboBoxStyle}" />
 
-                                <TextBlock Text="Note:" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
-                                         MaxLength="500"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         Height="80"
-                                         VerticalContentAlignment="Top"
-                                         Style="{StaticResource TextBoxStyle}"
-                                         PreviewKeyDown="MoveFocusOnEnter"/>
+                                <TextBlock Style="{StaticResource LabelStyle}" Text="Note:" />
+                                <TextBox
+                                    Height="80"
+                                    VerticalContentAlignment="Top"
+                                    AcceptsReturn="True"
+                                    MaxLength="500"
+                                    PreviewKeyDown="MoveFocusOnEnter"
+                                    Style="{StaticResource TextBoxStyle}"
+                                    Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
+                                    TextWrapping="Wrap" />
 
-                                <StackPanel Orientation="Horizontal" Margin="0,20,0,0" HorizontalAlignment="Center">
-                                    <Button Content="save"
-                                            Command="{Binding SaveCommand}"
-                                            Style="{StaticResource PrimaryButtonStyle}"
-                                            Margin="0,0,10,0"/>
+                                <StackPanel
+                                    Margin="0,20,0,0"
+                                    HorizontalAlignment="Center"
+                                    Orientation="Horizontal">
+                                    <Button
+                                        Margin="0,0,10,0"
+                                        Command="{Binding SaveCommand}"
+                                        Content="save"
+                                        Style="{StaticResource PrimaryButtonStyle}" />
 
-                                    <Button Content="Clear"
-                                            Command="{Binding ClearCommand}"
-                                            Style="{StaticResource SecondaryButtonStyle}"/>
+                                    <Button
+                                        Command="{Binding ClearCommand}"
+                                        Content="Clear"
+                                        Style="{StaticResource SecondaryButtonStyle}" />
                                 </StackPanel>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>
 
-                    <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                    <Border
+                        Grid.Column="1"
+                        Margin="0"
+                        Style="{StaticResource PanelCardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <Border Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1"
-                                    CornerRadius="6" Padding="10" Margin="0,0,0,4">
+                            <Border
+                                Margin="0,0,0,4"
+                                Padding="10"
+                                Background="#F8F9FA"
+                                BorderBrush="#E1E8ED"
+                                BorderThickness="1"
+                                CornerRadius="6">
                                 <Grid>
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                        <TextBlock Text="Add Items" Style="{StaticResource SubHeaderTextStyle}" VerticalAlignment="Center" Margin="0"/>
+                                    <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                                        <TextBlock
+                                            Margin="0"
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource SubHeaderTextStyle}"
+                                            Text="Add Items" />
                                     </StackPanel>
 
                                     <Grid Grid.Row="1">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="150"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="110"/>
-                                            <ColumnDefinition Width="100"/>
-                                            <ColumnDefinition Width="100"/>
-                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="150" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="110" />
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="120" />
                                         </Grid.ColumnDefinitions>
 
-                                        <StackPanel Margin="0 0 8 0">
-                                            <TextBlock Text="Code / Barcode:" Style="{StaticResource LabelStyle}"/>
-                                            <TextBox x:Name="BarcodeTextBox"
-                                                     Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                                                     Style="{StaticResource TextBoxStyle}"
-                                                     PreviewKeyDown="MoveFocusOnEnter"/>
+                                        <StackPanel Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="Code / Barcode:" />
+                                            <TextBox
+                                                x:Name="BarcodeTextBox"
+                                                PreviewKeyDown="MoveFocusOnEnter"
+                                                Style="{StaticResource TextBoxStyle}"
+                                                Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="1" Margin="0 0 8 0">
-                                            <TextBlock Text="Product:" Style="{StaticResource LabelStyle}"/>
-                                            <ComboBox x:Name="ProductCombobox"
-                                                      ItemsSource="{Binding Products}"
-                                                      SelectedItem="{Binding SelectedProduct, Mode=TwoWay}"
-                                                      DisplayMemberPath="ProductName"
-                                                      TextSearch.TextPath="ProductName"
-                                                      IsEditable="True"
-                                                      IsTextSearchEnabled="True"
-                                                      PreviewKeyDown="MoveFocusOnEnter"
-                                                      Style="{StaticResource ComboBoxStyle}"/>
+                                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="Product:" />
+                                            <ComboBox
+                                                x:Name="ProductCombobox"
+                                                DisplayMemberPath="ProductName"
+                                                IsEditable="True"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding Products}"
+                                                PreviewKeyDown="MoveFocusOnEnter"
+                                                SelectedItem="{Binding SelectedProduct, Mode=TwoWay}"
+                                                Style="{StaticResource ComboBoxStyle}"
+                                                TextSearch.TextPath="ProductName" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="2" Margin="0 0 8 0">
-                                            <TextBlock Text="Reason:" Style="{StaticResource LabelStyle}"/>
+                                        <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="Reason:" />
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
 
-                                                <ComboBox ItemsSource="{Binding Reasons}"
-                                                          SelectedValue="{Binding ReasonId}"
-                                                          DisplayMemberPath="Reason"
-                                                          SelectedValuePath="Id"
-                                                          PreviewKeyDown="MoveFocusOnEnter"
-                                                          Style="{StaticResource ComboBoxStyle}"
-                                                          Margin="0"/>
+                                                <ComboBox
+                                                    Margin="0"
+                                                    DisplayMemberPath="Reason"
+                                                    ItemsSource="{Binding Reasons}"
+                                                    PreviewKeyDown="MoveFocusOnEnter"
+                                                    SelectedValue="{Binding ReasonId}"
+                                                    SelectedValuePath="Id"
+                                                    Style="{StaticResource ComboBoxStyle}" />
 
-                                                <Button Grid.Column="1"
-                                                        Command="{Binding AddReasonCommand}"
-                                                        ToolTip="Add New Reason"
-                                                        Margin="4,0"
-                                                        Style="{StaticResource AddButtonStyle}"
-                                                        Focusable="False"/>
+                                                <Button
+                                                    Grid.Column="1"
+                                                    Margin="4,0"
+                                                    Command="{Binding AddReasonCommand}"
+                                                    Focusable="False"
+                                                    Style="{StaticResource AddButtonStyle}"
+                                                    ToolTip="Add New Reason" />
                                             </Grid>
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="3" Margin="0 0 8 0">
-                                            <TextBlock Text="UOM:" Style="{StaticResource LabelStyle}"/>
-                                            <ComboBox ItemsSource="{Binding AllowedUOMs}"
-                                                      SelectedItem="{Binding SelectedUOM, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                      DisplayMemberPath="DisplayName"
-                                                      Style="{StaticResource ComboBoxStyle}"
-                                                      ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
-                                                      PreviewKeyDown="MoveFocusOnEnter"/>
+                                        <StackPanel Grid.Column="3" Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="UOM:" />
+                                            <ComboBox
+                                                DisplayMemberPath="DisplayName"
+                                                ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                                ItemsSource="{Binding AllowedUOMs}"
+                                                PreviewKeyDown="MoveFocusOnEnter"
+                                                SelectedItem="{Binding SelectedUOM, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Style="{StaticResource ComboBoxStyle}" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="4" Margin="0 0 8 0">
-                                            <TextBlock Text="Available:" Style="{StaticResource LabelStyle}"/>
-                                            <TextBox Text="{Binding SelectedBatch.AvailableQuantity, StringFormat=N3, FallbackValue='-'}"
-                                                     IsReadOnly="True"
-                                                     Style="{StaticResource ReadOnlyTextBoxStyle}"
-                                                     Foreground="Gray"
-                                                     FontWeight="Bold"
-                                                     TextAlignment="Center"/>
+                                        <StackPanel Grid.Column="4" Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="Available:" />
+                                            <TextBox
+                                                FontWeight="Bold"
+                                                Foreground="Gray"
+                                                IsReadOnly="True"
+                                                Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                                Text="{Binding SelectedBatch.AvailableQuantity, StringFormat=N3, FallbackValue='-'}"
+                                                TextAlignment="Center" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="5" Margin="0 0 8 0">
-                                            <TextBlock Text="Quantity:" Style="{StaticResource LabelStyle}"/>
-                                            <TextBox x:Name="QtyTextBox"
-                                                     Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                                     Style="{StaticResource TextBoxStyle}"
-                                                     PreviewKeyDown="MoveFocusOnEnter"
-                                                     GotKeyboardFocus="SelectAllText_GotFocus"
-                                                     PreviewMouseLeftButtonDown="QtyTextBox_PreviewMouseLeftButtonDown"
-                                                     PreviewTextInput="QtyTextBox_PreviewTextInput"
-                                                     TextAlignment="Center"/>
+                                        <StackPanel Grid.Column="5" Margin="0,0,8,0">
+                                            <TextBlock Style="{StaticResource LabelStyle}" Text="Quantity:" />
+                                            <TextBox
+                                                x:Name="QtyTextBox"
+                                                GotKeyboardFocus="SelectAllText_GotFocus"
+                                                PreviewKeyDown="MoveFocusOnEnter"
+                                                PreviewMouseLeftButtonDown="QtyTextBox_PreviewMouseLeftButtonDown"
+                                                PreviewTextInput="QtyTextBox_PreviewTextInput"
+                                                Style="{StaticResource TextBoxStyle}"
+                                                Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                TextAlignment="Center" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="6" Margin="0" VerticalAlignment="Top">
-                                            <Button x:Name="AddButton"
-                                                    Content="Add"
-                                                    Command="{Binding AddLineCommand}"
-                                                    Style="{StaticResource PrimaryButtonStyle}"
-                                                    Click="AddButton_Click"
-                                                    Margin="0,20,0,0"/>
+                                        <StackPanel
+                                            Grid.Column="6"
+                                            Margin="0"
+                                            VerticalAlignment="Top">
+                                            <Button
+                                                x:Name="AddButton"
+                                                Margin="0,20,0,0"
+                                                Click="AddButton_Click"
+                                                Command="{Binding AddLineCommand}"
+                                                Content="Add"
+                                                Style="{StaticResource PrimaryButtonStyle}" />
                                         </StackPanel>
                                     </Grid>
                                 </Grid>
                             </Border>
 
-                            <DataGrid Grid.Row="1"
-                                      ItemsSource="{Binding WastageLines}"
-                                      SelectedItem="{Binding SelectedLine}"
-                                      Style="{StaticResource DataGridStyle}"
-                                      Margin="0,4,0,0"
-                                      AutoGenerateColumns="False"
-                                      CanUserAddRows="False"
-                                      IsReadOnly="True">
+                            <DataGrid
+                                Grid.Row="1"
+                                Margin="0,4,0,0"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                IsReadOnly="True"
+                                ItemsSource="{Binding WastageLines}"
+                                SelectedItem="{Binding SelectedLine}"
+                                Style="{StaticResource DataGridStyle}">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="*"/>
-                                    <DataGridTextColumn Header="Reason" Binding="{Binding ReasonName}" Width="Auto"/>
-                                    <DataGridTextColumn Header="UOM" Binding="{Binding UnitMeasureName}" Width="110"/>
+                                    <DataGridTextColumn
+                                        Width="*"
+                                        Binding="{Binding ProductName}"
+                                        Header="Product Name" />
+                                    <DataGridTextColumn
+                                        Width="Auto"
+                                        Binding="{Binding ReasonName}"
+                                        Header="Reason" />
+                                    <DataGridTextColumn
+                                        Width="110"
+                                        Binding="{Binding UnitMeasureName}"
+                                        Header="UOM" />
 
-                                    <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat=N3}" Width="120" FontWeight="Bold">
+                                    <DataGridTextColumn
+                                        Width="120"
+                                        Binding="{Binding Quantity, StringFormat=N3}"
+                                        FontWeight="Bold"
+                                        Header="Quantity">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                <Setter Property="HorizontalAlignment" Value="Right" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                    <DataGridTextColumn
+                                        Width="120"
+                                        Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}"
+                                        Header="Unit Cost"
+                                        HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                <Setter Property="HorizontalAlignment" Value="Right" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <DataGridTemplateColumn Width="100" Header="Action">
+                                    <DataGridTemplateColumn Width="110" Header="Action">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource DeleteButtonStyle}"
-                                                        ToolTip="Remove line"/>
+                                                <Button
+                                                    Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource DeleteButtonStyle}"
+                                                    ToolTip="Remove line" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
 
-                            <Border Grid.Row="2" Background="#F8F9FA" BorderBrush="#E1E8ED" BorderThickness="1"
-                                    CornerRadius="6" Padding="8" Margin="0,4,0,0">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="Total Items:" Style="{StaticResource LabelStyle}" Margin="0,0,5,0"/>
-                                    <TextBlock Text="{Binding WastageLines.Count}" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Border
+                                Grid.Row="2"
+                                Margin="0,4,0,0"
+                                Padding="8"
+                                Background="#F8F9FA"
+                                BorderBrush="#E1E8ED"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                    <TextBlock
+                                        Margin="0,0,5,0"
+                                        Style="{StaticResource LabelStyle}"
+                                        Text="Total Items:" />
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontWeight="Bold"
+                                        Text="{Binding WastageLines.Count}" />
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -243,65 +307,81 @@
             <TabItem Header=" Wastage History " Style="{StaticResource TabItemStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Border Style="{StaticResource PanelCardStyle}" Margin="0 4 0 0">
+                    <Border Margin="0,4,0,0" Style="{StaticResource PanelCardStyle}">
                         <StackPanel Orientation="Horizontal">
                             <StackPanel Margin="0,0,20,0">
-                                <TextBlock Text="From Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
-                                <DatePicker SelectedDate="{Binding SearchDateFrom}"
-                                            Style="{StaticResource DatePickerStyle}"
-                                            Width="150"
-                                            Margin="0"/>
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    Style="{StaticResource LabelStyle}"
+                                    Text="From Date" />
+                                <DatePicker
+                                    Width="150"
+                                    Margin="0"
+                                    SelectedDate="{Binding SearchDateFrom}"
+                                    Style="{StaticResource DatePickerStyle}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,0,20,0">
-                                <TextBlock Text="To Date" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
-                                <DatePicker SelectedDate="{Binding SearchDateTo}"
-                                            Style="{StaticResource DatePickerStyle}"
-                                            Width="150"
-                                            Margin="0"/>
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    Style="{StaticResource LabelStyle}"
+                                    Text="To Date" />
+                                <DatePicker
+                                    Width="150"
+                                    Margin="0"
+                                    SelectedDate="{Binding SearchDateTo}"
+                                    Style="{StaticResource DatePickerStyle}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,0,12,0">
-                                <TextBlock Text="Location" Style="{StaticResource LabelStyle}" Margin="0,0,0,2"/>
-                                <ComboBox ItemsSource="{Binding Locations}"
-                                          DisplayMemberPath="Name"
-                                          SelectedValuePath="Id"
-                                          SelectedValue="{Binding HistoryLocationId}"
-                                          Style="{StaticResource ComboBoxStyle}"
-                                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
-                                          Width="220"
-                                          IsEditable="True"
-                                          Margin="0"/>
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    Style="{StaticResource LabelStyle}"
+                                    Text="Location" />
+                                <ComboBox
+                                    Width="220"
+                                    Margin="0"
+                                    DisplayMemberPath="Name"
+                                    IsEditable="True"
+                                    ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                    ItemsSource="{Binding Locations}"
+                                    SelectedValue="{Binding HistoryLocationId}"
+                                    SelectedValuePath="Id"
+                                    Style="{StaticResource ComboBoxStyle}" />
                             </StackPanel>
 
-                            <Button Command="{Binding SearchCommand}"
-                                    Margin="0,16,12,0"
-                                    Style="{StaticResource SearchButtonStyle}"
-                                    Width="80" Height="30"/>
+                            <Button
+                                Width="80"
+                                Height="30"
+                                Margin="0,16,12,0"
+                                Command="{Binding SearchCommand}"
+                                Style="{StaticResource SearchButtonStyle}" />
                         </StackPanel>
                     </Border>
 
-                    <DataGrid x:Name="WastageHistoryDataGrid"
-                              Grid.Row="1" Margin="0 4"
-                              ItemsSource="{Binding HistoryList}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              GridLinesVisibility="All"
-                              Style="{StaticResource DataGridStyle}"
-                              RowDetailsVisibilityMode="Visible"
-                              SelectionMode="Single"
-                              HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Auto">
+                    <DataGrid
+                        x:Name="WastageHistoryDataGrid"
+                        Grid.Row="1"
+                        Margin="0,4"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        GridLinesVisibility="All"
+                        HorizontalScrollBarVisibility="Auto"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding HistoryList}"
+                        RowDetailsVisibilityMode="Visible"
+                        SelectionMode="Single"
+                        Style="{StaticResource DataGridStyle}"
+                        VerticalScrollBarVisibility="Auto">
                         <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
-                                <Setter Property="Height" Value="Auto"/>
-                                <Setter Property="MinHeight" Value="42"/>
-                                <Setter Property="DetailsVisibility" Value="Visible"/>
+                            <Style BasedOn="{StaticResource Style.DataGrid.Row}" TargetType="DataGridRow">
+                                <Setter Property="Height" Value="Auto" />
+                                <Setter Property="MinHeight" Value="42" />
+                                <Setter Property="DetailsVisibility" Value="Visible" />
                             </Style>
                         </DataGrid.RowStyle>
 
@@ -309,42 +389,42 @@
                             <DataGridTemplateColumn Width="44">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <ToggleButton IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                      Command="{Binding DataContext.RowExpandedCommand, ElementName=WastageHistoryDataGrid}"
-                                                      CommandParameter="{Binding}"
-                                                      Width="28"
-                                                      Height="28"
-                                                      HorizontalAlignment="Center"
-                                                      VerticalAlignment="Center"
-                                                      ToolTip="Expand wastage">
+                                        <ToggleButton
+                                            Width="28"
+                                            Height="28"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Command="{Binding DataContext.RowExpandedCommand, ElementName=WastageHistoryDataGrid}"
+                                            CommandParameter="{Binding}"
+                                            IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTip="Expand wastage">
                                             <ToggleButton.Style>
                                                 <Style TargetType="ToggleButton">
-                                                    <Setter Property="Content" Value="&gt;"/>
-                                                    <Setter Property="FontFamily" Value="Segoe UI"/>
-                                                    <Setter Property="FontSize" Value="12"/>
-                                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                                    <Setter Property="Foreground" Value="#334155"/>
-                                                    <Setter Property="Background" Value="Transparent"/>
-                                                    <Setter Property="BorderThickness" Value="0"/>
-                                                    <Setter Property="Cursor" Value="Hand"/>
-                                                    <Setter Property="Focusable" Value="False"/>
+                                                    <Setter Property="Content" Value="&gt;" />
+                                                    <Setter Property="FontFamily" Value="Segoe UI" />
+                                                    <Setter Property="FontSize" Value="12" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Setter Property="Foreground" Value="#334155" />
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="BorderThickness" Value="0" />
+                                                    <Setter Property="Cursor" Value="Hand" />
+                                                    <Setter Property="Focusable" Value="False" />
                                                     <Setter Property="Template">
                                                         <Setter.Value>
                                                             <ControlTemplate TargetType="ToggleButton">
                                                                 <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                                                                    <ContentPresenter HorizontalAlignment="Center"
-                                                                                      VerticalAlignment="Center"/>
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                                 </Border>
                                                             </ControlTemplate>
                                                         </Setter.Value>
                                                     </Setter>
                                                     <Style.Triggers>
                                                         <Trigger Property="IsChecked" Value="True">
-                                                            <Setter Property="Content" Value="v"/>
-                                                            <Setter Property="ToolTip" Value="Collapse wastage"/>
+                                                            <Setter Property="Content" Value="v" />
+                                                            <Setter Property="ToolTip" Value="Collapse wastage" />
                                                         </Trigger>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#E5E7EB"/>
+                                                            <Setter Property="Background" Value="#E5E7EB" />
                                                         </Trigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -354,47 +434,76 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Wastage #" Binding="{Binding WastageNumber}" Width="130"/>
-                            <DataGridTextColumn Header="Date" Binding="{Binding WastageDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
-                            <DataGridTextColumn Header="Location" Binding="{Binding LocationName}" Width="160"/>
-                            <DataGridTextColumn Header="Note" Binding="{Binding Note}" Width="*"/>
-                            <DataGridTemplateColumn Header="Status" Width="150">
+                            <DataGridTextColumn
+                                Width="130"
+                                Binding="{Binding WastageNumber}"
+                                Header="Wastage #" />
+                            <DataGridTextColumn
+                                Width="120"
+                                Binding="{Binding WastageDate, StringFormat='{}{0:dd/MM/yyyy}'}"
+                                Header="Date" />
+                            <DataGridTextColumn
+                                Width="160"
+                                Binding="{Binding LocationName}"
+                                Header="Location" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Note}"
+                                Header="Note" />
+                            <DataGridTemplateColumn Width="150" Header="Status">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Style="{StaticResource StatusPillBorderStyle}">
-                                            <TextBlock Text="{Binding Status}" Style="{StaticResource StatusPillTextStyle}"/>
+                                            <TextBlock Style="{StaticResource StatusPillTextStyle}" Text="{Binding Status}" />
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Created By" Binding="{Binding CreatedBy}" Width="130"/>
-                            <DataGridTextColumn Header="Total Amount"
-                                                Binding="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}"
-                                                Width="130"
-                                                ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                                HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+                            <DataGridTextColumn
+                                Width="130"
+                                Binding="{Binding CreatedBy}"
+                                Header="Created By" />
+                            <DataGridTextColumn
+                                Width="130"
+                                Binding="{Binding TotalAmount, StringFormat='Rs. {0:N2}'}"
+                                ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                Header="Total Amount"
+                                HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
+                            <DataGridTemplateColumn Width="80" Header="Action">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            Command="{Binding DataContext.PrintWastageCommand, ElementName=WastageHistoryDataGrid}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource DataGridPrintButtonStyle}"
+                                            ToolTip="Print wastage note" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
 
                         <DataGrid.RowDetailsTemplate>
                             <DataTemplate>
-                                <Border Background="#F4F6F8"
-                                        BorderBrush="#D8DEE6"
-                                        BorderThickness="0,1,0,1"
-                                        Margin="0,12,0,12"
-                                        Padding="40,0,12,0"
-                                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        HorizontalAlignment="Stretch"
-                                        Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}">
+                                <Border
+                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    Margin="0,12,0,12"
+                                    Padding="40,0,12,0"
+                                    HorizontalAlignment="Stretch"
+                                    Background="#F4F6F8"
+                                    BorderBrush="#D8DEE6"
+                                    BorderThickness="0,1,0,1"
+                                    Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}">
                                     <Grid>
-                                        <TextBlock Text="Loading wastage items..."
-                                                   Foreground="#64748B"
-                                                   Margin="4,0,0,8">
+                                        <TextBlock
+                                            Margin="4,0,0,8"
+                                            Foreground="#64748B"
+                                            Text="Loading wastage items...">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Setter Property="Visibility" Value="Collapsed" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsLoadingLineItems}" Value="True">
-                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <Setter Property="Visibility" Value="Visible" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -402,40 +511,53 @@
                                         </TextBlock>
 
                                         <Border Margin="0,22,0,0" HorizontalAlignment="Stretch">
-                                            <DataGrid ItemsSource="{Binding WastageLines}"
-                                                      Style="{StaticResource DataGridStyle}"
-                                                      AutoGenerateColumns="False"
-                                                      CanUserAddRows="False"
-                                                      IsReadOnly="True"
-                                                      HeadersVisibility="Column"
-                                                      HorizontalAlignment="Stretch"
-                                                      MinHeight="78"
-                                                      HorizontalScrollBarVisibility="Disabled"
-                                                      VerticalScrollBarVisibility="Disabled">
+                                            <DataGrid
+                                                MinHeight="78"
+                                                HorizontalAlignment="Stretch"
+                                                AutoGenerateColumns="False"
+                                                CanUserAddRows="False"
+                                                HeadersVisibility="Column"
+                                                HorizontalScrollBarVisibility="Disabled"
+                                                IsReadOnly="True"
+                                                ItemsSource="{Binding WastageLines}"
+                                                Style="{StaticResource DataGridStyle}"
+                                                VerticalScrollBarVisibility="Disabled">
                                                 <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="*"/>
-                                                    <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="160"/>
-                                                    <DataGridTextColumn Header="UOM" Binding="{Binding UOM}" Width="80">
+                                                    <DataGridTextColumn
+                                                        Width="*"
+                                                        Binding="{Binding ProductName}"
+                                                        Header="Product Name" />
+                                                    <DataGridTextColumn
+                                                        Width="160"
+                                                        Binding="{Binding Reason}"
+                                                        Header="Reason" />
+                                                    <DataGridTextColumn
+                                                        Width="80"
+                                                        Binding="{Binding UOM}"
+                                                        Header="UOM">
                                                         <DataGridTextColumn.ElementStyle>
                                                             <Style TargetType="TextBlock">
-                                                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                                <Setter Property="HorizontalAlignment" Value="Center" />
                                                             </Style>
                                                         </DataGridTextColumn.ElementStyle>
                                                     </DataGridTextColumn>
-                                                    <DataGridTextColumn Header="Qty"
-                                                                        Binding="{Binding Quantity, StringFormat=N3}"
-                                                                        Width="90"
-                                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"/>
-                                                    <DataGridTextColumn Header="Unit Cost"
-                                                                        Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}"
-                                                                        Width="120"
-                                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                                                        HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
-                                                    <DataGridTextColumn Header="Total"
-                                                                        Binding="{Binding TotalCost, StringFormat='Rs. {0:N2}'}"
-                                                                        Width="120"
-                                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"
-                                                                        HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+                                                    <DataGridTextColumn
+                                                        Width="90"
+                                                        Binding="{Binding Quantity, StringFormat=N3}"
+                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                                        Header="Qty" />
+                                                    <DataGridTextColumn
+                                                        Width="120"
+                                                        Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}"
+                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                                        Header="Unit Cost"
+                                                        HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
+                                                    <DataGridTextColumn
+                                                        Width="120"
+                                                        Binding="{Binding TotalCost, StringFormat='Rs. {0:N2}'}"
+                                                        ElementStyle="{StaticResource RightAlignedTextStyle}"
+                                                        Header="Total"
+                                                        HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
                                         </Border>
