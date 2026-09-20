@@ -692,8 +692,8 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             {
                 var unitCode = SelectedRecipeUnit.UnitCode;
                 var unitMeasureId = SelectedRecipeUnit.UnitId;
-                var lineCost = CalculateRecipeLineCost(qty, SelectedRecipeProduct, SelectedRecipeUnit);
-                var costPerSelectedUnit = qty > 0m ? lineCost / qty : 0m;
+                var baseUnitCost = CalculateRecipeBaseUnitCost(SelectedRecipeProduct, SelectedRecipeUnit);
+                var wastagePercentage = SelectedRecipeProduct.WastagePercentage;
 
                 // 1. Check if this Product + Unit already exists in the current Variant's recipe
                 var existingLine = SelectedVariantForRecipe.RecipeLines
@@ -712,7 +712,8 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                     {
                         existingLine.UnitName = unitCode;
                     }
-                    existingLine.CostPerUnit = costPerSelectedUnit;
+                    existingLine.BaseUnitCost = baseUnitCost;
+                    existingLine.WastagePercentage = wastagePercentage;
                 }
                 else
                 {
@@ -724,7 +725,8 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                         ProductName = SelectedRecipeProduct.ProductName,
                         UnitName = unitCode,
                         Quantity = qty,
-                        CostPerUnit = costPerSelectedUnit
+                        BaseUnitCost = baseUnitCost,
+                        WastagePercentage = wastagePercentage
                     };
 
                     SelectedVariantForRecipe.RecipeLines.Add(line);
@@ -740,18 +742,41 @@ namespace PointOfSale.UI.ViewModels.Restaurant
 
         private decimal CalculateRecipeLineCost(decimal qtyNeeded, Product ingredient, RecipeUnitDto selectedUnit)
         {
+            return qtyNeeded * CalculateTrueUnitCost(
+                CalculateRecipeBaseUnitCost(ingredient, selectedUnit),
+                ingredient?.WastagePercentage ?? 0m);
+        }
+
+        private decimal CalculateRecipeBaseUnitCost(Product ingredient, RecipeUnitDto selectedUnit)
+        {
             if (ingredient == null || selectedUnit == null)
             {
                 return 0m;
             }
 
-            var actualQtyInBaseUnit = selectedUnit.IsBaseUnit || selectedUnit.ConversionRate <= 0m
-                ? qtyNeeded
+            var selectedUnitInBaseUnit = selectedUnit.IsBaseUnit || selectedUnit.ConversionRate <= 0m
+                ? 1m
                 : selectedUnit.IsMultiply
-                    ? qtyNeeded * selectedUnit.ConversionRate
-                    : qtyNeeded / selectedUnit.ConversionRate;
+                    ? selectedUnit.ConversionRate
+                    : 1m / selectedUnit.ConversionRate;
 
-            return actualQtyInBaseUnit * ingredient.StandardCost;
+            return ingredient.StandardCost * selectedUnitInBaseUnit;
+        }
+
+        private static decimal CalculateTrueUnitCost(decimal baseUnitCost, decimal wastagePercentage)
+        {
+            if (baseUnitCost <= 0m || wastagePercentage <= 0m)
+            {
+                return baseUnitCost;
+            }
+
+            var yieldPercentage = 100m - wastagePercentage;
+            if (yieldPercentage <= 0m)
+            {
+                return 0m;
+            }
+
+            return baseUnitCost / (yieldPercentage / 100m);
         }
 
         private async Task LoadAvailableUnits()

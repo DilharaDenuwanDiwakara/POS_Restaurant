@@ -406,10 +406,9 @@
 
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Ingredient" Binding="{Binding ProductName}" Width="2*"/>
-                                            <DataGridTextColumn Header="Unit Measure" Binding="{Binding UnitName}" Width="*"/>
-                                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="*"/>
-
-                                            <DataGridTextColumn Header="Unit Cost (LKR)" Binding="{Binding CostPerUnit, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                            <DataGridTextColumn Header="Qty" Binding="{Binding Qty, StringFormat='{}{0:N3}'}" Width="*"/>
+                                            <DataGridTextColumn Header="Unit" Binding="{Binding UnitName}" Width="*"/>
+                                            <DataGridTextColumn Header="Base Unit Cost" Binding="{Binding BaseUnitCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -417,7 +416,23 @@
                                                     </Style>
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
-                                            <DataGridTextColumn Header="Line Cost (LKR)" Binding="{Binding TotalCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                            <DataGridTextColumn Header="Wastage %" Binding="{Binding WastagePercentage, StringFormat='{}{0:N2}%'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                        <Setter Property="Margin" Value="0,0,8,0"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                            <DataGridTextColumn Header="True Unit Cost" Binding="{Binding TrueUnitCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                        <Setter Property="Margin" Value="0,0,8,0"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                            <DataGridTextColumn Header="Line Cost" Binding="{Binding LineCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="HorizontalAlignment" Value="Right"/>

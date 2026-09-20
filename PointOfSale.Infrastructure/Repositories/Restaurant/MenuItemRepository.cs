@@ -199,6 +199,7 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
             await PopulateSavedRecipeUnitsAsync(connection, variants);
 
             var costByProductId = new Dictionary<int, decimal>();
+            var wastageByProductId = new Dictionary<int, decimal>();
             var baseUnitIdByProductId = new Dictionary<int, int>();
             var baseUnitCodeByProductId = new Dictionary<int, string>();
             var baseUnitNameByProductId = new Dictionary<int, string>();
@@ -207,7 +208,7 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
             {
                 command.CommandType = CommandType.Text;
                 command.CommandText =
-                    "SELECT p.Id, p.StandardCost, p.UnitMeasureId, um.Code AS UnitMeasureCode, um.Name AS UnitMeasureName " +
+                    "SELECT p.Id, p.StandardCost, p.WastagePercentage, p.UnitMeasureId, um.Code AS UnitMeasureCode, um.Name AS UnitMeasureName " +
                     "FROM Inventory.Product p " +
                     "LEFT JOIN Inventory.UnitMeasure um ON um.Id = p.UnitMeasureId " +
                     "WHERE p.Id IN (" + string.Join(",", productIds.Select((_, i) => "@p" + i)) + ")";
@@ -223,6 +224,7 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                     {
                         var productId = GetValue<int>(reader, "Id");
                         costByProductId[productId] = GetValue<decimal>(reader, "StandardCost");
+                        wastageByProductId[productId] = GetValue<decimal>(reader, "WastagePercentage");
                         baseUnitIdByProductId[productId] = GetValue<int>(reader, "UnitMeasureId");
                         baseUnitCodeByProductId[productId] = GetValue<string>(reader, "UnitMeasureCode");
                         baseUnitNameByProductId[productId] = GetValue<string>(reader, "UnitMeasureName");
@@ -337,9 +339,12 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                     selectedUnitNameById,
                     conversionByProductAndUnit);
 
-                line.CostPerUnit = targetToBaseFactor > 0m
+                line.BaseUnitCost = targetToBaseFactor > 0m
                     ? baseCost * targetToBaseFactor
                     : baseCost;
+                line.WastagePercentage = wastageByProductId.TryGetValue(line.ProductId, out var wastagePercentage)
+                    ? wastagePercentage
+                    : 0m;
             }
         }
 

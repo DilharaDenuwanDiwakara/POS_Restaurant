@@ -13,8 +13,9 @@ namespace PointOfSale.Core.Models.Restaurant
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private decimal _quantity;
-        private decimal _costPerUnit;
+        private decimal _qty;
+        private decimal _baseUnitCost;
+        private decimal _wastagePercentage;
         private string _unitName;
 
         public int Id { get; set; }
@@ -34,35 +35,106 @@ namespace PointOfSale.Core.Models.Restaurant
             }
         }
 
-        public decimal CostPerUnit
+        public decimal BaseUnitCost
         {
-            get => _costPerUnit;
+            get => _baseUnitCost;
             set
             {
-                if (_costPerUnit != value)
+                if (_baseUnitCost != value)
                 {
-                    _costPerUnit = value;
-                    OnPropertyChanged();              // Update self
-                    OnPropertyChanged(nameof(TotalCost)); // Update calculation
+                    _baseUnitCost = value;
+                    OnCostingChanged();
                 }
             }
         }
 
-        public decimal Quantity
+        public decimal WastagePercentage
         {
-            get => _quantity;
+            get => _wastagePercentage;
             set
             {
-                if (_quantity != value)
+                if (_wastagePercentage != value)
                 {
-                    _quantity = value;
+                    _wastagePercentage = value;
+                    OnCostingChanged();
+                }
+            }
+        }
+
+        public decimal YieldPercentage
+        {
+            get
+            {
+                if (WastagePercentage <= 0m)
+                {
+                    return 100m;
+                }
+
+                return 100m - WastagePercentage;
+            }
+        }
+
+        public decimal TrueUnitCost
+        {
+            get
+            {
+                if (BaseUnitCost <= 0m || WastagePercentage <= 0m)
+                {
+                    return BaseUnitCost;
+                }
+
+                var yieldPercentage = YieldPercentage;
+                if (yieldPercentage <= 0m)
+                {
+                    return 0m;
+                }
+
+                return BaseUnitCost / (yieldPercentage / 100m);
+            }
+        }
+
+        public decimal Qty
+        {
+            get => _qty;
+            set
+            {
+                if (_qty != value)
+                {
+                    _qty = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(Quantity));
+                    OnPropertyChanged(nameof(LineCost));
                     OnPropertyChanged(nameof(TotalCost));
                 }
             }
         }
 
-        // Calculated Property
-        public decimal TotalCost => Quantity * CostPerUnit;
+        public decimal LineCost => Qty * TrueUnitCost;
+
+        // Backward-compatible aliases used by existing repository/view-model code.
+        public decimal Quantity
+        {
+            get => Qty;
+            set => Qty = value;
+        }
+
+        public decimal CostPerUnit
+        {
+            get => TrueUnitCost;
+            set => BaseUnitCost = value;
+        }
+
+        public decimal TotalCost => LineCost;
+
+        private void OnCostingChanged()
+        {
+            OnPropertyChanged(nameof(BaseUnitCost));
+            OnPropertyChanged(nameof(WastagePercentage));
+            OnPropertyChanged(nameof(YieldPercentage));
+            OnPropertyChanged(nameof(TrueUnitCost));
+            OnPropertyChanged(nameof(CostPerUnit));
+            OnPropertyChanged(nameof(LineCost));
+            OnPropertyChanged(nameof(TotalCost));
+        }
     }
 }
