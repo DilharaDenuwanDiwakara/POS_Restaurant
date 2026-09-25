@@ -105,11 +105,6 @@ namespace PointOfSale.Core.Models.Purchasing
 
         private decimal NormalizeQuantityReceived(decimal value)
         {
-            if (value > QuantityOrdered)
-            {
-                return QuantityOrdered;
-            }
-
             if (value < 0)
             {
                 return 0m;

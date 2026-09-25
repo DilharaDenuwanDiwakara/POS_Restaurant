@@ -810,10 +810,6 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                         line.OrderedPrice = poLine.UnitPrice;
                         line.TrackExpiry = poLine.TrackExpiry;
                     }
-                    else if (line.QuantityOrdered < line.QuantityReceived)
-                    {
-                        line.QuantityOrdered = line.QuantityReceived;
-                    }
 
                     GoodsReceiveNoteLines.Add(line);
                 }
@@ -1103,14 +1099,6 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 AddError(nameof(ReceivedBy), "Received by is required.");
             else if (!Regex.IsMatch(ReceivedBy, @"^[a-zA-Z\s]+$"))
                 AddError(nameof(ReceivedBy), "Cannot contain special character and numbers");
-        }
-        private void ValidateLine(GoodsReceiveNoteLine line)
-        {
-            // Industry Standard: You cannot receive more than what was ordered
-            if (line.QuantityReceived > line.QuantityOrdered)
-            {
-                // Trigger UI Warning
-            }
         }
         #endregion
     }
