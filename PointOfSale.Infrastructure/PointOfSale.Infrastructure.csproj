@@ -169,6 +169,7 @@
     <None Include="Database\Inventory\StockAdjustment_MasterDetail_DatabaseChanges.sql" />
     <None Include="Database\Inventory\StockTransfer_UOM_DatabaseChanges.sql" />
     <None Include="Database\Inventory\uspGetInternalIssueVoucher.sql" />
+    <None Include="Database\Security\WastageApproval_Permission.sql" />
     <None Include="Database\Sales\HoldRecallProcedures.sql" />
     <None Include="Database\System\CompanyContactNumber_Length.sql" />
     <None Include="Database\Purchasing\uspGetAllGoodsReceiveNotes.sql" />

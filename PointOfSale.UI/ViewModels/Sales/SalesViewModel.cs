@@ -236,6 +236,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         }
 
         private MenuCategory _selectedCategory;
+        private int? _teaSalesCategoryId;
         public MenuCategory SelectedCategory
         {
             get => _selectedCategory;
@@ -679,7 +680,17 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         // State
         private bool _isProcessing;
-        public bool IsProcessing { get => _isProcessing; set => SetProperty(ref _isProcessing, value); }
+        public bool IsProcessing
+        {
+            get => _isProcessing;
+            set
+            {
+                if (SetProperty(ref _isProcessing, value))
+                {
+                    System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+                }
+            }
+        }
 
         private bool _isOverlayVisible;
         public bool IsOverlayVisible
@@ -761,7 +772,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             DecreaseQuantityCommand = new RelayCommand(
                 parameter => ExecuteChangeQuantity(parameter as SalesLine, -1),
                 parameter => parameter is SalesLine);
-            CancelInvoiceCommand = new RelayCommand(_ => ExecuteCancelInvoice());
+            CancelInvoiceCommand = new RelayCommand(_ => ExecuteCancelInvoice(), _ => !IsProcessing);
 
             EnableDiscountCommad = new RelayCommand(_ => RequestBillDiscountFocus?.Invoke());
             ApplyQuickDiscountCommand = new RelayCommand(ExecuteApplyQuickDiscount);
@@ -774,8 +785,8 @@ namespace PointOfSale.UI.ViewModels.Sales
                 SelectedPaymentMethod = null;
                 IsPaymentInputVisible = false;
             });
-            AddPaymentCommand = new RelayCommand(_ => AddCurrentPayment(), _ => CanAttemptAddPayment());
-            RemovePaymentCommand = new RelayCommand<PaymentDetail>(RemoveAppliedPayment, payment => payment != null);
+            AddPaymentCommand = new RelayCommand(_ => AddCurrentPayment(), _ => !IsProcessing && CanAttemptAddPayment());
+            RemovePaymentCommand = new RelayCommand<PaymentDetail>(RemoveAppliedPayment, payment => !IsProcessing && payment != null);
             SaveSaleCommand = new AsyncRelayCommand(async _ => await SaveSalesAsync(printBill: false), _ => CanSaveSale());
             SaveAndPrintCommand = new AsyncRelayCommand(async _ => await SaveSalesAsync(printBill: true), _ => CanSaveSale());
             PrintPreBillCommand = new AsyncRelayCommand(async _ => await PrintPreBillAsync(), _ => CanPrintPreBill());
@@ -826,7 +837,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 SelectedCustomer = Customers.FirstOrDefault(c => c.IsDefault);
 
                 loadStep = "loading menu categories";
-                await LoadCategoriesAsync();
+                await LoadTeaSalesCategoriesAsync();
 
                 loadStep = "loading menu items";
                 await LoadMenuItemsAsync();
@@ -867,40 +878,26 @@ namespace PointOfSale.UI.ViewModels.Sales
             foreach (var o in orders) ServedOrders.Add(o);
         }
 
-        private async Task LoadCategoriesAsync()
+        public async Task LoadTeaSalesCategoriesAsync()
         {
+            _teaSalesCategoryId = null;
+            Categories.Clear();
+            SelectedCategory = null;
+            RefreshProductFilter();
+
             try
             {
                 var allCategories = (await _menuCategoryRepository.GetAllAsync()).ToList();
 
-                var parentIds = allCategories
-                    .Where(c => c.ParentId.HasValue)
-                    .Select(c => c.ParentId.Value)
-                    .Distinct()
-                    .ToHashSet();
+                var teaSalesParent = allCategories.FirstOrDefault(c =>
+                    c.Name == "TEA SALES" && c.ParentId == null);
 
-                var allCategory = new MenuCategory
+                if (teaSalesParent != null)
                 {
-                    Id = 0,
-                    Name = "All",
-                    DisplayOrder = -1,
-                    IsActive = true
-                };
-
-                Categories.Clear();
-                Categories.Add(allCategory);
-
-                var leafCategories = allCategories
-                    .Where(c => c.IsActive && !parentIds.Contains(c.Id))
-                    .OrderBy(c => c.DisplayOrder)
-                    .ThenBy(c => c.Name);
-
-                foreach (var category in leafCategories)
-                {
-                    Categories.Add(category);
+                    _teaSalesCategoryId = teaSalesParent.Id;
+                    Categories.Add(teaSalesParent);
+                    SelectedCategory = teaSalesParent;
                 }
-
-                SelectedCategory = allCategory;
             }
             catch (Exception ex)
             {
@@ -1221,10 +1218,14 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private async Task LoadRestaurantOrderIntoCart(ServedOrderDto order)
         {
-            _currentRestaurantOrderId = order?.OrderId;
+            var targetOrderId = order?.OrderId;
+            CurrentOpenSalesId = 0;
+            AppliedPayments.Clear();
+            _currentRestaurantOrderId = targetOrderId;
             ResetImportedOrderPricingState();
             CartItems.Clear();
             var items = await _orderRepository.GetOrderItemsAsync(order.OrderId);
+            if (_currentRestaurantOrderId != targetOrderId) return;
 
             int sequence = 1;
 
@@ -1254,6 +1255,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
             CalculateTotals();
         }
+
         private void ResetImportedOrderPricingState()
         {
             _autoBillDiscountAmount = 0;
@@ -1320,6 +1322,13 @@ namespace PointOfSale.UI.ViewModels.Sales
             var product = item as MenuVariantDto;
             if (product == null) return false;
 
+            // Restrict the Sales menu even when the category selection is cleared.
+            if (!_teaSalesCategoryId.HasValue ||
+                product.MenuCategoryId != _teaSalesCategoryId.Value)
+            {
+                return false;
+            }
+
             if (SelectedCategory != null &&
                 SelectedCategory.Id > 0 &&
                 product.MenuCategoryId != SelectedCategory.Id)
@@ -1346,8 +1355,13 @@ namespace PointOfSale.UI.ViewModels.Sales
             _productFilterDebounceTimer?.Stop();
             RefreshProductFilter();
 
-            // Physical barcode/item-code scans must resolve across all products, independent of the selected category chip.
+            // Sales menu scans must stay within the TEA SALES category.
             _productByCode.TryGetValue(term, out var exactMatch);
+            if (exactMatch != null &&
+                (!_teaSalesCategoryId.HasValue || exactMatch.MenuCategoryId != _teaSalesCategoryId.Value))
+            {
+                exactMatch = null;
+            }
 
             _suppressProductSelectionTrigger = true;
             SelectedProduct = exactMatch;
@@ -1485,6 +1499,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             Quantity = 1;
             SelectedPaymentTerminal = null;
             ReferenceNumber = string.Empty;
+            PaymentErrorMessage = string.Empty;
             CurrentPaymentAmount = 0m;
             CalculateTotals();
         }
@@ -1655,12 +1670,13 @@ namespace PointOfSale.UI.ViewModels.Sales
                 if (printBill)
                     PrintFinalizedSale(salesId, isRecalledBill);
 
-                // In-memory removal: drop the just-billed order straight out of the ComboBox's
-                // source collection so the cashier sees it disappear immediately, with no extra
-                // DB round-trip. SelectedServedOrder is the exact instance WPF selected from
-                // ServedOrders, so reference-based Remove finds it directly.
-                if (SelectedServedOrder != null)
-                    ServedOrders.Remove(SelectedServedOrder);
+                // Detach the selection before removing the row so WPF does not auto-select the
+                // next served order and start loading it while the current sale is being cleared.
+                var finalizedServedOrder = SelectedServedOrder;
+                SelectedServedOrder = null;
+
+                if (finalizedServedOrder != null)
+                    ServedOrders.Remove(finalizedServedOrder);
 
                 ExecuteCancelInvoice();
                 RequestBarcodeFocus?.Invoke();
@@ -1755,7 +1771,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 IsTaxInvoice = false,
                 TaxInvoiceNumber = null,
                 CreatedBy = CurrentUser.UserId,
-                OrderId = SelectedServedOrder?.OrderId,
+                OrderId = _currentRestaurantOrderId,
                 TaxAmount = TaxAmount,
                 ServiceChargeAmount = ServiceChargeAmount,
                 ShiftId = CurrentUser.CurrentShiftId,
