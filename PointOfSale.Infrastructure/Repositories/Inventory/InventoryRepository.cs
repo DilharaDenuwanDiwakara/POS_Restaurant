@@ -318,6 +318,41 @@ ORDER BY p.Name;";
             return transfers;
         }
 
+        public async Task<IEnumerable<StockTransferLine>> GetStockTransferLinesAsync(long transferId)
+        {
+            var lines = new List<StockTransferLine>();
+
+            if (transferId <= 0)
+            {
+                return lines;
+            }
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[uspGetStockTransferLines]"))
+                {
+                    command.Parameters.Add("@TransferId", SqlDbType.BigInt).Value = transferId;
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            lines.Add(MapStockTransferLine(reader));
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException($"A database error occurred while retrieving lines for stock transfer {transferId}.", ex);
+            }
+
+            return lines;
+        }
+
         public async Task<DataTable> GetStockTransferNoteReportAsync(long transferId)
         {
             if (transferId <= 0)
@@ -560,6 +595,25 @@ ORDER BY p.Name;";
                 Status = GetValue<string>(record, "Status"),
                 CreatedBy = GetValue<int>(record, "CreatedBy"),
                 Username = GetValue<string>(record, "Username"),
+            };
+        }
+
+        private StockTransferLine MapStockTransferLine(IDataRecord record)
+        {
+            return new StockTransferLine
+            {
+                TransferLineId = GetValue<long>(record, "Id"),
+                TransferId = GetValue<long>(record, "TransferId"),
+                ProductId = GetValue<int>(record, "ProductId"),
+                ProductCode = GetValue<string>(record, "ProductCode"),
+                ProductName = GetValue<string>(record, "ProductName"),
+                BatchId = GetValue<long>(record, "BatchId"),
+                Quantity = GetValue<decimal>(record, "Quantity"),
+                UnitMeasureId = GetValue<int>(record, "UnitMeasureId"),
+                UnitMeasureCode = GetValue<string>(record, "UnitMeasureCode"),
+                UnitMeasureName = GetValue<string>(record, "UnitMeasureName"),
+                ExpiryDate = GetValue<DateTime?>(record, "ExpiryDate"),
+                UnitCost = GetValue<decimal>(record, "UnitCost")
             };
         }
 

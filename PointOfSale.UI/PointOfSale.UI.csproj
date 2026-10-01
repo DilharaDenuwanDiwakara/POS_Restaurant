@@ -463,6 +463,7 @@
     <Compile Include="ViewModels\Inventory\ProductViewModel.cs" />
     <Compile Include="ViewModels\Inventory\ProvisioningViewModel.cs" />
     <Compile Include="ViewModels\Inventory\StockAdjustmentViewModel.cs" />
+    <Compile Include="ViewModels\Inventory\StockTransferSummaryModel.cs" />
     <Compile Include="ViewModels\Inventory\StockTransferViewModel.cs" />
     <Compile Include="ViewModels\Inventory\UnitMeasureViewModel.cs" />
     <Compile Include="ViewModels\Inventory\WastageApprovalViewModel.cs" />

@@ -51,7 +51,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 RefreshSaveCommand();
             };
 
-            HistoryList = new ObservableCollection<StockTransfer>();
+            HistoryList = new ObservableCollection<StockTransferSummaryModel>();
 
             // Initialize Commands
             SaveTransferCommand = new AsyncRelayCommand(async _ => await SaveTransferAsync(), _ => CanSaveTransfer);
@@ -59,6 +59,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             RemoveLineCommand = new RelayCommand<StockTransferLine>(RemoveLine);
             ClearCommand = new RelayCommand(_ => ClearAll());
             SearchHistoryCommand = new AsyncRelayCommand(async _ => await SearchHistoryAsync());
+            PrintStockTransferCommand = new AsyncRelayCommand(async parameter => await PrintStockTransferAsync(parameter));
 
             // Load Initial Data
             _ = LoadInitialDataAsync();
@@ -255,8 +256,8 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         #region Properties - History
 
-        private ObservableCollection<StockTransfer> _historyList;
-        public ObservableCollection<StockTransfer> HistoryList
+        private ObservableCollection<StockTransferSummaryModel> _historyList;
+        public ObservableCollection<StockTransferSummaryModel> HistoryList
         {
             get => _historyList;
             set => SetProperty(ref _historyList, value);
@@ -295,6 +296,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public ICommand RemoveLineCommand { get; }
         public ICommand ClearCommand { get; }
         public ICommand SearchHistoryCommand { get; }
+        public ICommand PrintStockTransferCommand { get; }
 
         public bool CanSaveTransfer => !IsSavingTransfer && !HasErrors && TransferLines.Any() && FromLocationId > 0 && ToLocationId > 0 && FromLocationId != ToLocationId;
         #endregion
@@ -656,7 +658,11 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 var results = await _inventoryRepository.GetAllStockTransfersAsync(
                     _sessionService.BranchId, HistoryDateFrom, HistoryDateTo);
 
-                HistoryList = new ObservableCollection<StockTransfer>(results);
+                HistoryList = new ObservableCollection<StockTransferSummaryModel>(
+                    results.Select(transfer => new StockTransferSummaryModel(
+                        transfer,
+                        _inventoryRepository.GetStockTransferLinesAsync,
+                        ex => MessageBox.Show($"Unable to load stock transfer items: {ex.Message}", "Transfer History", MessageBoxButton.OK, MessageBoxImage.Error))));
 
                 if (HistoryList.Count == 0)
                     MessageBox.Show("No records found for the selected date range.");
@@ -716,6 +722,34 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     logOnInfo.ConnectionInfo = myConnectionInfo;
                     table.ApplyLogOnInfo(logOnInfo);
                 }
+            }
+        }
+
+        private static StockTransfer GetStockTransfer(object parameter)
+        {
+            if (parameter is StockTransferSummaryModel summary)
+            {
+                return summary.Source;
+            }
+
+            return parameter as StockTransfer;
+        }
+
+        private async Task PrintStockTransferAsync(object parameter)
+        {
+            var stockTransfer = GetStockTransfer(parameter);
+            if (stockTransfer == null || stockTransfer.TransferId <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await OpenStockTransferReportAsync(stockTransfer.TransferId);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open Stock Transfer Note preview: {ex.Message}", "Stock Transfer Note", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
