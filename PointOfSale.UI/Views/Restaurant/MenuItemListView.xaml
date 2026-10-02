@@ -87,144 +87,159 @@
             </Grid>
         </Border>
 
-        <DataGrid Grid.Row="2" 
-                  ItemsSource="{Binding FilteredMenuItems}" 
-                  AutoGenerateColumns="False" 
-                  CanUserAddRows="False"
-                  IsReadOnly="True"
-                  HeadersVisibility="Column"
-                  RowHeight="50"
-                  Style="{StaticResource DataGridStyle}">
+        <Grid Grid.Row="2" MinHeight="0">
+            <DataGrid ItemsSource="{Binding FilteredMenuItems}" 
+                      AutoGenerateColumns="False" 
+                      CanUserAddRows="False"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      ScrollViewer.CanContentScroll="True"
+                      EnableRowVirtualization="True"
+                      EnableColumnVirtualization="True"
+                      Style="{StaticResource DataGridStyle}">
 
-            <DataGrid.Columns>
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
+                        <Setter Property="Height" Value="Auto"/>
+                        <Setter Property="MinHeight" Value="50"/>
+                    </Style>
+                </DataGrid.RowStyle>
 
-                <DataGridTemplateColumn Header="Image" Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Width="50" Height="50" CornerRadius="4" ClipToBounds="True" Background="#F5F5F5"
-                                    VerticalAlignment="Center" HorizontalAlignment="Center" Margin="4">
-                                <Grid>
-                                    <TextBlock Text="IMG" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#DDD" FontSize="10"/>
-                                    <Image Source="{Binding ImageUrl, IsAsync=True, TargetNullValue={x:Null}, FallbackValue={x:Null}}" 
-                                           Stretch="UniformToFill"
-                                           RenderOptions.BitmapScalingMode="HighQuality"/>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                <DataGrid.Columns>
 
-                <DataGridTextColumn Header="Item Code" Binding="{Binding ItemCode}" Width="110">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Padding" Value="4,4"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                    <DataGridTemplateColumn Header="Image" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Width="50" Height="50" CornerRadius="4" ClipToBounds="True" Background="#F5F5F5"
+                                        VerticalAlignment="Center" HorizontalAlignment="Center" Margin="4">
+                                    <Grid>
+                                        <TextBlock Text="IMG" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#DDD" FontSize="10"/>
+                                        <Image Source="{Binding ImageUrl, IsAsync=True, TargetNullValue={x:Null}, FallbackValue={x:Null}}" 
+                                               Stretch="UniformToFill"
+                                               RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="Item Name" Binding="{Binding Name}" Width="*" FontWeight="SemiBold">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Padding" Value="4,4"/>
-                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                    <DataGridTextColumn Header="Item Code" Binding="{Binding ItemCode}" Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,4"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                
+                    <DataGridTemplateColumn Header="Item Name" Width="*" MinWidth="300">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           TextTrimming="None"
+                                           VerticalAlignment="Center"
+                                           Padding="4,4"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="Auto">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Padding" Value="4,4"/>
-                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="Auto">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,4"/>
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                <DataGridTemplateColumn Header="Category" Width="200">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" Background="#E3F2FD" CornerRadius="4" Padding="8,4" 
-                                    HorizontalAlignment="Left" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding CategoryName}" Foreground="{StaticResource BrandBrush}" FontWeight="SemiBold"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Category" Width="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" Background="#E3F2FD" CornerRadius="4" Padding="8,4" 
+                                        HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding CategoryName}" Foreground="{StaticResource BrandBrush}" FontWeight="SemiBold"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="Station" Binding="{Binding TargetStation}" Width="120"/>
+                    <DataGridTextColumn Header="Station" Binding="{Binding TargetStation}" Width="120"/>
 
-                <DataGridTextColumn Header="Base Price" Binding="{Binding Price, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                    <DataGridTextColumn Header="Base Price" Binding="{Binding Price, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Taxes" Binding="{Binding AppliedTaxes}" Width="160">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Padding" Value="4,4"/>
-                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                    <DataGridTextColumn Header="Taxes" Binding="{Binding AppliedTaxes}" Width="160">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,4"/>
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                <DataGridTemplateColumn Header="Status" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border BorderBrush="{StaticResource SuccessBrush}" BorderThickness="1" Background="{Binding IsActive, Converter={StaticResource BoolToColorConverter}}" 
-                                    CornerRadius="4" Padding="8,4" 
-                                    HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding IsActive, Converter={StaticResource BoolToStatusTextConverter}}" 
-                                           FontWeight="SemiBold" Foreground="{StaticResource SuccessBrush}"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Status" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource SuccessBrush}" BorderThickness="1" Background="{Binding IsActive, Converter={StaticResource BoolToColorConverter}}" 
+                                        CornerRadius="4" Padding="8,4" 
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding IsActive, Converter={StaticResource BoolToStatusTextConverter}}" 
+                                               FontWeight="SemiBold" Foreground="{StaticResource SuccessBrush}"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Action" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <DataGridTemplateColumn Header="Action" Width="120" MinWidth="120" MaxWidth="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
 
-                                <Button
-                                        ToolTip="Edit Menu Item Details"
-                                        Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}"
-                                        Visibility="{Binding DataContext.CanEditMenuItem, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
-                                        Style="{StaticResource EditButtonStyle}"
-                                        Margin="0,0,6,0"/>
+                                    <Button
+                                            ToolTip="Edit Menu Item Details"
+                                            Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Visibility="{Binding DataContext.CanEditMenuItem, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
+                                            Style="{StaticResource EditButtonStyle}"
+                                            Margin="0,0,6,0"/>
 
-                                <Button
-                                        ToolTip="Delete Menu Item"
-                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding Id}"
-                                        Visibility="{Binding DataContext.CanDeleteMenuItem, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
-                                        Style="{StaticResource DeleteButtonStyle}"
-                                        Margin="0,0,6,0"/>
+                                    <Button
+                                            ToolTip="Delete Menu Item"
+                                            Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding Id}"
+                                            Visibility="{Binding DataContext.CanDeleteMenuItem, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
+                                            Style="{StaticResource DeleteButtonStyle}"
+                                            Margin="0,0,6,0"/>
 
-                                <Button
-                                        ToolTip="Quick Price Update"
-                                        Command="{Binding DataContext.QuickUpdatePriceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}"
-                                        Visibility="{Binding DataContext.CanSetPrice, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
-                                        Style="{StaticResource PriceButtonStyle}"/>
+                                    <Button
+                                            ToolTip="Quick Price Update"
+                                            Command="{Binding DataContext.QuickUpdatePriceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Visibility="{Binding DataContext.CanSetPrice, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
+                                            Style="{StaticResource PriceButtonStyle}"/>
 
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
-            </DataGrid.Columns>
-        </DataGrid>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
 
         <Border Grid.Row="3" Margin="0,4,0,0" Style="{StaticResource PanelCardStyle}">
             <Grid>

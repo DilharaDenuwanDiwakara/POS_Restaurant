@@ -112,7 +112,12 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="4">
-                        <ScrollViewer x:Name="DG_ScrollViewer" Focusable="false">
+                        <ScrollViewer
+                            x:Name="DG_ScrollViewer"
+                            Focusable="false"
+                            HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                            VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                            CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}">
                             <ScrollViewer.Template>
                                 <ControlTemplate TargetType="ScrollViewer">
                                     <Grid>
