@@ -454,6 +454,7 @@
     <Compile Include="ViewModels\Accounts\SupplierSettlementViewModel.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\Inventory\BarcodePrintViewModel.cs" />
+    <Compile Include="ViewModels\Inventory\BatchProductionViewModel.cs" />
     <Compile Include="ViewModels\Inventory\BatchSelectionViewModel.cs" />
     <Compile Include="ViewModels\Inventory\CategoryViewModel.cs" />
     <Compile Include="ViewModels\Inventory\InternalIssueViewModel.cs" />
@@ -465,6 +466,7 @@
     <Compile Include="ViewModels\Inventory\StockAdjustmentViewModel.cs" />
     <Compile Include="ViewModels\Inventory\StockTransferSummaryModel.cs" />
     <Compile Include="ViewModels\Inventory\StockTransferViewModel.cs" />
+    <Compile Include="ViewModels\Inventory\SubRecipeViewModel.cs" />
     <Compile Include="ViewModels\Inventory\UnitMeasureViewModel.cs" />
     <Compile Include="ViewModels\Inventory\WastageApprovalViewModel.cs" />
     <Compile Include="ViewModels\Inventory\WastageReasonViewModel.cs" />
@@ -568,6 +570,9 @@
     <Compile Include="Views\Inventory\BatchSelectionView.xaml.cs">
       <DependentUpon>BatchSelectionView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Inventory\BatchProductionView.xaml.cs">
+      <DependentUpon>BatchProductionView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Inventory\CategoryView.xaml.cs">
       <DependentUpon>CategoryView.xaml</DependentUpon>
     </Compile>
@@ -603,6 +608,9 @@
     </Compile>
     <Compile Include="Views\Inventory\StockTransferView.xaml.cs">
       <DependentUpon>StockTransferView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Inventory\SubRecipeView.xaml.cs">
+      <DependentUpon>SubRecipeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Inventory\WastageView.xaml.cs">
       <DependentUpon>WastageView.xaml</DependentUpon>
@@ -859,6 +867,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Inventory\BatchProductionView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Inventory\CategoryView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -904,6 +916,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Inventory\StockTransferView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Inventory\SubRecipeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

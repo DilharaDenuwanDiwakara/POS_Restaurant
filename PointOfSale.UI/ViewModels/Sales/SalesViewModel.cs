@@ -89,6 +89,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             new Dictionary<string, MenuVariantDto>(StringComparer.OrdinalIgnoreCase);
         private readonly System.Windows.Threading.DispatcherTimer _productFilterDebounceTimer;
         private readonly System.Windows.Threading.DispatcherTimer _autoDiscountRefreshDebounceTimer;
+        private readonly System.Windows.Threading.DispatcherTimer _productStockRefreshTimer;
+        private bool _isRefreshingProductStocks;
 
         public SalesViewModel(ISalesRepository salesRepository,
                               IDiscountRepository discountRepository,
@@ -155,6 +157,12 @@ namespace PointOfSale.UI.ViewModels.Sales
                 if (_pendingAutoDiscountRulesSubTotal.HasValue && !_isRefreshingAutoDiscountRules)
                     _ = RefreshPendingActiveAutoDiscountRulesAsync();
             };
+
+            _productStockRefreshTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(10)
+            };
+            _productStockRefreshTimer.Tick += (s, e) => _ = RefreshProductStocksSafeAsync();
 
             Quantity = 1;
             IsServiceChargeEnabled = false;
@@ -860,6 +868,8 @@ namespace PointOfSale.UI.ViewModels.Sales
 
                 loadStep = "loading served orders";
                 await LoadServedOrdersAsync();
+
+                StartProductStockRefreshTimer();
             }
             catch (Exception ex)
             {
@@ -926,6 +936,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 }
 
                 RefreshProductFilter();
+                await RefreshProductStocksSafeAsync();
             }
             catch (Exception ex)
             {
@@ -942,6 +953,67 @@ namespace PointOfSale.UI.ViewModels.Sales
             return ex.InnerException == null
                 ? ex.Message
                 : $"{ex.Message}\n\nInner: {ex.InnerException.Message}";
+        }
+
+        private void StartProductStockRefreshTimer()
+        {
+            if (_productStockRefreshTimer == null || _productStockRefreshTimer.IsEnabled)
+                return;
+
+            _productStockRefreshTimer.Start();
+        }
+
+        public void StopProductStockRefreshTimer()
+        {
+            _productStockRefreshTimer?.Stop();
+        }
+
+        private async Task RefreshProductStocksSafeAsync()
+        {
+            if (_isRefreshingProductStocks)
+                return;
+
+            try
+            {
+                _isRefreshingProductStocks = true;
+                await RefreshProductStocksAsync();
+            }
+            catch
+            {
+                // Keep the sales screen responsive if a periodic stock refresh fails.
+            }
+            finally
+            {
+                _isRefreshingProductStocks = false;
+            }
+        }
+
+        private async Task RefreshProductStocksAsync()
+        {
+            if (Products == null || !Products.Any())
+                return;
+
+            var stockLocationId = GetPositiveAppSetting(RetailStockLocationIdSettingName);
+            if (stockLocationId <= 0)
+                return;
+
+            var retailProducts = Products
+                .Where(IsRetailItem)
+                .ToList();
+
+            if (!retailProducts.Any())
+                return;
+
+            var stockByVariant = await _inventoryRepository.GetRetailItemStockByVariantAsync(
+                retailProducts.Select(x => x.VariantId),
+                stockLocationId);
+
+            foreach (var product in retailProducts)
+            {
+                product.AvailableQuantity = stockByVariant.TryGetValue(product.VariantId, out var quantity)
+                    ? quantity
+                    : 0m;
+            }
         }
         #endregion
 
@@ -1679,6 +1751,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                     ServedOrders.Remove(finalizedServedOrder);
 
                 ExecuteCancelInvoice();
+                await RefreshProductStocksSafeAsync();
                 RequestBarcodeFocus?.Invoke();
             }
             catch (Exception ex)

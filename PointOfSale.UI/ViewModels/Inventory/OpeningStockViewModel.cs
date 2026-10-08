@@ -9,7 +9,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using CrystalDecisions.CrystalReports.Engine;
+using Microsoft.Win32;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Inventory;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Inventory;
 using PointOfSale.Core.Services;
 using PointOfSale.UI.Commands;
@@ -24,6 +27,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         private readonly IStockAdjustmentRepository _stockAdjustmentRepository;
         private readonly IInventoryRepository _inventoryRepository;
+        private readonly IExcelService _excelService;
         private readonly IUserSessionService _userSessionService;
         private readonly DispatcherTimer _draftTimer;
         private readonly string _draftFilePath;
@@ -32,16 +36,19 @@ namespace PointOfSale.UI.ViewModels.Inventory
         public OpeningStockViewModel(
             IStockAdjustmentRepository stockAdjustmentRepository,
             IInventoryRepository inventoryRepository,
+            IExcelService excelService,
             IUserSessionService userSessionService)
         {
             _stockAdjustmentRepository = stockAdjustmentRepository ?? throw new ArgumentNullException(nameof(stockAdjustmentRepository));
             _inventoryRepository = inventoryRepository ?? throw new ArgumentNullException(nameof(inventoryRepository));
+            _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
             _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
 
             Locations = new ObservableCollection<Location>();
             StockItems = new ObservableCollection<OpeningStockItemModel>();
 
             SaveCommand = new AsyncRelayCommand(async _ => await ExecuteSaveAsync(), _ => CanSave());
+            ImportExcelCommand = new AsyncRelayCommand(async _ => await ImportExcelAsync());
             ClearDraftCommand = new RelayCommand(_ => ClearDraft());
 
             OpeningDate = DateTime.Today;
@@ -98,6 +105,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         }
 
         public AsyncRelayCommand SaveCommand { get; }
+        public AsyncRelayCommand ImportExcelCommand { get; }
         public RelayCommand ClearDraftCommand { get; }
 
         private async Task InitializeAsync()
@@ -205,12 +213,23 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             try
             {
-                var documentNumber = await Task.Run(() =>
-                    _inventoryRepository.SaveOpeningStock(
-                        SelectedLocation.Id,
-                        _userSessionService.UserId,
-                        OpeningDate.Value,
-                        StockItems.ToList()));
+                var itemsToSave = StockItems
+                    .Where(x => x.OpeningQuantity > 0)
+                    .Select(x => new OpeningStockItemDto
+                    {
+                        ProductId = x.ProductId,
+                        ProductName = x.ProductName,
+                        UnitCost = x.UnitCost,
+                        OpeningQuantity = x.OpeningQuantity,
+                        Uom = x.DefaultUOM
+                    })
+                    .ToList();
+
+                var documentNumber = await _inventoryRepository.SaveOpeningStockAsync(
+                    SelectedLocation.Id,
+                    _userSessionService.UserId,
+                    OpeningDate.Value,
+                    itemsToSave);
 
                 DeleteDraftFile();
                 ClearEnteredQuantities();
@@ -226,6 +245,85 @@ namespace PointOfSale.UI.ViewModels.Inventory
             finally
             {
                 SaveCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private async Task ImportExcelAsync()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Import Opening Stock from Excel",
+                Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls",
+                CheckFileExists = true,
+                Multiselect = false
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            try
+            {
+                var importedItems = await _excelService.ImportOpeningStockAsync(dialog.FileName, _userSessionService.UserId);
+                ApplyImportedItems(importedItems);
+                SaveDraft();
+
+                MessageBox.Show(
+                    $"{importedItems.Count} opening stock item(s) imported successfully. Please review the grid before saving.",
+                    "Opening Stock Import",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Import failed: {ex.Message}", "Opening Stock Import", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                SaveCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private void ApplyImportedItems(List<OpeningStockItemDto> importedItems)
+        {
+            if (importedItems == null || importedItems.Count == 0)
+            {
+                return;
+            }
+
+            _isLoading = true;
+            try
+            {
+                var existingItems = StockItems.ToDictionary(x => x.ProductId);
+
+                foreach (var importedItem in importedItems)
+                {
+                    if (existingItems.TryGetValue(importedItem.ProductId, out var stockItem))
+                    {
+                        stockItem.OpeningQuantity = importedItem.OpeningQuantity;
+                        stockItem.UnitCost = importedItem.UnitCost;
+                        continue;
+                    }
+
+                    var newItem = new OpeningStockItemModel
+                    {
+                        ProductId = importedItem.ProductId,
+                        ProductName = importedItem.ProductName,
+                        DefaultUOM = importedItem.Uom,
+                        CurrentStock = 0m,
+                        OpeningQuantity = importedItem.OpeningQuantity,
+                        UnitCost = importedItem.UnitCost
+                    };
+
+                    newItem.PropertyChanged += StockItem_PropertyChanged;
+                    StockItems.Add(newItem);
+                    existingItems[importedItem.ProductId] = newItem;
+                }
+            }
+            finally
+            {
+                _isLoading = false;
             }
         }
 

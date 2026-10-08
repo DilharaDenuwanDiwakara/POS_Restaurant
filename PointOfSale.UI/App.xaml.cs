@@ -70,10 +70,12 @@ namespace PointOfSale.UI
             services.AddSingleton<ISupplierRepository, SupplierRepository>();
 
             services.AddSingleton<IBrandRepository, BrandRepository>();
+            services.AddSingleton<IBatchProductionRepository, BatchProductionRepository>();
             services.AddSingleton<ICategoryRepository, CategoryRepository>();
             services.AddSingleton<IUnitMeasureRepository, UnitMeasureRepository>();
             services.AddSingleton<IProductRepository, ProductRepository>();
             services.AddSingleton<IProductBatchRepository, ProductBatchRepository>();
+            services.AddSingleton<ISubRecipeRepository, SubRecipeRepository>();
             services.AddSingleton<IInventoryRepository, InventoryRepository>();
             services.AddSingleton<IInternalIssueRepository, InternalIssueRepository>();
             services.AddSingleton<IStockAdjustmentRepository, StockAdjustmentRepository>();
@@ -127,6 +129,8 @@ namespace PointOfSale.UI
             // Register Services
             services.AddSingleton<IPasswordHasher, PasswordHasher>();
             services.AddSingleton<IAuthService, AuthService>();
+            services.AddSingleton<IBatchProductionService, BatchProductionService>();
+            services.AddSingleton<ISubRecipeService, SubRecipeService>();
             services.AddSingleton<ISalesReportService, SalesReportService>();
             services.AddSingleton<IConfigurationService, ConfigurationService>();
             services.AddSingleton<IUserSessionService, UserSessionService>();
@@ -190,6 +194,8 @@ namespace PointOfSale.UI
             services.AddTransient<OpeningStockViewModel>();
             services.AddTransient<InternalIssueViewModel>();
             services.AddTransient<BarcodePrintViewModel>();
+            services.AddTransient<BatchProductionViewModel>();
+            services.AddTransient<SubRecipeViewModel>();
             services.AddTransient<CategoryViewModel>();
             services.AddTransient<UnitMeasureViewModel>();
             services.AddTransient<GoodsReceiveNoteViewModel>();

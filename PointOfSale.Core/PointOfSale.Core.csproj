@@ -62,6 +62,7 @@
     <Compile Include="DTOs\SalesReturnFlatDto.cs" />
     <Compile Include="DTOs\StockAdjustmentHeaderDto.cs" />
     <Compile Include="DTOs\StockAdjustmentLineDto.cs" />
+    <Compile Include="DTOs\SubRecipeLineDto.cs" />
     <Compile Include="DTOs\SupplierReturnLineDto.cs" />
     <Compile Include="Enums\GoodsReceiveNoteStatus.cs" />
     <Compile Include="Enums\PurchaseOrderStatus.cs" />
@@ -79,6 +80,8 @@
     <Compile Include="DTOs\AccountDto.cs" />
     <Compile Include="Models\Accounts\Entities\AccountType.cs" />
     <Compile Include="DTOs\AvailableQuantityDto.cs" />
+    <Compile Include="DTOs\BatchProductionHistoryDto.cs" />
+    <Compile Include="DTOs\BatchProductionRequest.cs" />
     <Compile Include="DTOs\CategoryLookupItem.cs" />
     <Compile Include="DTOs\MenuProfitabilityDto.cs" />
     <Compile Include="DTOs\CategoryTreeNode.cs" />
@@ -90,6 +93,7 @@
     <Compile Include="DTOs\InventoryStockReportModel.cs" />
     <Compile Include="DTOs\InternalIssueSaveDto.cs" />
     <Compile Include="DTOs\MenuItemDto.cs" />
+    <Compile Include="DTOs\OpeningStockItemDto.cs" />
     <Compile Include="DTOs\OpenStockItemDto.cs" />
     <Compile Include="DTOs\OrderItemDto.cs" />
     <Compile Include="DTOs\ProvisioningYieldDetailModel.cs" />
@@ -114,6 +118,7 @@
     <Compile Include="Enums\AccountsPaymentMethod.cs" />
     <Compile Include="Enums\SalesPaymentMethod.cs" />
     <Compile Include="Enums\SupplierPaymentMethod.cs" />
+    <Compile Include="Exception\BatchProductionException.cs" />
     <Compile Include="Exception\ProductImportError.cs" />
     <Compile Include="Exception\ProductImportResult.cs" />
     <Compile Include="Interfaces\Repositories\Accounts\IAccountingRepository.cs" />
@@ -126,6 +131,7 @@
     <Compile Include="Interfaces\Repositories\Accounts\ISupplierAdvanceRepository.cs" />
     <Compile Include="Interfaces\Repositories\Accounts\ISupplierCreditRepository.cs" />
     <Compile Include="Interfaces\Repositories\Accounts\ISupplierPaymentRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\IBatchProductionRepository.cs" />
     <Compile Include="Interfaces\Repositories\Inventory\IBrandRepository.cs" />
     <Compile Include="Interfaces\Repositories\Inventory\ICategoryRepository.cs" />
     <Compile Include="Interfaces\Repositories\Inventory\IInventoryReportRepository.cs" />
@@ -134,6 +140,7 @@
     <Compile Include="Interfaces\Repositories\Inventory\IProductBatchRepository.cs" />
     <Compile Include="Interfaces\Repositories\Inventory\IProductRepository.cs" />
     <Compile Include="Interfaces\Repositories\Inventory\IStockAdjustmentRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Inventory\ISubRecipeRepository.cs" />
     <Compile Include="Interfaces\Repositories\Inventory\IUnitMeasureRepository.cs" />
     <Compile Include="Interfaces\Repositories\Inventory\IWastageReasonRepository.cs" />
     <Compile Include="Interfaces\Repositories\Inventory\IWastageRepository.cs" />
@@ -164,6 +171,7 @@
     <Compile Include="Interfaces\Repositories\System\IBranchRepository.cs" />
     <Compile Include="Interfaces\Repositories\System\ICompanyRepository.cs" />
     <Compile Include="Interfaces\Repositories\System\ITaxConfigurationRepository.cs" />
+    <Compile Include="Interfaces\Services\IBatchProductionService.cs" />
     <Compile Include="Interfaces\Services\IBarcodeService.cs" />
     <Compile Include="Interfaces\Services\IConfigurationService.cs" />
     <Compile Include="Interfaces\Services\IDialogService.cs" />
@@ -173,6 +181,7 @@
     <Compile Include="Interfaces\Services\IUOMConversionService.cs" />
     <Compile Include="Interfaces\Services\ISalesInvoiceReportPreviewService.cs" />
     <Compile Include="Interfaces\Services\ISalesReportService.cs" />
+    <Compile Include="Interfaces\Services\ISubRecipeService.cs" />
     <Compile Include="Models\Accounts\DTOs\CustomerAdvance.cs" />
     <Compile Include="Models\Accounts\DTOs\CustomerAdvanceList.cs" />
     <Compile Include="Models\Accounts\DTOs\SupplierCredit.cs" />
@@ -268,11 +277,13 @@
     <Compile Include="Models\System\TaxConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\AuthService.cs" />
+    <Compile Include="Services\BatchProductionService.cs" />
     <Compile Include="Interfaces\Services\IAuthService.cs" />
     <Compile Include="Interfaces\Services\IPasswordHasher.cs" />
     <Compile Include="Interfaces\Services\IUserSessionService.cs" />
     <Compile Include="Services\PasswordHasher.cs" />
     <Compile Include="Services\SalesReportService.cs" />
+    <Compile Include="Services\SubRecipeService.cs" />
     <Compile Include="Services\UserSessionService.cs" />
     <Compile Include="Services\TaxCalculator.cs" />
     <Compile Include="Services\UOMConversionService.cs" />

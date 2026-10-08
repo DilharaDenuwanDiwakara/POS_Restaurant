@@ -419,6 +419,24 @@
                                 </RadioButton>
 
                                 <RadioButton
+                                    Command="{Binding NavigateToBatchProductionCommand}"
+                                    Style="{StaticResource Style.Nav.RadioButton}"
+                                    Visibility="{Binding CanNavBatchProduction, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Batch Production" />
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <RadioButton
+                                    Command="{Binding NavigateToSubRecipeCommand}"
+                                    Style="{StaticResource Style.Nav.RadioButton}"
+                                    Visibility="{Binding CanNavSubRecipe, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Sub-Recipes" />
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <RadioButton
                                     Command="{Binding NavigateToInternalIssueCommand}"
                                     Style="{StaticResource Style.Nav.RadioButton}"
                                     Visibility="{Binding CanNavInternalIssue, Converter={StaticResource BoolToVisibility}}">

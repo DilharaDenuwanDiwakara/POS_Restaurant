@@ -27,84 +27,97 @@ namespace PointOfSale.Infrastructure.Service
         }
 
         #region Public
-        public async Task<string> ImportOpeningStockAsync(string filePath, int userId)
+        public async Task<List<OpeningStockItemDto>> ImportOpeningStockAsync(string filePath, int userId)
         {
             EnsureFileSizeIsAllowed(filePath);
             EnsureFileIsNotLocked(filePath);
 
-            var stockItems = new List<OpenStockItemDto>();
+            var stockItems = new List<OpeningStockItemDto>();
             var errors = new List<string>();
+            var activeProducts = (await _productRepository.GetAllAsync())
+                .Where(p => p.IsActive && !string.IsNullOrWhiteSpace(p.ProductCode))
+                .GroupBy(p => p.ProductCode.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
             using (var workbook = new XLWorkbook(filePath))
             {
                 var ws = workbook.Worksheet(1);
-                var rows = ws.RangeUsed().RowsUsed().Skip(1); // Skip Header
+                var range = ws.RangeUsed();
 
-                int rowNum = 2; // Start from row 2 for error reporting
+                if (range == null)
+                {
+                    throw new InvalidOperationException("The Excel file does not contain any data.");
+                }
+
+                var headerRow = range.FirstRowUsed();
+                var headerMap = headerRow.CellsUsed()
+                    .Select(cell => new
+                    {
+                        Header = Convert.ToString(GetString(cell)),
+                        ColumnNumber = cell.Address.ColumnNumber
+                    })
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Header))
+                    .GroupBy(x => x.Header.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.First().ColumnNumber, StringComparer.OrdinalIgnoreCase);
+
+                var productCodeColumn = GetRequiredColumn(headerMap, "Product Code");
+                var standardCostColumn = GetRequiredColumn(headerMap, "Standard Cost");
+                var availableQuantityColumn = GetRequiredColumn(headerMap, "Available Quantity");
+
+                var rows = range.RowsUsed().Skip(1);
 
                 foreach (var row in rows)
                 {
-                    // 1. Read Barcode (Column 1)
-                    string barcode = (string)GetString(row.Cell(1));
+                    var rowNum = row.RowNumber();
+                    var openingQuantity = GetDecimal(row.Cell(availableQuantityColumn));
 
-                    // Skip empty rows
-                    if (string.IsNullOrWhiteSpace(barcode))
+                    if (openingQuantity <= 0)
                     {
-                        rowNum++;
                         continue;
                     }
 
-                    // 2. Read Values
-                    decimal qty = GetDecimal(row.Cell(2));
-                    decimal price = GetDecimal(row.Cell(3));
-                    decimal cost = GetDecimal(row.Cell(4)); // Helper returns 0 if empty
+                    var productCode = Convert.ToString(GetString(row.Cell(productCodeColumn)));
+                    productCode = productCode == null ? string.Empty : productCode.Trim();
 
-                    // 3. Basic Validation
-                    if (qty <= 0)
+                    if (string.IsNullOrWhiteSpace(productCode))
                     {
-                        errors.Add($"Row {rowNum}: Quantity must be greater than 0.");
+                        errors.Add($"Row {rowNum}: Product Code is required when Available Quantity is greater than 0.");
+                        continue;
                     }
-                    else if (price < 0)
+
+                    Product product;
+                    if (!activeProducts.TryGetValue(productCode, out product))
                     {
-                        errors.Add($"Row {rowNum}: Selling Price cannot be negative.");
+                        errors.Add($"Row {rowNum}: Product Code '{productCode}' was not found as an active product.");
+                        continue;
                     }
-                    else
+
+                    stockItems.Add(new OpeningStockItemDto
                     {
-                        // Add to list
-                        stockItems.Add(new OpenStockItemDto
-                        {
-                            ProductCode = barcode,
-                            Quantity = qty,
-                            SellingPrice = price,
-                            UnitCost = cost == 0 ? (decimal?)null : cost
-                        });
-                    }
-                    rowNum++;
+                        ProductId = product.ProductId,
+                        ProductCode = product.ProductCode,
+                        ProductName = product.ProductName,
+                        UnitCost = GetDecimal(row.Cell(standardCostColumn)),
+                        OpeningQuantity = openingQuantity,
+                        Uom = string.IsNullOrWhiteSpace(product.UnitMeasureName)
+                            ? product.UnitMeasureCode
+                            : product.UnitMeasureName
+                    });
                 }
             }
 
-            // If Excel validation failed, return errors immediately
             if (errors.Any())
             {
-                return "Import Failed with Validation Errors:\n" + string.Join("\n", errors.Take(10)); // Show top 10 errors
+                throw new InvalidOperationException(
+                    "Opening stock import failed with validation errors:\n" + string.Join("\n", errors.Take(20)));
             }
 
-            // If no data found
             if (!stockItems.Any())
             {
-                return "No valid data found in the Excel file.";
+                throw new InvalidOperationException("No opening stock rows were found. Only rows with Available Quantity greater than 0 are imported.");
             }
 
-            // 4. Save to Database
-            try
-            {
-                await _inventoryRepository.ImportOpeningStockAsync(stockItems, userId);
-                return string.Empty; // Success
-            }
-            catch (Exception ex)
-            {
-                return $"Database Error: {ex.Message}";
-            }
+            return stockItems;
         }
 
         public void ExportSuppliers(IEnumerable<Supplier> suppliers, string filePath)
@@ -280,6 +293,181 @@ namespace PointOfSale.Infrastructure.Service
                 workbook.SaveAs(filePath);
             }
         }
+
+        public void ExportSalesSummaryReport(DataTable data, string companyName, DateTime fromDate, DateTime toDate, string filePath)
+        {
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+
+            if (File.Exists(filePath))
+            {
+                EnsureFileIsNotLocked(filePath);
+            }
+
+            var categoryColumn = FindColumn(data, "ParentCategoryName", "ParentCategory", "CategoryName", "MenuCategoryName", "Category");
+            var codeColumn = FindColumn(data, "Code", "ItemCode", "ProductCode", "MenuItemCode");
+            var descriptionColumn = FindColumn(data, "Description", "ItemName", "ProductName", "MenuItemName", "Name");
+            var packSizeColumn = FindColumn(data, "PackSize", "Pack", "PortionSize", "UnitMeasureName", "UOM", "UomName");
+            var qtyColumn = FindColumn(data, "TotalQuantity", "ToDateQuantity", "ToDateQty", "SalesQuantity", "SalesQty", "TotalQty", "Qty", "Quantity");
+            var qtyKgColumn = FindColumn(data, "TotalQuantityKg", "ToDateQuantityKg", "ToDateQtyKg", "QtyKg", "QtyKG", "QuantityKg", "QuantityKG", "QtyInKg");
+            var amountColumn = FindColumn(data, "TotalAmount", "ToDateTotal", "SalesAmount", "Amount", "NetAmount");
+            var vatColumn = FindColumn(data, "VatAmount", "VAT", "Vat", "TaxAmount");
+            var averageColumn = FindColumn(data, "Average", "Avg", "AveragePrice", "AvgPrice");
+
+            var returnQtyColumn = FindColumn(data, "CategoryToDateReturnQty", "CategoryReturnQty", "ReturnQty", "ToDateReturnQty");
+            var returnQtyKgColumn = FindColumn(data, "CategoryToDateReturnQtyKg", "CategoryToDateReturnKg", "ReturnQtyKg", "ReturnQuantityKg");
+            var returnTotalColumn = FindColumn(data, "CategoryToDateReturnTotal", "CategoryReturnTotal", "ReturnTotal", "ToDateReturnTotal");
+            var returnVatColumn = FindColumn(data, "CategoryToDateReturnVat", "CategoryToDateReturnVAT", "CategoryReturnVat", "ReturnVat", "ReturnVAT");
+
+            var cashColumn = FindColumn(data, "PayModeCashTotal", "CashTotal", "CashAmount");
+            var cardColumn = FindColumn(data, "PayModeCardTotal", "CardTotal", "CardAmount");
+            var bankTransferColumn = FindColumn(data, "PayModeBankTransferTotal", "BankTransferTotal", "BankTransferAmount");
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Sales Summary");
+                var row = 1;
+
+                worksheet.Range(row, 1, row, 8).Merge();
+                worksheet.Cell(row, 1).Value = "SALES SUMMARY REPORT";
+                worksheet.Cell(row, 1).Style.Font.Bold = true;
+                worksheet.Cell(row, 1).Style.Font.FontSize = 14;
+                worksheet.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                row++;
+
+                worksheet.Range(row, 1, row, 8).Merge();
+                worksheet.Cell(row, 1).Value = string.IsNullOrWhiteSpace(companyName) ? "Nexora" : companyName;
+                worksheet.Cell(row, 1).Style.Font.Bold = true;
+                worksheet.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                row++;
+
+                worksheet.Range(row, 1, row, 8).Merge();
+                worksheet.Cell(row, 1).Value = $"From: {fromDate:dd/MM/yyyy}   To: {toDate:dd/MM/yyyy}";
+                worksheet.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                row += 2;
+
+                var summaries = new List<SalesCategoryExportSummary>();
+                var groups = data.Rows.Cast<DataRow>()
+                    .GroupBy(r => string.IsNullOrWhiteSpace(GetString(r, categoryColumn)) ? "UNCATEGORIZED" : GetString(r, categoryColumn))
+                    .OrderBy(g => g.Key);
+
+                foreach (var group in groups)
+                {
+                    var firstRow = row;
+                    worksheet.Range(row, 1, row, 8).Merge();
+                    worksheet.Cell(row, 1).Value = group.Key.ToUpperInvariant();
+                    StyleSectionHeader(worksheet.Range(row, 1, row, 8));
+                    row++;
+
+                    WriteRow(worksheet, row, "CODE", "DESCRIPTION", "PACK SIZE", "QTY", "QTY(Kg)", "AMOUNT", "VAT", "AVERAGE");
+                    StyleColumnHeader(worksheet.Range(row, 1, row, 8));
+                    row++;
+
+                    foreach (var item in group)
+                    {
+                        var qty = GetDecimal(item, qtyColumn);
+                        var amount = GetDecimal(item, amountColumn);
+                        var averageValue = GetDecimal(item, averageColumn);
+                        var average = qty != 0m
+                            ? amount / qty
+                            : averageValue;
+
+                        worksheet.Cell(row, 1).Value = GetString(item, codeColumn);
+                        worksheet.Cell(row, 2).Value = GetString(item, descriptionColumn);
+                        worksheet.Cell(row, 3).Value = GetString(item, packSizeColumn);
+                        worksheet.Cell(row, 4).Value = qty;
+                        worksheet.Cell(row, 5).Value = GetDecimal(item, qtyKgColumn);
+                        worksheet.Cell(row, 6).Value = amount;
+                        worksheet.Cell(row, 7).Value = GetDecimal(item, vatColumn);
+                        worksheet.Cell(row, 8).Value = average;
+                        row++;
+                    }
+
+                    var totalQty = group.Sum(item => GetDecimal(item, qtyColumn));
+                    var totalQtyKg = group.Sum(item => GetDecimal(item, qtyKgColumn));
+                    var totalAmount = group.Sum(item => GetDecimal(item, amountColumn));
+                    var totalVat = group.Sum(item => GetDecimal(item, vatColumn));
+                    var returnQty = GetFirstDecimal(group, returnQtyColumn);
+                    var returnQtyKg = GetFirstDecimal(group, returnQtyKgColumn);
+                    var returnAmount = GetFirstDecimal(group, returnTotalColumn);
+                    var returnVat = GetFirstDecimal(group, returnVatColumn);
+                    var netQty = totalQty - returnQty;
+                    var netQtyKg = totalQtyKg - returnQtyKg;
+                    var netAmount = totalAmount - returnAmount;
+                    var netVat = totalVat - returnVat;
+
+                    WriteSummaryRow(worksheet, row++, "TOTAL", totalQty, totalQtyKg, totalAmount, totalVat, totalQty == 0m ? 0m : totalAmount / totalQty, XLColor.FromHtml("#EEF3F8"));
+                    WriteSummaryRow(worksheet, row++, "SALES RETURN", returnQty, returnQtyKg, returnAmount, returnVat, 0m, XLColor.FromHtml("#FFF4E5"));
+                    WriteSummaryRow(worksheet, row++, "NET AMOUNT", netQty, netQtyKg, netAmount, netVat, netQty == 0m ? 0m : netAmount / netQty, XLColor.FromHtml("#EAF7EE"));
+
+                    ApplyTableBorder(worksheet.Range(firstRow, 1, row - 1, 8));
+                    row++;
+
+                    summaries.Add(new SalesCategoryExportSummary
+                    {
+                        CategoryName = group.Key,
+                        NetQty = netQty,
+                        NetQtyKg = netQtyKg,
+                        NetAmount = netAmount,
+                        NetVat = netVat,
+                        NetExclude = netAmount - netVat
+                    });
+                }
+
+                row++;
+                worksheet.Range(row, 1, row, 6).Merge();
+                worksheet.Cell(row, 1).Value = "TOTAL AMOUNT IN ALL CATEGORIES";
+                StyleSectionHeader(worksheet.Range(row, 1, row, 6));
+                row++;
+
+                var grandTotalFirstRow = row;
+                WriteRow(worksheet, row, "CATEGORY", "QTY", "QTY(Kg)", "AMOUNT", "VAT", "NET EXCLUDE");
+                StyleColumnHeader(worksheet.Range(row, 1, row, 6));
+                row++;
+
+                foreach (var summary in summaries)
+                {
+                    worksheet.Cell(row, 1).Value = summary.CategoryName;
+                    worksheet.Cell(row, 2).Value = summary.NetQty;
+                    worksheet.Cell(row, 3).Value = summary.NetQtyKg;
+                    worksheet.Cell(row, 4).Value = summary.NetAmount;
+                    worksheet.Cell(row, 5).Value = summary.NetVat;
+                    worksheet.Cell(row, 6).Value = summary.NetExclude;
+                    row++;
+                }
+
+                worksheet.Cell(row, 1).Value = "GRAND TOTAL";
+                worksheet.Cell(row, 2).Value = summaries.Sum(s => s.NetQty);
+                worksheet.Cell(row, 3).Value = summaries.Sum(s => s.NetQtyKg);
+                worksheet.Cell(row, 4).Value = summaries.Sum(s => s.NetAmount);
+                worksheet.Cell(row, 5).Value = summaries.Sum(s => s.NetVat);
+                worksheet.Cell(row, 6).Value = summaries.Sum(s => s.NetExclude);
+                worksheet.Range(row, 1, row, 6).Style.Font.Bold = true;
+                worksheet.Range(row, 1, row, 6).Style.Fill.BackgroundColor = XLColor.FromHtml("#EEF3F8");
+                ApplyTableBorder(worksheet.Range(grandTotalFirstRow, 1, row, 6));
+                row += 2;
+
+                worksheet.Range(row, 1, row, 2).Merge();
+                worksheet.Cell(row, 1).Value = "PAY MODE WISE TOTAL";
+                StyleSectionHeader(worksheet.Range(row, 1, row, 2));
+                row++;
+
+                var payModeFirstRow = row;
+                WritePayModeRow(worksheet, row++, "CASH", GetFirstDecimal(data.Rows.Cast<DataRow>(), cashColumn));
+                WritePayModeRow(worksheet, row++, "CARD", GetFirstDecimal(data.Rows.Cast<DataRow>(), cardColumn));
+                WritePayModeRow(worksheet, row++, "BANK TRANSFER", GetFirstDecimal(data.Rows.Cast<DataRow>(), bankTransferColumn));
+                ApplyTableBorder(worksheet.Range(payModeFirstRow, 1, row - 1, 2));
+
+                worksheet.Columns(4, 8).Style.NumberFormat.Format = "#,##0.00";
+                worksheet.Columns(2, 6).Style.NumberFormat.Format = "#,##0.00";
+                worksheet.Column(4).Style.NumberFormat.Format = "#,##0.000";
+                worksheet.Column(5).Style.NumberFormat.Format = "#,##0.000";
+                worksheet.SheetView.FreezeRows(4);
+                worksheet.Columns().AdjustToContents();
+
+                workbook.SaveAs(filePath);
+            }
+        }
         #endregion
 
         #region Private
@@ -333,6 +521,16 @@ namespace PointOfSale.Infrastructure.Service
             {
                 throw new InvalidOperationException(FileUploadConstraints.BuildFileTooLargeMessage(fileInfo.Name));
             }
+        }
+        private static int GetRequiredColumn(Dictionary<string, int> headerMap, string headerName)
+        {
+            int columnNumber;
+            if (headerMap.TryGetValue(headerName, out columnNumber))
+            {
+                return columnNumber;
+            }
+
+            throw new InvalidOperationException($"The Excel file is missing the required '{headerName}' column.");
         }
         private DataTable CreateProductDataTable()
         {
@@ -399,6 +597,114 @@ namespace PointOfSale.Infrastructure.Service
             }
 
             return value;
+        }
+
+        private static string FindColumn(DataTable table, params string[] candidates)
+        {
+            if (table == null)
+                return null;
+
+            foreach (var candidate in candidates)
+            {
+                foreach (DataColumn column in table.Columns)
+                {
+                    if (string.Equals(column.ColumnName, candidate, StringComparison.OrdinalIgnoreCase))
+                        return column.ColumnName;
+                }
+            }
+
+            return null;
+        }
+
+        private static string GetString(DataRow row, string columnName)
+        {
+            if (row == null || string.IsNullOrEmpty(columnName) || row[columnName] == DBNull.Value)
+                return string.Empty;
+
+            return Convert.ToString(row[columnName])?.Trim() ?? string.Empty;
+        }
+
+        private static decimal GetDecimal(DataRow row, string columnName)
+        {
+            if (row == null || string.IsNullOrEmpty(columnName) || row[columnName] == DBNull.Value)
+                return 0m;
+
+            decimal value;
+            return decimal.TryParse(Convert.ToString(row[columnName]), out value) ? value : 0m;
+        }
+
+        private static decimal GetFirstDecimal(IEnumerable<DataRow> rows, string columnName)
+        {
+            if (string.IsNullOrEmpty(columnName))
+                return 0m;
+
+            foreach (var row in rows)
+            {
+                var value = GetDecimal(row, columnName);
+                if (value != 0m)
+                    return value;
+            }
+
+            return 0m;
+        }
+
+        private static void WriteRow(IXLWorksheet worksheet, int row, params object[] values)
+        {
+            for (var i = 0; i < values.Length; i++)
+            {
+                worksheet.Cell(row, i + 1).Value = values[i]?.ToString() ?? string.Empty;
+            }
+        }
+
+        private static void WriteSummaryRow(IXLWorksheet worksheet, int row, string label, decimal qty, decimal qtyKg, decimal amount, decimal vat, decimal average, XLColor fill)
+        {
+            worksheet.Range(row, 1, row, 3).Merge();
+            worksheet.Cell(row, 1).Value = label;
+            worksheet.Cell(row, 4).Value = qty;
+            worksheet.Cell(row, 5).Value = qtyKg;
+            worksheet.Cell(row, 6).Value = amount;
+            worksheet.Cell(row, 7).Value = vat;
+            worksheet.Cell(row, 8).Value = average;
+            worksheet.Range(row, 1, row, 8).Style.Font.Bold = true;
+            worksheet.Range(row, 1, row, 8).Style.Fill.BackgroundColor = fill;
+        }
+
+        private static void WritePayModeRow(IXLWorksheet worksheet, int row, string payMode, decimal amount)
+        {
+            worksheet.Cell(row, 1).Value = payMode;
+            worksheet.Cell(row, 2).Value = amount;
+            worksheet.Cell(row, 2).Style.NumberFormat.Format = "#,##0.00";
+        }
+
+        private static void StyleSectionHeader(IXLRange range)
+        {
+            range.Style.Font.Bold = true;
+            range.Style.Font.FontColor = XLColor.White;
+            range.Style.Fill.BackgroundColor = XLColor.FromHtml("#243B6B");
+            range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        }
+
+        private static void StyleColumnHeader(IXLRange range)
+        {
+            range.Style.Font.Bold = true;
+            range.Style.Fill.BackgroundColor = XLColor.FromHtml("#E9EDF5");
+            range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        }
+
+        private static void ApplyTableBorder(IXLRange range)
+        {
+            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        }
+
+        private class SalesCategoryExportSummary
+        {
+            public string CategoryName { get; set; }
+            public decimal NetQty { get; set; }
+            public decimal NetQtyKg { get; set; }
+            public decimal NetAmount { get; set; }
+            public decimal NetVat { get; set; }
+            public decimal NetExclude { get; set; }
         }
         #endregion
 

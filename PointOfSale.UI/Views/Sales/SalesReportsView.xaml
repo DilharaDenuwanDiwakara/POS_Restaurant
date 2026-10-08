@@ -174,14 +174,24 @@
                         Style="{StaticResource SubHeaderTextStyle}"
                         Text="{Binding ReportTitle}" />
 
-                    <Button
+                    <StackPanel
                         Grid.Column="1"
-                        Width="110"
-                        Height="36"
-                        Command="{Binding PrintReportCommand}"
-                        Style="{StaticResource SecondaryButtonStyle}">
-                        <TextBlock Margin="5,0" Text="PRINT" />
-                    </Button>
+                        Orientation="Horizontal">
+                        <Button
+                            Margin="0,0,8,0"
+                            Command="{Binding ExportCommand}"
+                            Content="Export Excel"
+                            Style="{StaticResource ExportExcelButtonStyle}"
+                            ToolTip="Export Sales Summary to Excel (.xlsx)" />
+
+                        <Button
+                            Width="110"
+                            Height="36"
+                            Command="{Binding PrintReportCommand}"
+                            Style="{StaticResource SecondaryButtonStyle}">
+                            <TextBlock Margin="5,0" Text="PRINT" />
+                        </Button>
+                    </StackPanel>
                 </Grid>
 
                 <DataGrid

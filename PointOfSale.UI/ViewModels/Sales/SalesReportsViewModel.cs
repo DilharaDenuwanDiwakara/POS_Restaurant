@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
@@ -24,15 +25,24 @@ namespace PointOfSale.UI.ViewModels.Sales
         private readonly ISalesReportService _salesReportService;
         private readonly IBranchRepository _branchRepository;
         private readonly IReportService _reportService;
+        private readonly IExcelService _excelService;
         private readonly IUserSessionService _userSessionService;
         private readonly AsyncRelayCommand _generateReportCommand;
         private readonly AsyncRelayCommand _printReportCommand;
+        private readonly AsyncRelayCommand _exportCommand;
+        private DataTable _lastPaymentReport;
 
-        public SalesReportsViewModel(ISalesReportService salesReportService, IBranchRepository branchRepository, IReportService reportService, IUserSessionService userSessionService)
+        public SalesReportsViewModel(
+            ISalesReportService salesReportService,
+            IBranchRepository branchRepository,
+            IReportService reportService,
+            IExcelService excelService,
+            IUserSessionService userSessionService)
         {
             _salesReportService = salesReportService;
             _branchRepository = branchRepository;
             _reportService = reportService;
+            _excelService = excelService;
             _userSessionService = userSessionService;
 
             foreach (var reportType in _salesReportService.GetAvailableReportTypes())
@@ -48,6 +58,9 @@ namespace PointOfSale.UI.ViewModels.Sales
 
             _printReportCommand = new AsyncRelayCommand(_ => PrintReportAsync(), _ => !IsProcessing);
             PrintReportCommand = _printReportCommand;
+
+            _exportCommand = new AsyncRelayCommand(_ => ExportAsync(), _ => !IsProcessing && ReportRows != null && ReportRows.Count > 0);
+            ExportCommand = _exportCommand;
 
             _ = LoadInitialDataAsync();
         }
@@ -146,12 +159,14 @@ namespace PointOfSale.UI.ViewModels.Sales
                 {
                     _generateReportCommand?.RaiseCanExecuteChanged();
                     _printReportCommand?.RaiseCanExecuteChanged();
+                    _exportCommand?.RaiseCanExecuteChanged();
                 }
             }
         }
 
         public ICommand GenerateReportCommand { get; }
         public ICommand PrintReportCommand { get; }
+        public ICommand ExportCommand { get; }
 
         private async Task LoadInitialDataAsync()
         {
@@ -196,6 +211,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
                 ReportRows = selectedReport.DefaultView;
                 UpdateSummaryMetrics(selectedReport);
+                _exportCommand?.RaiseCanExecuteChanged();
 
                 var trendSource = SelectedReportType.Key == SalesReportService.SalesSummaryKey
                     ? selectedReport
@@ -204,6 +220,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 var paymentSource = SelectedReportType.Key == SalesReportService.PaymentModeWiseKey
                     ? selectedReport
                     : await _salesReportService.GenerateReportAsync(SalesReportService.PaymentModeWiseKey, request);
+                _lastPaymentReport = paymentSource;
 
                 BuildDailySalesTrend(trendSource);
                 BuildPaymentBreakdown(paymentSource);
@@ -273,6 +290,60 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
         }
 
+        private async Task ExportAsync()
+        {
+            if (!ValidateFilters())
+                return;
+
+            if (SelectedReportType?.Key != SalesReportService.SalesSummaryKey)
+            {
+                MessageBox.Show("Excel export is available for the Sales Summary report.", "Export Excel", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (ReportRows?.Table == null || ReportRows.Count == 0)
+            {
+                MessageBox.Show("Please generate a Sales Summary report before exporting.", "Export Excel", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var saveDialog = new SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = $"SalesSummary_{StartDate:yyyyMMdd}_{EndDate:yyyyMMdd}.xlsx",
+                Title = "Export Sales Summary to Excel"
+            };
+
+            if (saveDialog.ShowDialog() != true)
+                return;
+
+            try
+            {
+                IsProcessing = true;
+                ErrorMessage = string.Empty;
+
+                var table = CreateSalesSummaryExportTable(ReportRows.Table);
+                var companyName = GetFirstString(table, "CompanyName")
+                    ?? (SelectedBranch != null && SelectedBranch.Id > 0 ? SelectedBranch.Name : "Nexora");
+                var filePath = saveDialog.FileName;
+
+                await Task.Run(() => _excelService.ExportSalesSummaryReport(table, companyName, StartDate, EndDate, filePath));
+
+                if (MessageBox.Show("Excel report saved. Open now?", "Export Excel", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+                    Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError($"Sales summary Excel export failed: {ex}");
+                MessageBox.Show($"Failed to export Sales Summary report: {ex.Message}", "Export Excel", MessageBoxButton.OK, MessageBoxImage.Error);
+                ErrorMessage = $"Export Error: {ex.Message}";
+            }
+            finally
+            {
+                IsProcessing = false;
+            }
+        }
+
         private bool ValidateFilters()
         {
             if (SelectedBranch == null)
@@ -305,6 +376,138 @@ namespace PointOfSale.UI.ViewModels.Sales
                 StartDate = StartDate,
                 EndDate = EndDate
             };
+        }
+
+        private DataTable CreateSalesSummaryExportTable(DataTable source)
+        {
+            var table = CreateWritableCopy(source);
+            if (table.Rows.Count == 0)
+                return table;
+
+            var hasSalesSummaryPayModeColumns =
+                FindColumn(table, "PayModeCashTotal", "CashTotal", "CashAmount") != null ||
+                FindColumn(table, "PayModeCardTotal", "CardTotal", "CardAmount") != null ||
+                FindColumn(table, "PayModeBankTransferTotal", "BankTransferTotal", "BankTransferAmount") != null;
+
+            decimal cashTotal;
+            decimal cardTotal;
+            decimal bankTransferTotal;
+
+            if (hasSalesSummaryPayModeColumns)
+            {
+                ResolvePaymentTotals(table, out cashTotal, out cardTotal, out bankTransferTotal);
+            }
+            else if (_lastPaymentReport != null && _lastPaymentReport.Rows.Count > 0)
+            {
+                ResolvePaymentTotals(_lastPaymentReport, out cashTotal, out cardTotal, out bankTransferTotal);
+            }
+            else
+            {
+                cashTotal = 0m;
+                cardTotal = 0m;
+                bankTransferTotal = 0m;
+            }
+
+            EnsureColumn(table, "PayModeCashTotal");
+            EnsureColumn(table, "PayModeCardTotal");
+            EnsureColumn(table, "PayModeBankTransferTotal");
+
+            table.Rows[0]["PayModeCashTotal"] = cashTotal;
+            table.Rows[0]["PayModeCardTotal"] = cardTotal;
+            table.Rows[0]["PayModeBankTransferTotal"] = bankTransferTotal;
+
+            return table;
+        }
+
+        private static DataTable CreateWritableCopy(DataTable source)
+        {
+            var table = source.Clone();
+
+            foreach (DataColumn column in table.Columns)
+            {
+                if (string.IsNullOrEmpty(column.Expression))
+                    column.ReadOnly = false;
+            }
+
+            foreach (DataRow row in source.Rows)
+                table.ImportRow(row);
+
+            return table;
+        }
+
+        private static void EnsureColumn(DataTable table, string columnName)
+        {
+            if (!table.Columns.Contains(columnName))
+                table.Columns.Add(columnName, typeof(decimal));
+        }
+
+        private static string GetFirstString(DataTable table, string columnName)
+        {
+            if (table == null || string.IsNullOrEmpty(columnName) || !table.Columns.Contains(columnName))
+                return null;
+
+            foreach (DataRow row in table.Rows)
+            {
+                var value = Convert.ToString(row[columnName]);
+                if (!string.IsNullOrWhiteSpace(value))
+                    return value.Trim();
+            }
+
+            return null;
+        }
+
+        private static void ResolvePaymentTotals(DataTable table, out decimal cashTotal, out decimal cardTotal, out decimal bankTransferTotal)
+        {
+            cashTotal = 0m;
+            cardTotal = 0m;
+            bankTransferTotal = 0m;
+
+            var directCashColumn = FindColumn(table, "PayModeCashTotal", "CashTotal", "CashAmount");
+            var directCardColumn = FindColumn(table, "PayModeCardTotal", "CardTotal", "CardAmount");
+            var directBankTransferColumn = FindColumn(table, "PayModeBankTransferTotal", "BankTransferTotal", "BankTransferAmount");
+
+            if (directCashColumn != null || directCardColumn != null || directBankTransferColumn != null)
+            {
+                cashTotal = GetFirstNonZeroDecimal(table, directCashColumn);
+                cardTotal = GetFirstNonZeroDecimal(table, directCardColumn);
+                bankTransferTotal = GetFirstNonZeroDecimal(table, directBankTransferColumn);
+                return;
+            }
+
+            var methodColumn = FindColumn(table, "PaymentMethod", "PaymentMode", "PaymentType", "Mode");
+            var amountColumn = FindColumn(table, "Amount", "TotalAmount", "NetAmount", "PaidAmount", "SalesAmount");
+
+            if (methodColumn == null || amountColumn == null)
+                return;
+
+            foreach (DataRow row in table.Rows)
+            {
+                var method = Convert.ToString(row[methodColumn]) ?? string.Empty;
+                var amount = GetDecimal(row, amountColumn);
+                var normalizedMethod = method.Trim().ToUpperInvariant();
+
+                if (normalizedMethod.Contains("CASH"))
+                    cashTotal += amount;
+                else if (normalizedMethod.Contains("CARD"))
+                    cardTotal += amount;
+                else if (normalizedMethod.Contains("BANK") || normalizedMethod.Contains("TRANSFER"))
+                    bankTransferTotal += amount;
+            }
+        }
+
+        private static decimal GetFirstNonZeroDecimal(DataTable table, string columnName)
+        {
+            if (string.IsNullOrEmpty(columnName))
+                return 0m;
+
+            foreach (DataRow row in table.Rows)
+            {
+                var value = GetDecimal(row, columnName);
+                if (value != 0m)
+                    return value;
+            }
+
+            return 0m;
         }
 
         private void BuildDailySalesTrend(DataTable table)

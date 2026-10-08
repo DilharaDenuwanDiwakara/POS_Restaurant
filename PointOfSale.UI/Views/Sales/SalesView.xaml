@@ -286,11 +286,24 @@
                                                 Style="{StaticResource MenuProductNameStyle}"
                                                 Text="{Binding DisplayName}"
                                                 ToolTip="{Binding DisplayName}" />
-                                            <TextBlock
+                                            <Grid
                                                 Grid.Row="1"
-                                                Margin="0,2,0,0"
-                                                Style="{StaticResource MenuProductPriceStyle}"
-                                                Text="{Binding DefaultPrice, StringFormat='Rs. {0:N2}'}" />
+                                                Margin="0,2,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Style="{StaticResource MenuProductPriceStyle}"
+                                                    Text="{Binding DefaultPrice, StringFormat='Rs. {0:N2}'}" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="8,1,0,0"
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="#64748B"
+                                                    Text="{Binding AvailableQuantityText}" />
+                                            </Grid>
                                         </Grid>
 
                                         <Button

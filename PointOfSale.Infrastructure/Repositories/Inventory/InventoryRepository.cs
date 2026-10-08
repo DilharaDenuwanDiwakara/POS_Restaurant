@@ -164,6 +164,55 @@ namespace PointOfSale.Infrastructure.Repositories.Inventory
             }
         }
 
+        public async Task<string> SaveOpeningStockAsync(int locationId, int userId, DateTime openingDate, List<OpeningStockItemDto> items)
+        {
+            if (locationId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(locationId), "A valid location is required.");
+
+            if (userId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(userId), "A valid user is required.");
+
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            var openingStockTable = CreateOpeningStockDataTable(items);
+            if (openingStockTable.Rows.Count == 0)
+                throw new InvalidOperationException("At least one product must have an opening quantity greater than zero.");
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Inventory].[uspSaveOpeningStock]"))
+                {
+                    command.CommandTimeout = 120;
+                    command.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
+                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                    command.Parameters.Add("@OpeningDate", SqlDbType.DateTime).Value = openingDate;
+
+                    var stockItemsParameter = command.Parameters.Add("@StockItems", SqlDbType.Structured);
+                    stockItemsParameter.TypeName = "[Inventory].[udtOpeningStock]";
+                    stockItemsParameter.Value = openingStockTable;
+
+                    await connection.OpenAsync();
+                    var result = await command.ExecuteScalarAsync();
+
+                    if (result == null || result == DBNull.Value)
+                        throw new InvalidOperationException("Opening stock was saved, but the database did not return a document number.");
+
+                    return Convert.ToString(result);
+                }
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2627 || ex.Number == 2601 || ex.Number == 50000)
+                {
+                    throw new InvalidOperationException(ex.Message, ex);
+                }
+
+                throw new InvalidOperationException("A database error occurred while saving opening stock.", ex);
+            }
+        }
+
         public async Task<List<OpeningStockItemModel>> GetOpeningStockItemsAsync(int locationId)
         {
             var items = new List<OpeningStockItemModel>();
@@ -242,6 +291,21 @@ ORDER BY p.Name;";
         }
 
         private DataTable CreateOpeningStockDataTable(IEnumerable<OpeningStockItemModel> stockItems)
+        {
+            var table = new DataTable();
+            table.Columns.Add("ProductId", typeof(int));
+            table.Columns.Add("Quantity", typeof(decimal));
+            table.Columns.Add("UnitCost", typeof(decimal));
+
+            foreach (var item in stockItems.Where(x => x.OpeningQuantity > 0))
+            {
+                table.Rows.Add(item.ProductId, item.OpeningQuantity, item.UnitCost);
+            }
+
+            return table;
+        }
+
+        private DataTable CreateOpeningStockDataTable(IEnumerable<OpeningStockItemDto> stockItems)
         {
             var table = new DataTable();
             table.Columns.Add("ProductId", typeof(int));
@@ -525,6 +589,61 @@ ORDER BY p.Name;";
             {
                 throw new InvalidOperationException("A database error occurred while checking retail item stock.", ex);
             }
+        }
+
+        public async Task<IDictionary<int, decimal>> GetRetailItemStockByVariantAsync(IEnumerable<int> variantIds, int locationId)
+        {
+            var stocks = new Dictionary<int, decimal>();
+            var ids = (variantIds ?? Enumerable.Empty<int>())
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            if (!ids.Any() || locationId <= 0)
+                return stocks;
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = connection.CreateCommand())
+                {
+                    var parameterNames = ids
+                        .Select((id, index) => "@VariantId" + index)
+                        .ToList();
+
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = $@"
+                        SELECT
+                            r.VariantId,
+                            ISNULL(SUM(ls.AvailableQuantity), 0) AS AvailableQuantity
+                        FROM [Inventory].[Recipe] r
+                        INNER JOIN [Inventory].[LocationStock] ls ON ls.ProductId = r.ProductId
+                        WHERE r.VariantId IN ({string.Join(",", parameterNames)})
+                          AND ls.LocationId = @LocationId
+                        GROUP BY r.VariantId;";
+
+                    for (var i = 0; i < ids.Count; i++)
+                        command.Parameters.Add(parameterNames[i], SqlDbType.Int).Value = ids[i];
+
+                    command.Parameters.Add("@LocationId", SqlDbType.Int).Value = locationId;
+
+                    await connection.OpenAsync();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            stocks[GetValue<int>(reader, "VariantId")] =
+                                GetValue<decimal>(reader, "AvailableQuantity");
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occurred while checking retail item stock.", ex);
+            }
+
+            return stocks;
         }
 
         public async Task<List<ProvisioningYieldDetailModel>> GetProvisioningYieldDetailsAsync(string provisionNumber)

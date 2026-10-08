@@ -283,6 +283,8 @@ namespace PointOfSale.UI.ViewModels.Restaurant
         }
 
         public bool IsTaxBreakdownVisible => NewVariantPrice > 0m;
+        public bool IsTaxApplied => IsVatSelected;
+        public decimal TaxPercentage => IsVatSelected ? VatRate : 0m;
 
         public void CalculateTaxBreakdown()
         {
@@ -298,6 +300,9 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             }
 
             OnPropertyChanged(nameof(IsTaxBreakdownVisible));
+            OnPropertyChanged(nameof(IsTaxApplied));
+            OnPropertyChanged(nameof(TaxPercentage));
+            RecalculateFinancials();
         }
 
         private bool IsVatSelected => AvailableTaxes.Any(t =>
@@ -337,6 +342,13 @@ namespace PointOfSale.UI.ViewModels.Restaurant
         {
             get => _totalRecipeCost;
             private set => SetProperty(ref _totalRecipeCost, value);
+        }
+
+        private decimal _basePrice;
+        public decimal BasePrice
+        {
+            get => _basePrice;
+            private set => SetProperty(ref _basePrice, value);
         }
 
         private decimal _grossProfit;
@@ -413,10 +425,22 @@ namespace PointOfSale.UI.ViewModels.Restaurant
         private void RecalculateFinancials()
         {
             var sellingPrice = SelectedVariantForRecipe?.Price ?? 0m;
+            var basePrice = CalculateBasePrice(sellingPrice);
 
             TotalRecipeCost = SelectedVariantForRecipe?.RecipeLines.Sum(x => x.TotalCost) ?? 0m;
-            GrossProfit = sellingPrice - TotalRecipeCost;
-            ProfitMarginPercent = sellingPrice > 0m ? (GrossProfit / sellingPrice) * 100m : 0m;
+            BasePrice = basePrice;
+            GrossProfit = BasePrice - TotalRecipeCost;
+            ProfitMarginPercent = BasePrice > 0m ? (GrossProfit / BasePrice) * 100m : 0m;
+        }
+
+        private decimal CalculateBasePrice(decimal sellingPrice)
+        {
+            if (sellingPrice <= 0m)
+                return 0m;
+
+            return IsTaxApplied && TaxPercentage > 0m
+                ? sellingPrice / (1m + (TaxPercentage / 100m))
+                : sellingPrice;
         }
 
         // Ingredient Lookups

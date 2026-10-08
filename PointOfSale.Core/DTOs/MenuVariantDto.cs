@@ -18,6 +18,25 @@ namespace PointOfSale.Core.DTOs
         public decimal? DiscountAmount { get; set; }
         public List<int> TaxIds { get; set; } = new List<int>();
 
+        private decimal _availableQuantity;
+        public decimal AvailableQuantity
+        {
+            get => _availableQuantity;
+            set
+            {
+                if (_availableQuantity == value)
+                    return;
+
+                _availableQuantity = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AvailableQuantityText));
+                OnPropertyChanged(nameof(IsOutOfStock));
+            }
+        }
+
+        public string AvailableQuantityText => $"Stock: {AvailableQuantity:0.##}";
+        public bool IsOutOfStock => AvailableQuantity <= 0m;
+
         private string _offerSummary;
         public string OfferSummary
         {

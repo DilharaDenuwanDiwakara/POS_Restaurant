@@ -472,6 +472,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
 
                                             <StackPanel Grid.Column="0">
@@ -488,12 +489,19 @@
 
                                             <Border Grid.Column="2" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Card.Border}" Padding="16,0,0,0">
                                                 <StackPanel>
+                                                    <TextBlock Text="VAT EXCL. PRICE" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding BasePrice, StringFormat='Rs. {0:N2}'}" FontSize="18" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Right"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Grid.Column="3" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Card.Border}" Padding="16,0,0,0">
+                                                <StackPanel>
                                                     <TextBlock Text="GROSS PROFIT" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
                                                     <TextBlock Text="{Binding GrossProfit, StringFormat='Rs. {0:N2}'}" FontSize="18" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Right"/>
                                                 </StackPanel>
                                             </Border>
 
-                                            <Border Grid.Column="3" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Card.Border}" Padding="16,0,0,0">
+                                            <Border Grid.Column="4" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Card.Border}" Padding="16,0,0,0">
                                                 <StackPanel>
                                                     <TextBlock Text="MARGIN" Style="{StaticResource CaptionStyle}" FontWeight="SemiBold"/>
                                                     <TextBlock Text="{Binding ProfitMarginPercent, StringFormat={}{0:N1}%}" FontSize="18" FontWeight="Bold"

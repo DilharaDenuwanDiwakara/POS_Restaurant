@@ -81,6 +81,11 @@
 
         <Border Grid.Row="2" Style="{StaticResource PanelCardStyle}" Margin="0,6,0,0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Import Excel"
+                        Command="{Binding ImportExcelCommand}"
+                        Style="{StaticResource ExportExcelButtonStyle}"
+                        Margin="0,0,8,0"
+                        ToolTip="Import opening stock from Excel (.xlsx)"/>
                 <Button Content="Clear/Discard Draft"
                         Command="{Binding ClearDraftCommand}"
                         Style="{StaticResource SecondaryButtonStyle}"

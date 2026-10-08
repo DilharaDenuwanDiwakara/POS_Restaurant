@@ -108,6 +108,7 @@
     <Compile Include="Repositories\Accounts\SupplierPaymentRepository.cs" />
     <Compile Include="Repositories\BaseRepository.cs" />
     <Compile Include="Repositories\Inventory\BrandRepository.cs" />
+    <Compile Include="Repositories\Inventory\BatchProductionRepository.cs" />
     <Compile Include="Repositories\Inventory\CategoryRepository.cs" />
     <Compile Include="Repositories\Inventory\InventoryReportRepository.cs" />
     <Compile Include="Repositories\Inventory\InventoryRepository.cs" />
@@ -116,6 +117,7 @@
     <Compile Include="Repositories\Inventory\ProductBatchRepository.cs" />
     <Compile Include="Repositories\Inventory\ProductRepository.cs" />
     <Compile Include="Repositories\Inventory\StockAdjustmentRepository.cs" />
+    <Compile Include="Repositories\Inventory\SubRecipeRepository.cs" />
     <Compile Include="Repositories\Inventory\UnitMeasureRepository.cs" />
     <Compile Include="Repositories\Inventory\WastageReasonRepository.cs" />
     <Compile Include="Repositories\Inventory\WastageRepository.cs" />
@@ -168,6 +170,7 @@
     <None Include="Database\Inventory\ProductUnitConversion_IsMultiply.sql" />
     <None Include="Database\Inventory\StockAdjustment_MasterDetail_DatabaseChanges.sql" />
     <None Include="Database\Inventory\StockTransfer_UOM_DatabaseChanges.sql" />
+    <None Include="Database\Inventory\uspGetBatchProductionHistory.sql" />
     <None Include="Database\Inventory\uspGetInternalIssueVoucher.sql" />
     <None Include="Database\Inventory\uspGetStockTransferLines.sql" />
     <None Include="Database\Security\WastageApproval_Permission.sql" />

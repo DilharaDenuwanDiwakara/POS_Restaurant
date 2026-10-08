@@ -42,6 +42,7 @@ namespace PointOfSale.UI.Views.Sales
         {
             if (ViewModel != null)
             {
+                ViewModel.StopProductStockRefreshTimer();
                 ViewModel.RequestCashFocus -= OnRequestCashFocus;
                 ViewModel.RequestBillDiscountFocus -= OnRequestBillDiscountFocus;
                 ViewModel.RequestBarcodeFocus -= OnRequestBarcodeFocus;

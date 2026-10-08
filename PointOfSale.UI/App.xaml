@@ -168,6 +168,14 @@
                 <viewinventory:ProvisioningView />
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelinventory:BatchProductionViewModel}">
+                <viewinventory:BatchProductionView />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type viewmodelinventory:SubRecipeViewModel}">
+                <viewinventory:SubRecipeView />
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type viewmodelinventory:UnitMeasureViewModel}">
                 <viewinventorydialog:UnitMeasureWindow />
             </DataTemplate>
