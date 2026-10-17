@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Threading.Tasks;
 using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces;
@@ -39,10 +38,37 @@ namespace PointOfSale.Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<AccountDto>> GetPaymentAccountsAsync()
+        public async Task<IEnumerable<PaymentAccountDto>> GetPaymentAccountsAsync()
         {
-            var accounts = await GetAccountsAsync();
-            return accounts.Where(a => a.AccountTypeId == 1 && !a.IsHeader && a.IsActive);
+            var accounts = new List<PaymentAccountDto>();
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Accounts].[uspGetPaymentAccounts]"))
+                {
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            accounts.Add(new PaymentAccountDto
+                            {
+                                Id = GetValue<int>(reader, "Id"),
+                                AccountCode = GetValue<string>(reader, "AccountCode"),
+                                AccountName = GetValue<string>(reader, "AccountName")
+                            });
+                        }
+                    }
+                }
+
+                return accounts;
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occurred while retrieving payment accounts.", ex);
+            }
         }
 
         public async Task<int> CreateAccountAsync(AccountDto account)

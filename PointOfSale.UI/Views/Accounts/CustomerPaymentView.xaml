@@ -172,6 +172,24 @@
           Width="150"
           VerticalAlignment="Center"
           Tag="Select Method"
+                                      Margin="0,0,24,0"/>
+
+                            <!-- Deposit To Account -->
+                            <TextBlock Text="Deposit To:" 
+           Style="{StaticResource LabelStyle}" 
+           VerticalAlignment="Center"
+           Margin="0,0,12,0"/>
+
+                            <ComboBox ItemsSource="{Binding PaymentAccounts}"
+          SelectedValue="{Binding SelectedPaymentAccountId, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+          SelectedValuePath="Id"
+          DisplayMemberPath="DisplayText"
+          TextSearch.TextPath="DisplayText"
+          Style="{StaticResource ComboBoxStyle}"
+          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+          Width="220"
+          VerticalAlignment="Center"
+          Tag="Select Account"
                                       Margin="0"/>
                         </StackPanel>
 

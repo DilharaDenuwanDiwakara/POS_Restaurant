@@ -46,7 +46,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
             ExpensesList = new ObservableCollection<Expenses>();
             Branches = new ObservableCollection<Branch>();
-            PaymentAccounts = new ObservableCollection<AccountDto>();
+            PaymentAccounts = new ObservableCollection<PaymentAccountDto>();
             GLExpenseAccounts = new ObservableCollection<AccountDto>();
             ExpenseLines = new ObservableCollection<ExpenseLineModel>();
             ExpenseLines.CollectionChanged += ExpenseLinesCollectionChanged;
@@ -67,7 +67,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
         public ObservableCollection<Expenses> ExpensesList { get; }
         public ObservableCollection<Branch> Branches { get; }
-        public ObservableCollection<AccountDto> PaymentAccounts { get; }
+        public ObservableCollection<PaymentAccountDto> PaymentAccounts { get; }
         public ObservableCollection<AccountDto> GLExpenseAccounts { get; }
         public ObservableCollection<ExpenseLineModel> ExpenseLines { get; }
 
@@ -91,8 +91,8 @@ namespace PointOfSale.UI.ViewModels.Accounts
             }
         }
 
-        private AccountDto _selectedPaymentAccount;
-        public AccountDto SelectedPaymentAccount
+        private PaymentAccountDto _selectedPaymentAccount;
+        public PaymentAccountDto SelectedPaymentAccount
         {
             get => _selectedPaymentAccount;
             set

@@ -21,7 +21,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             ItemName = itemName;
 
             Variants = new ObservableCollection<VariantPriceDto>();
-            SaveCommand = new AsyncRelayCommand(async _ => await SaveAsync());
+            SaveCommand = new AsyncRelayCommand(async _ => await SaveAsync(), _ => !IsBusy && Variants.Count > 0);
             CloseCommand = new RelayCommand(win => (win as Window)?.Close());
 
             // Load data immediately
@@ -33,9 +33,21 @@ namespace PointOfSale.UI.ViewModels.Restaurant
 
         public ICommand SaveCommand { get; }
         public ICommand CloseCommand { get; }
+        public bool CanSave => !IsBusy && Variants.Count > 0;
 
         private bool _isBusy;
-        public bool IsBusy { get => _isBusy; set => SetProperty(ref _isBusy, value); }
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                if (SetProperty(ref _isBusy, value))
+                {
+                    OnPropertyChanged(nameof(CanSave));
+                    (SaveCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                }
+            }
+        }
 
         private async Task LoadVariantsAsync()
         {
@@ -55,11 +67,14 @@ namespace PointOfSale.UI.ViewModels.Restaurant
 
         private async Task SaveAsync()
         {
+            if (IsBusy || Variants.Count == 0) return;
+
             try
             {
                 IsBusy = true;
                 await _repository.UpdateVariantPricesAsync(Variants);
-                MessageBox.Show("Prices Updated Successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                foreach (var variant in Variants) variant.ItemCode = variant.ItemCode?.Trim();
+                MessageBox.Show("Item codes and prices updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 // Optional: Close window automatically? 
                 // For now, we just let the user click Close.

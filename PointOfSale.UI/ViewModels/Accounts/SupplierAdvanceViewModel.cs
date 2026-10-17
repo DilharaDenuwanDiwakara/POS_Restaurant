@@ -34,7 +34,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             _accountingRepository = accountingRepository ?? throw new ArgumentNullException(nameof(accountingRepository));
 
             Suppliers = new ObservableCollection<Supplier>();
-            PaymentAccounts = new ObservableCollection<AccountDto>();
+            PaymentAccounts = new ObservableCollection<PaymentAccountDto>();
             PaymentMethods = new ObservableCollection<AccountsPaymentMethod>(
                 (AccountsPaymentMethod[])Enum.GetValues(typeof(AccountsPaymentMethod)));
             UnappliedAdvances = new ObservableCollection<SupplierAdvanceList>();
@@ -49,7 +49,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
         #region Collections
         public ObservableCollection<Supplier> Suppliers { get; }
-        public ObservableCollection<AccountDto> PaymentAccounts { get; }
+        public ObservableCollection<PaymentAccountDto> PaymentAccounts { get; }
         public ObservableCollection<AccountsPaymentMethod> PaymentMethods { get; }
         public ObservableCollection<SupplierAdvanceList> UnappliedAdvances { get; }
         #endregion

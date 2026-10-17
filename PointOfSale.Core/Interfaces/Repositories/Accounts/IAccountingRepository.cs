@@ -7,7 +7,7 @@ namespace PointOfSale.Core.Interfaces
     public interface IAccountingRepository
     {
         Task<IEnumerable<AccountDto>> GetAccountsAsync();
-        Task<IEnumerable<AccountDto>> GetPaymentAccountsAsync();
+        Task<IEnumerable<PaymentAccountDto>> GetPaymentAccountsAsync();
         Task<int> CreateAccountAsync(AccountDto account);
         Task UpdateAccountAsync(AccountDto account);
         Task DeactivateAccountAsync(int accountId);

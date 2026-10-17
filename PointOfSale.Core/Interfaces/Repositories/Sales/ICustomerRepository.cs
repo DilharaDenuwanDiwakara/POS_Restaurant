@@ -8,6 +8,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Sales
     {
         Task<int> CreateAsync(Customer customer);
         Task<IEnumerable<Customer>> GetAllAsync();
+        Task<IEnumerable<Customer>> GetCreditCustomersAsync();
         Task<Customer> GetByIdAsync(int id);
         Task<Customer> GetCustomerByPhoneAsync(string phone);
         Task UpdateAsync(Customer customer);

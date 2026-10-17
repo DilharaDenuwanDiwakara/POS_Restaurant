@@ -52,7 +52,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
             Suppliers = new ObservableCollection<Supplier>();
             PayableItems = new ObservableCollection<SupplierPayableItem>();
-            PaymentAccounts = new ObservableCollection<AccountDto>();
+            PaymentAccounts = new ObservableCollection<PaymentAccountDto>();
             PaymentMethods = new ObservableCollection<AccountsPaymentMethod>((AccountsPaymentMethod[])Enum.GetValues(typeof(AccountsPaymentMethod)));
 
             LoadPayablesCommand = new AsyncRelayCommand(_ => LoadPayablesAsync(), _ => CanLoadPayables());
@@ -69,7 +69,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
         public ObservableCollection<Supplier> Suppliers { get; }
         public ObservableCollection<AccountsPaymentMethod> PaymentMethods { get; }
         public ObservableCollection<SupplierPayableItem> PayableItems { get; }
-        public ObservableCollection<AccountDto> PaymentAccounts { get; }
+        public ObservableCollection<PaymentAccountDto> PaymentAccounts { get; }
         public SupplierPayment Payment { get; set; } = new SupplierPayment();
 
         public ObservableCollection<Bank> AvailableBanks { get; } = new ObservableCollection<Bank>();

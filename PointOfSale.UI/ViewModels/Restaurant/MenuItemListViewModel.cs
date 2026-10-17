@@ -42,7 +42,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             SearchCommand = new RelayCommand(_ => ExecuteSearch());
             RefreshCommand = new AsyncRelayCommand(async _ => await ReloadDataAsync());
 
-            QuickUpdatePriceCommand = new RelayCommand(obj => ExecuteQuickUpdatePrice(obj));
+            QuickUpdatePriceCommand = new AsyncRelayCommand(async obj => await ExecuteQuickUpdatePriceAsync(obj));
             EditCommand = new AsyncRelayCommand(async obj => await ExecuteEditAsync(obj));
             DeleteCommand = new AsyncRelayCommand(async obj => await ExecuteDeleteAsync(obj));
 
@@ -261,7 +261,7 @@ namespace PointOfSale.UI.ViewModels.Restaurant
             InactiveCount = visibleItems.Count(x => !x.IsActive);
         }
 
-        private void ExecuteQuickUpdatePrice(object obj)
+        private async Task ExecuteQuickUpdatePriceAsync(object obj)
         {
             if (obj is MenuItemDto item)
             {
@@ -275,9 +275,8 @@ namespace PointOfSale.UI.ViewModels.Restaurant
                 // 3. Show it
                 window.ShowDialog();
 
-                // 4. Optional: Refresh main list to show updated base price
-                // (If the logic updates the "Standard" price shown on the main card)
-                ExecuteSearch();
+                // Reload persisted item codes and prices before applying the current filters.
+                await ReloadDataAsync();
             }
         }
 

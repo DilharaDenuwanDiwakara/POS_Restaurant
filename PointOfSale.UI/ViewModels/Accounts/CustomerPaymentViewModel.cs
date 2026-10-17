@@ -6,7 +6,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Enums;
+using PointOfSale.Core.Interfaces;
 using PointOfSale.Core.Interfaces.Repositories.Accounts;
 using PointOfSale.Core.Interfaces.Repositories.Sales;
 using PointOfSale.Core.Interfaces.Repositories.System;
@@ -24,21 +26,25 @@ namespace PointOfSale.UI.ViewModels.Accounts
         private readonly ICustomerPaymentRepository _customerPaymentRepository;
         private readonly IUserSessionService _userSessionService;
         private readonly IBankRepository _bankRepository;
+        private readonly IAccountingRepository _accountingRepository;
 
         public CustomerPaymentViewModel(IServiceProvider serviceProvider,
                                         ICustomerRepository customerRepository,
                                         ICustomerPaymentRepository customerPaymentRepository,
                                         IUserSessionService userSessionService,
-                                        IBankRepository bankRepository)
+                                        IBankRepository bankRepository,
+                                        IAccountingRepository accountingRepository)
         {
             _serviceProvider = serviceProvider;
             _customerRepository = customerRepository;
             _customerPaymentRepository = customerPaymentRepository;
             _userSessionService = userSessionService;
             _bankRepository = bankRepository ?? throw new ArgumentNullException(nameof(bankRepository));
+            _accountingRepository = accountingRepository ?? throw new ArgumentNullException(nameof(accountingRepository));
 
             Customers = new ObservableCollection<Customer>();
             ReceivableItems = new ObservableCollection<CustomerReceivableItem>();
+            PaymentAccounts = new ObservableCollection<PaymentAccountDto>();
             PaymentMethods = new ObservableCollection<AccountsPaymentMethod>((AccountsPaymentMethod[])Enum.GetValues(typeof(AccountsPaymentMethod)));
 
 
@@ -47,6 +53,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
             Task.Run(LoadCustomerAsync);
             _ = LoadBanksAsync();
+            _ = LoadPaymentAccountsAsync();
         }
 
         public List<AccountsPaymentMethod> AvailablePaymentMethods { get; } =
@@ -97,12 +104,13 @@ namespace PointOfSale.UI.ViewModels.Accounts
         public Visibility IsAccountNumberVisible =>
             SelectedPaymentMethod == AccountsPaymentMethod.BANK_TRANSFER ? Visibility.Visible : Visibility.Collapsed;
         public Visibility IsAccountNameVisible =>
-            (SelectedPaymentMethod == AccountsPaymentMethod.BANK_TRANSFER || PaymentMethod == AccountsPaymentMethod.CHEQUE)
+            (SelectedPaymentMethod == AccountsPaymentMethod.BANK_TRANSFER || SelectedPaymentMethod == AccountsPaymentMethod.CHEQUE)
             ? Visibility.Visible : Visibility.Collapsed;
 
         #region Properties
         public ObservableCollection<Customer> Customers { get; }
         public ObservableCollection<AccountsPaymentMethod> PaymentMethods { get; }
+        public ObservableCollection<PaymentAccountDto> PaymentAccounts { get; }
         public ObservableCollection<CustomerReceivableItem> ReceivableItems { get; }
         public CustomerPayment Payment { get; set; } = new CustomerPayment();
 
@@ -147,6 +155,19 @@ namespace PointOfSale.UI.ViewModels.Accounts
             }
         }
 
+        private int _selectedPaymentAccountId;
+        public int SelectedPaymentAccountId
+        {
+            get => _selectedPaymentAccountId;
+            set
+            {
+                if (SetProperty(ref _selectedPaymentAccountId, value))
+                {
+                    SavePaymentCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
         private decimal _totalSelectedReceivableAmount;
         public decimal TotalSelectedReceivableAmount
         {
@@ -183,9 +204,29 @@ namespace PointOfSale.UI.ViewModels.Accounts
             }
         }
 
+        private async Task LoadPaymentAccountsAsync()
+        {
+            try
+            {
+                PaymentAccounts.Clear();
+                var accounts = await _accountingRepository.GetPaymentAccountsAsync();
+                foreach (var account in accounts)
+                {
+                    PaymentAccounts.Add(account);
+                }
+
+                SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault()?.Id ?? 0;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load deposit accounts: {ex.Message}";
+            }
+        }
+
         private void ClearForm()
         {
             Payment = new CustomerPayment();
+            SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault()?.Id ?? 0;
             foreach (var r in ReceivableItems)
             {
                 r.IsSelected = false;
@@ -196,16 +237,18 @@ namespace PointOfSale.UI.ViewModels.Accounts
         {
             try
             {
-                var result = await _customerRepository.GetAllAsync();
+                Customers.Clear();
 
-                foreach (var customers in result)
+                var result = await _customerRepository.GetCreditCustomersAsync();
+
+                foreach (var customer in result)
                 {
-                    Customers.Add(customers);
+                    Customers.Add(customer);
                 }
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Failed to load customers: {ex.Message}";
+                ErrorMessage = $"Failed to load credit customers: {ex.Message}";
             }
         }
 
@@ -289,7 +332,8 @@ namespace PointOfSale.UI.ViewModels.Accounts
         private bool CanSave()
         {
             return Payment.PaidAmount > 0
-                    && SelectedPaymentMethod.HasValue;
+                    && SelectedPaymentMethod.HasValue
+                    && SelectedPaymentAccountId > 0;
         }
         private async Task SaveAsync()
         {
@@ -299,6 +343,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 Payment.PaymentDate = PaymentDate;
                 Payment.PaymentMethod = SelectedPaymentMethod?.ToString();
                 Payment.ReferenceNumber = null;
+                Payment.PaymentAccountId = SelectedPaymentAccountId;
                 Payment.PaidAmount = TotalSelectedReceivableAmount;
                 Payment.CreatedBy = _userSessionService.UserId;
 

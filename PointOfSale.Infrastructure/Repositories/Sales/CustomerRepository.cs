@@ -71,6 +71,35 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             }
             return customers;
         }
+
+        public async Task<IEnumerable<Customer>> GetCreditCustomersAsync()
+        {
+            var customers = new List<Customer>();
+
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Accounts].[uspGetCreditCustomers]"))
+                {
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            customers.Add(MapCreditCustomer(reader));
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("A database error occurred while retrieving credit customers.", ex);
+            }
+
+            return customers;
+        }
+
         public async Task<Customer> GetByIdAsync(int id)
         {
             try
@@ -237,8 +266,24 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 IsTaxRegistered = GetOptionalValue(record, "IsTaxRegistered", false),
                 TaxRegistrationNumber = GetOptionalValue<string>(record, "TaxRegistrationNumber", null),
                 Balance = GetValue<decimal>(record, "Balance"),
+                ActualBalance = GetOptionalValue(record, "ActualBalance", GetOptionalValue(record, "Balance", 0m)),
                 LoyaltyPoints = GetOptionalValue(record, "LoyaltyPoints", 0),
                 IsActive = GetValue<bool>(record, "IsActive")
+            };
+        }
+
+        private Customer MapCreditCustomer(IDataRecord record)
+        {
+            var actualBalance = GetOptionalValue(record, "ActualBalance", 0m);
+
+            return new Customer
+            {
+                Id = GetOptionalValue(record, "Id", GetOptionalValue(record, "CustomerId", 0)),
+                CustomerName = GetOptionalValue<string>(record, "Name", GetOptionalValue<string>(record, "CustomerName", null)),
+                ContactNumber = GetOptionalValue<string>(record, "ContactNumber", null),
+                Balance = actualBalance,
+                ActualBalance = actualBalance,
+                IsActive = GetOptionalValue(record, "IsActive", true)
             };
         }
 

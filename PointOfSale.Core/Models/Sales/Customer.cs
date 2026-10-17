@@ -11,6 +11,7 @@ namespace PointOfSale.Core.Models.Sales
         public string TaxRegistrationNumber { get; set; }
         public decimal CreditLimit { get; set; }
         public decimal Balance { get; set; }
+        public decimal ActualBalance { get; set; }
         public int LoyaltyPoints { get; set; }
         public bool IsActive { get; set; }
         public bool IsDefault { get; set; }

@@ -25,6 +25,13 @@ namespace PointOfSale.Core.DTOs
         public int VariantId { get; set; }
         public string VariantName { get; set; }
 
+        private string _itemCode;
+        public string ItemCode
+        {
+            get => _itemCode;
+            set => SetProperty(ref _itemCode, value);
+        }
+
         private decimal _price;
         public decimal Price
         {

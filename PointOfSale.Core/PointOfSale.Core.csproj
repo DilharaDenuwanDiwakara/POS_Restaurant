@@ -96,6 +96,7 @@
     <Compile Include="DTOs\OpeningStockItemDto.cs" />
     <Compile Include="DTOs\OpenStockItemDto.cs" />
     <Compile Include="DTOs\OrderItemDto.cs" />
+    <Compile Include="DTOs\PaymentAccountDto.cs" />
     <Compile Include="DTOs\ProvisioningYieldDetailModel.cs" />
     <Compile Include="DTOs\ProvisioningYieldModel.cs" />
     <Compile Include="DTOs\ProductLiteDto.cs" />

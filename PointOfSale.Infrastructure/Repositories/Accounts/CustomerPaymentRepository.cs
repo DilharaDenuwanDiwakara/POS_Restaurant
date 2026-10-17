@@ -96,24 +96,32 @@ namespace PointOfSale.Infrastructure.Repositories.Accounts
         private void AddCustomerPaymentParameters(SqlCommand command, CustomerPayment payment)
         {
             command.Parameters.Add("@CustomerId", SqlDbType.Int).Value = payment.CustomerId;
+            command.Parameters.Add("@PaymentAccountId", SqlDbType.Int).Value = payment.PaymentAccountId;
             command.Parameters.Add("@PaymentDate", SqlDbType.DateTime).Value = payment.PaymentDate;
             command.Parameters.Add("@PaymentMethod", SqlDbType.NVarChar, 50).Value = payment.PaymentMethod ?? (object)DBNull.Value;
             command.Parameters.Add("@ReferenceNumber", SqlDbType.NVarChar, 50).Value = payment.ReferenceNumber ?? (object)DBNull.Value;
-            command.Parameters.Add("@PaidAmount", SqlDbType.Decimal).Value = payment.PaidAmount;
+            AddDecimalParameter(command, "@PaidAmount", payment.PaidAmount);
 
-            // Move these ABOVE @CreatedBy to match the Stored Procedure order
-            command.Parameters.AddWithValue("@BankName",
-                string.IsNullOrWhiteSpace(payment.BankName) ? (object)DBNull.Value : payment.BankName);
+            command.Parameters.Add("@BankName", SqlDbType.NVarChar, 100).Value =
+                string.IsNullOrWhiteSpace(payment.BankName) ? (object)DBNull.Value : payment.BankName;
 
-            command.Parameters.AddWithValue("@AccountNumber",
-                string.IsNullOrWhiteSpace(payment.AccountNumber) ? (object)DBNull.Value : payment.AccountNumber);
+            command.Parameters.Add("@AccountNumber", SqlDbType.NVarChar, 100).Value =
+                string.IsNullOrWhiteSpace(payment.AccountNumber) ? (object)DBNull.Value : payment.AccountNumber;
 
-            command.Parameters.AddWithValue("@AccountName",
-                string.IsNullOrWhiteSpace(payment.AccountName) ? (object)DBNull.Value : payment.AccountName);
+            command.Parameters.Add("@AccountName", SqlDbType.NVarChar, 100).Value =
+                string.IsNullOrWhiteSpace(payment.AccountName) ? (object)DBNull.Value : payment.AccountName;
 
-            // Now add @CreatedBy
             command.Parameters.Add("@CreatedBy", SqlDbType.Int).Value = payment.CreatedBy;
         }
+
+        private static void AddDecimalParameter(SqlCommand command, string parameterName, decimal value)
+        {
+            var parameter = command.Parameters.Add(parameterName, SqlDbType.Decimal);
+            parameter.Precision = 18;
+            parameter.Scale = 2;
+            parameter.Value = value;
+        }
+
         private CustomerReceivable MapCustomerReceivable(IDataRecord record)
         {
             return new CustomerReceivable

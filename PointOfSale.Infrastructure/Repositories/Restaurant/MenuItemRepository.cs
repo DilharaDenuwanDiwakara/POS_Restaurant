@@ -608,7 +608,7 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
         public async Task<IEnumerable<VariantPriceDto>> GetVariantsByItemIdAsync(int menuItemId)
         {
             var list = new List<VariantPriceDto>();
-            string sql = "SELECT Id, Name, Price FROM Restaurant.Variant WHERE MenuItemId = @Id";
+            string sql = "SELECT Id, ItemCode, Name, Price FROM Restaurant.Variant WHERE MenuItemId = @Id ORDER BY Id";
 
             using (var connection = GetConnection())
             {
@@ -627,6 +627,7 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                             list.Add(new VariantPriceDto
                             {
                                 VariantId = GetValue<int>(reader, "Id"),
+                                ItemCode = GetValue<string>(reader, "ItemCode"),
                                 VariantName = GetValue<string>(reader, "Name"),
                                 Price = GetValue<decimal>(reader, "Price")
                             });
@@ -639,6 +640,24 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
 
         public async Task UpdateVariantPricesAsync(IEnumerable<VariantPriceDto> variants)
         {
+            if (variants == null) throw new ArgumentNullException(nameof(variants));
+
+            // Snapshot edits before awaiting database work.
+            var updates = variants.Select(v => new VariantPriceDto
+            {
+                VariantId = v.VariantId,
+                ItemCode = v.ItemCode?.Trim(),
+                Price = v.Price
+            }).ToList();
+
+            if (updates.Any(v => string.IsNullOrWhiteSpace(v.ItemCode)))
+                throw new InvalidOperationException("Item code is required for every variant.");
+
+            var duplicate = updates.GroupBy(v => v.ItemCode, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault(group => group.Count() > 1);
+            if (duplicate != null)
+                throw new InvalidOperationException($"Item code '{duplicate.Key}' is used by more than one variant. Enter a unique item code.");
+
             using (var connection = GetConnection())
             {
                 await connection.OpenAsync();
@@ -646,20 +665,31 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
                 {
                     try
                     {
-                        string sql = "UPDATE Restaurant.Variant SET Price = @Price WHERE Id = @Id";
+                        // Keep the code lookup locked until commit to prevent concurrent saves
+                        // from assigning the same code. SQL Server applies the column collation.
+                        const string checkSql = @"SELECT TOP (1) Id
+                            FROM Restaurant.Variant WITH (UPDLOCK, HOLDLOCK)
+                            WHERE ItemCode = @ItemCode AND Id <> @Id";
+                        const string sql = "UPDATE Restaurant.Variant SET ItemCode = @ItemCode, Price = @Price WHERE Id = @Id";
 
-                        foreach (var v in variants)
+                        foreach (var v in updates.OrderBy(v => v.VariantId))
                         {
                             using (var command = connection.CreateCommand())
                             {
                                 command.Transaction = transaction;
                                 command.CommandType = CommandType.Text;
-                                command.CommandText = sql;
+                                command.CommandText = checkSql;
 
                                 var p1 = command.CreateParameter(); p1.ParameterName = "@Price"; p1.Value = v.Price; command.Parameters.Add(p1);
                                 var p2 = command.CreateParameter(); p2.ParameterName = "@Id"; p2.Value = v.VariantId; command.Parameters.Add(p2);
+                                var code = command.CreateParameter(); code.ParameterName = "@ItemCode"; code.Value = v.ItemCode; command.Parameters.Add(code);
 
-                                await command.ExecuteNonQueryAsync();
+                                if (await command.ExecuteScalarAsync() != null)
+                                    throw new InvalidOperationException($"Item code '{v.ItemCode}' is already assigned to another variant. Enter a unique item code.");
+
+                                command.CommandText = sql;
+                                if (await command.ExecuteNonQueryAsync() != 1)
+                                    throw new InvalidOperationException("A variant no longer exists. Close this window and reload the menu items before trying again.");
                             }
                         }
                         transaction.Commit();
