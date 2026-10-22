@@ -274,7 +274,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
 
         private Customer MapCreditCustomer(IDataRecord record)
         {
-            var actualBalance = GetOptionalValue(record, "ActualBalance", 0m);
+            var actualBalance = GetOptionalValue(record, "ActualBalance", GetOptionalValue(record, "Balance", 0m));
 
             return new Customer
             {

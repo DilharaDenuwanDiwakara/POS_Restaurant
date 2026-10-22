@@ -51,7 +51,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             LoadReceivableCommand = new AsyncRelayCommand(_ => LoadReceivableAsync(), _ => CanLoadReceivable());
             SavePaymentCommand = new AsyncRelayCommand(_ => SaveAsync(), _ => CanSave());
 
-            Task.Run(LoadCustomerAsync);
+            _ = LoadCustomerAsync();
             _ = LoadBanksAsync();
             _ = LoadPaymentAccountsAsync();
         }

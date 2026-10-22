@@ -51,13 +51,15 @@ namespace PointOfSale.UI.ViewModels.Accounts
             ExpenseLines = new ObservableCollection<ExpenseLineModel>();
             ExpenseLines.CollectionChanged += ExpenseLinesCollectionChanged;
 
-            SaveExpenseCommand = new AsyncRelayCommand(async _ => await SaveExpenseAsync());
+            SaveExpenseCommand = new AsyncRelayCommand(async _ => await SaveExpenseAsync(), _ => ExpenseLines.Any());
             LoadExpensesCommand = new AsyncRelayCommand(async _ => await LoadExpensesAsync());
             SearchExpensesCommand = new AsyncRelayCommand(async _ => await LoadExpensesAsync());
             PrintExpenseCommand = new AsyncRelayCommand(async parameter => await PrintExpenseAsync(parameter));
             NewExpenseCommand = new RelayCommand(_ => CreateNewExpense());
             AddLineCommand = new RelayCommand(_ => AddLine());
-            RemoveLineCommand = new RelayCommand(RemoveLine, parameter => parameter is ExpenseLineModel);
+            // Row command parameters can be unset while WPF creates the cell template.
+            // Removal guards the parameter itself so newly generated rows stay enabled.
+            RemoveLineCommand = new RelayCommand(RemoveLine);
 
             _ = LoadBranchesAsync();
             _ = LoadExpensesAsync();
@@ -70,6 +72,10 @@ namespace PointOfSale.UI.ViewModels.Accounts
         public ObservableCollection<PaymentAccountDto> PaymentAccounts { get; }
         public ObservableCollection<AccountDto> GLExpenseAccounts { get; }
         public ObservableCollection<ExpenseLineModel> ExpenseLines { get; }
+
+        public string ExpenseLinesValidationMessage => !ExpenseLines.Any()
+            ? "Add at least one expense line before saving."
+            : string.Join(Environment.NewLine, (GetErrors(nameof(ExpenseLines))?.Cast<string>() ?? Enumerable.Empty<string>()));
 
         private Expenses _selectedExpense;
         public Expenses SelectedExpense
@@ -163,7 +169,13 @@ namespace PointOfSale.UI.ViewModels.Accounts
         public string LineDescription
         {
             get => _lineDescription;
-            set => SetProperty(ref _lineDescription, value);
+            set
+            {
+                if (SetProperty(ref _lineDescription, value))
+                {
+                    ValidateLineDescription();
+                }
+            }
         }
 
         private decimal _lineAmount;
@@ -207,15 +219,8 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(LineDescription) && LineDescription.Length > 500)
+            if (!ValidateLineDescription())
             {
-                MessageBox.Show("Line description cannot exceed 500 characters.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(LineDescription) && !Regex.IsMatch(LineDescription, @"^[a-zA-Z0-9\s\-\(\)]+$"))
-            {
-                MessageBox.Show("Line description cannot contain special character.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -223,7 +228,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             {
                 AccountId = SelectedLineAccount.Id,
                 AccountDisplayText = SelectedLineAccount.DisplayText,
-                Description = LineDescription,
+                Description = LineDescription.Trim(),
                 Amount = LineAmount
             });
 
@@ -248,6 +253,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
             SelectedLineAccount = null;
             LineDescription = string.Empty;
             LineAmount = 0m;
+            ClearErrors(nameof(LineDescription));
         }
 
         private async Task LoadBranchesAsync()
@@ -355,7 +361,14 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
                 if (HasErrors)
                 {
-                    MessageBox.Show("Please correct the errors before saving.");
+                    var messages = new[]
+                    {
+                        nameof(SelectedBranch), nameof(SelectedPaymentAccount), nameof(Description),
+                        nameof(ExpenseLines), nameof(LineDescription)
+                    }.SelectMany(property => GetErrors(property)?.Cast<string>() ?? Enumerable.Empty<string>())
+                     .Distinct();
+                    MessageBox.Show(string.Join(Environment.NewLine, messages), "Cannot save expense",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -500,7 +513,7 @@ namespace PointOfSale.UI.ViewModels.Accounts
 
             CalculateTotalAmount();
             ValidateLines();
-            (RemoveLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (SaveExpenseCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
         }
 
         private void ExpenseLinePropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -558,13 +571,44 @@ namespace PointOfSale.UI.ViewModels.Accounts
             }
         }
 
+        private static string GetLineDescriptionError(string description)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                return "Enter a description for every expense line.";
+            }
+
+            if (description.Length > 500)
+            {
+                return "Line description cannot exceed 500 characters.";
+            }
+
+            return Regex.IsMatch(description, @"^[a-zA-Z0-9\s\-\(\)]+$")
+                ? null
+                : "Line description cannot contain special character.";
+        }
+
+        private bool ValidateLineDescription()
+        {
+            ClearErrors(nameof(LineDescription));
+            var error = GetLineDescriptionError(LineDescription);
+            if (error == null)
+            {
+                return true;
+            }
+
+            AddError(nameof(LineDescription), error);
+            return false;
+        }
+
         private void ValidateLines()
         {
             ClearErrors(nameof(ExpenseLines));
 
             if (!ExpenseLines.Any())
             {
-                AddError(nameof(ExpenseLines), "Add at least one expense line.");
+                AddError(nameof(ExpenseLines), "Add at least one expense line before saving.");
+                OnPropertyChanged(nameof(ExpenseLinesValidationMessage));
                 return;
             }
 
@@ -578,16 +622,16 @@ namespace PointOfSale.UI.ViewModels.Accounts
                 AddError(nameof(ExpenseLines), "Enter a valid amount for every line.");
             }
 
-            if (ExpenseLines.Any(line => !string.IsNullOrWhiteSpace(line.Description) && line.Description.Length > 500))
+            foreach (var line in ExpenseLines)
             {
-                AddError(nameof(ExpenseLines), "Line description cannot exceed 500 characters.");
+                var error = GetLineDescriptionError(line.Description);
+                if (error != null)
+                {
+                    AddError(nameof(ExpenseLines), error);
+                }
             }
 
-            if (ExpenseLines.Any(line => !string.IsNullOrWhiteSpace(line.Description)
-                                        && !Regex.IsMatch(line.Description, @"^[a-zA-Z0-9\s\-\(\)]+$")))
-            {
-                AddError(nameof(ExpenseLines), "Line description cannot contain special character.");
-            }
+            OnPropertyChanged(nameof(ExpenseLinesValidationMessage));
         }
     }
 
