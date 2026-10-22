@@ -490,33 +490,29 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                 IsSupplierLocked = true;
 
                 GoodsReceiveNoteLines.Clear();
-                var poLines = await _poRepository.GetPOLinesAsync(SelectedPO.GoodsPurchaseNoteId);
+                var poLines = await _poRepository.GetPendingPOLinesForGRNAsync(SelectedPO.GoodsPurchaseNoteId);
 
                 foreach (var line in poLines)
                 {
-                    decimal remainingQty = line.QuantityOrdered - line.AlreadyReceivedQuantity;
-
-                    if (remainingQty > 0)
+                    var grnLine = new GoodsReceiveNoteLine
                     {
-                        var grnLine = new GoodsReceiveNoteLine
-                        {
-                            GoodsPurchaseNoteLineId = line.GoodsPurchaseNoteLineId,
-                            ProductId = line.ProductId,
-                            ProductName = line.ProductName,
-                            QuantityOrdered = line.QuantityOrdered,
-                            QuantityReceived = remainingQty,
-                            UnitMeasureId = line.UnitMeasureId,
-                            UnitMeasure = line.UnitMeasure,
-                            OrderedPrice = line.UnitPrice,
-                            UnitPrice = line.UnitPrice,
-                            LineDiscount = line.LineDiscount,
-                            TaxAmount = line.TaxAmount,
-                            TrackExpiry = line.TrackExpiry,
-                            IsTaxApplicable = line.IsTaxApplicable
-                        };
+                        GoodsPurchaseNoteLineId = line.GoodsPurchaseNoteLineId,
+                        ProductId = line.ProductId,
+                        ProductName = line.ProductName,
+                        QuantityOrdered = line.QuantityOrdered,
+                        // The existing editable Qty Received binding and save logic use this value.
+                        QuantityReceived = line.PendingQuantity,
+                        UnitMeasureId = line.UnitMeasureId,
+                        UnitMeasure = line.UnitMeasure,
+                        OrderedPrice = line.UnitPrice,
+                        UnitPrice = line.UnitPrice,
+                        LineDiscount = line.LineDiscount,
+                        TaxAmount = line.TaxAmount,
+                        TrackExpiry = line.TrackExpiry,
+                        IsTaxApplicable = line.IsTaxApplicable
+                    };
 
-                        GoodsReceiveNoteLines.Add(grnLine);
-                    }
+                    GoodsReceiveNoteLines.Add(grnLine);
                 }
 
                 UpdateTotals();

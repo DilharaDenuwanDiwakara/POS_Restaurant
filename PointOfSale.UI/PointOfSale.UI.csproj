@@ -439,6 +439,10 @@
     <Compile Include="Services\UnavailableSalesInvoiceReportPreviewService.cs" Condition="'$(HasCrystalReports)' != 'true'" />
     <Compile Include="Services\CloudStorageService.cs" />
     <Compile Include="ViewModels\Accounts\AccountRegisterViewModel.cs" />
+    <Compile Include="ViewModels\Accounts\AccountInquiryViewModel.cs" />
+    <Compile Include="Views\Accounts\AccountInquiryView.xaml.cs">
+      <DependentUpon>AccountInquiryView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\Accounts\OpeningBalanceViewModel.cs" />
     <Compile Include="ViewModels\Accounts\AccountTypeRegisterViewModel.cs" />
     <Compile Include="ViewModels\Accounts\CustomerAdvanceViewModel.cs" />
@@ -506,6 +510,7 @@
     <Compile Include="ViewModels\Sales\SalesReportsViewModel.cs" />
     <Compile Include="ViewModels\Sales\SalesReturnViewModel.cs" />
     <Compile Include="ViewModels\Sales\SalesViewModel.cs" />
+    <Compile Include="ViewModels\Sales\MenuProductComparer.cs" />
     <Compile Include="ViewModels\Security\DeviceRegistrationViewModel.cs" />
     <Compile Include="ViewModels\Security\LoginViewModel.cs" />
     <Compile Include="ViewModels\Security\ManagerAuthorizationViewModel.cs" />
@@ -796,6 +801,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Resources\Themes\Icons.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Accounts\AccountInquiryView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

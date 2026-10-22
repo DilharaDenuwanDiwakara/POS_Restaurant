@@ -64,6 +64,7 @@ namespace PointOfSale.Core.Models.Purchasing
 
         public decimal QuantityReceived { get; set; }
         public decimal AlreadyReceivedQuantity { get; set; }
+        public decimal PendingQuantity { get; set; }
         public decimal LastGrnCostPrice { get; set; }
         public bool IsTaxApplicable { get; set; }
 

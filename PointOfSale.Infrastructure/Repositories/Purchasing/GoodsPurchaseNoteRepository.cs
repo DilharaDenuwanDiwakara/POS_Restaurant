@@ -161,6 +161,42 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
             }
             return lines;
         }
+        public async Task<IEnumerable<GoodsPurchaseNoteLine>> GetPendingPOLinesForGRNAsync(long purchaseNoteId)
+        {
+            if (purchaseNoteId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(purchaseNoteId));
+
+            var lines = new List<GoodsPurchaseNoteLine>();
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Purchasing].[uspGetPendingPurchaseNoteLinesForGRN]"))
+                {
+                    command.Parameters.Add("@PurchaseNoteId", SqlDbType.BigInt).Value = purchaseNoteId;
+                    await connection.OpenAsync().ConfigureAwait(false);
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        var pendingOrdinal = reader.GetOrdinal("PendingQuantity");
+                        while (await reader.ReadAsync().ConfigureAwait(false))
+                        {
+                            var line = MapPurchaseNoteLine(reader);
+                            line.PendingQuantity = reader.GetDecimal(pendingOrdinal);
+                            lines.Add(line);
+                        }
+                    }
+
+                    await PopulateMissingPurchaseLineUomIdsAsync(connection, lines).ConfigureAwait(false);
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(
+                    $"A database error occurred while retrieving pending GRN lines for PO {purchaseNoteId}.", ex);
+            }
+            return lines;
+        }
+
         public async Task<DataTable> GetPurchaseOrderReportDataAsync(long purchaseNoteId)
         {
             var dataTable = new DataTable();

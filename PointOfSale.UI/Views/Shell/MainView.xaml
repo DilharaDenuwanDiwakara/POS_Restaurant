@@ -606,6 +606,15 @@
                                 </RadioButton>
 
                                 <RadioButton
+                                    Command="{Binding NavigateToAccountInquiryCommand}"
+                                    Style="{StaticResource Style.Nav.RadioButton}"
+                                    Visibility="{Binding CanNavAccountInquiry, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Account Inquiry" />
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <RadioButton
                                     Command="{Binding NavigateToAccountsPayableCommand}"
                                     Style="{StaticResource Style.Nav.RadioButton}"
                                     Visibility="{Binding CanNavAccountsPayable, Converter={StaticResource BoolToVisibility}}">

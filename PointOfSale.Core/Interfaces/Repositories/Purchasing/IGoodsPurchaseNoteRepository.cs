@@ -15,6 +15,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
 
         Task<IEnumerable<GoodPurchaseNote>> GetPendingReceiptPOsAsync();
         Task<IEnumerable<GoodsPurchaseNoteLine>> GetPOLinesAsync(long purchaseNoteId);
+        Task<IEnumerable<GoodsPurchaseNoteLine>> GetPendingPOLinesForGRNAsync(long purchaseNoteId);
         Task<DataTable> GetPurchaseOrderReportDataAsync(long purchaseNoteId);
 
         Task<IEnumerable<GoodPurchaseNote>> GetPOsForApprovalAsync(int branchId, int? supplierId, DateTime? dateFrom, DateTime? dateTo);

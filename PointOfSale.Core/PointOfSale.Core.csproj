@@ -59,6 +59,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\FileUploadConstraints.cs" />
+    <Compile Include="DTOs\AccountInquirySummaryDto.cs" />
+    <Compile Include="DTOs\AccountInquiryLineDto.cs" />
+    <Compile Include="DTOs\AccountInquiryResponseDto.cs" />
+    <Compile Include="Exception\AccountNotFoundException.cs" />
+    <Compile Include="Interfaces\IAccountReportRepository.cs" />
     <Compile Include="DTOs\SalesReturnFlatDto.cs" />
     <Compile Include="DTOs\StockAdjustmentHeaderDto.cs" />
     <Compile Include="DTOs\StockAdjustmentLineDto.cs" />

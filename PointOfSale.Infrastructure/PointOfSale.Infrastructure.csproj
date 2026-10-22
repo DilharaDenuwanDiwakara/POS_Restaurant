@@ -107,6 +107,7 @@
     <Compile Include="Repositories\Accounts\SupplierCreditRepository.cs" />
     <Compile Include="Repositories\Accounts\SupplierPaymentRepository.cs" />
     <Compile Include="Repositories\BaseRepository.cs" />
+    <Compile Include="Repositories\AccountReportRepository.cs" />
     <Compile Include="Repositories\Inventory\BrandRepository.cs" />
     <Compile Include="Repositories\Inventory\BatchProductionRepository.cs" />
     <Compile Include="Repositories\Inventory\CategoryRepository.cs" />

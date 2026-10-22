@@ -184,6 +184,24 @@ namespace PointOfSale.UI.ViewModels.Sales
         public ObservableCollection<SalesLine> CartItems { get; private set; }
         public ICollectionView FilteredCustomers { get; private set; }
         public ICollectionView FilteredProducts { get; private set; }
+        public IReadOnlyList<KeyValuePair<ProductSortField, string>> ProductSortOptions { get; } =
+            new[]
+            {
+                new KeyValuePair<ProductSortField, string>(ProductSortField.Code, "Item code"),
+                new KeyValuePair<ProductSortField, string>(ProductSortField.Name, "Item name")
+            };
+
+        private ProductSortField _selectedProductSortField = ProductSortField.Code;
+        public ProductSortField SelectedProductSortField
+        {
+            get => _selectedProductSortField;
+            set
+            {
+                if (!Enum.IsDefined(typeof(ProductSortField), value)) return;
+                if (SetProperty(ref _selectedProductSortField, value))
+                    ApplyProductSort();
+            }
+        }
         public ObservableCollection<ServedOrderDto> ServedOrders { get; private set; }
         public ObservableCollection<PaymentDetail> AppliedPayments { get; } = new ObservableCollection<PaymentDetail>();
 
@@ -744,6 +762,8 @@ namespace PointOfSale.UI.ViewModels.Sales
 
             FilteredProducts = CollectionViewSource.GetDefaultView(Products);
             FilteredProducts.Filter = FilterProduct;
+
+            ApplyProductSort();
 
             // Listen for changes in the cart to recalculate totals
             CartItems.CollectionChanged += (s, e) =>
@@ -1368,6 +1388,12 @@ namespace PointOfSale.UI.ViewModels.Sales
             _productFilterDebounceTimer?.Stop();
             FilteredProducts.Filter = FilterProduct;
             FilteredProducts.Refresh();
+        }
+
+        private void ApplyProductSort()
+        {
+            if (FilteredProducts is ListCollectionView productView)
+                productView.CustomSort = new MenuProductComparer(SelectedProductSortField);
         }
 
         private void QueueProductFilterRefresh()

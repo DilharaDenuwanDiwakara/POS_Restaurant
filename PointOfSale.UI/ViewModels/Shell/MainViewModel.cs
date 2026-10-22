@@ -119,6 +119,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         // --- ACCOUNTS ---
         public bool CanAccessAccounts => _userSessionService.HasPermission("ACCESS_ACCOUNTS");
         public bool CanNavAccountManagement => _userSessionService.HasPermission("NAV_ACCOUNT_MANAGEMENT");
+        public bool CanNavAccountInquiry => CanAccessAccounts && CanNavAccountManagement;
         public bool CanNavAccountsPayable => _userSessionService.HasPermission("NAV_ACCOUNTS_PAYABLE");
         public bool CanNavAccountsReceivable => _userSessionService.HasPermission("NAV_ACCOUNTS_RECEIVABLE");
         public bool CanNavExpenses => _userSessionService.HasPermission("NAV_EXPENSES");
@@ -220,6 +221,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public ICommand NavigateToExpensesCommand { get; private set; }
         public ICommand NavigateToFundTransferCommand { get; private set; }
         public ICommand NavigateToAccountManagementCommand { get; private set; }
+        public ICommand NavigateToAccountInquiryCommand { get; private set; }
         public ICommand NavigateToOpeningBalanceCommand { get; private set; }
         public ICommand LogoutCommand { get; private set; }
         public ICommand OpenPosTerminalCommand { get; private set; }
@@ -368,6 +370,9 @@ namespace PointOfSale.UI.ViewModels.Shell
 
             NavigateToAccountManagementCommand = new RelayCommand(_ =>
                 NavigateTo<AccountRegisterViewModel>("Accounts  →  Chart of Accounts"));
+
+            NavigateToAccountInquiryCommand = new RelayCommand(_ =>
+                NavigateTo<AccountInquiryViewModel>("Accounts  →  Account Inquiry"), _ => CanNavAccountInquiry);
 
             NavigateToExpensesCommand = new RelayCommand(_ =>
                 NavigateTo<ExpensesViewModel>("Accounts  →  Expenses"));

@@ -89,6 +89,7 @@ namespace PointOfSale.UI
             services.AddSingleton<IRegisterRepository, RegisterRepository>();
             services.AddSingleton<ISalesRepository, SalesRepository>();
             services.AddSingleton<ISalesReportRepository, SalesReportRepository>();
+            services.AddSingleton<IAccountReportRepository, AccountReportRepository>();
             services.AddSingleton<ISalesReturnRepository, SalesReturnRepository>();
             services.AddSingleton<ISalesHoldRepository, SalesHoldRepository>();
             services.AddSingleton<ICashInOutRepository, CashInOutRepository>();
@@ -228,6 +229,11 @@ namespace PointOfSale.UI
             services.AddTransient<ExpensesCategoryViewModel>();
             services.AddTransient<FundTransferViewModel>();
 
+            services.AddTransient<AccountInquiryViewModel>();
+            services.AddTransient<AccountInquiryView>(provider => new AccountInquiryView
+            {
+                DataContext = provider.GetRequiredService<AccountInquiryViewModel>()
+            });
             services.AddTransient<AccountRegisterViewModel>();
             services.AddTransient<AccountRegisterView>();
             services.AddTransient<AccountTypeRegisterViewModel>();

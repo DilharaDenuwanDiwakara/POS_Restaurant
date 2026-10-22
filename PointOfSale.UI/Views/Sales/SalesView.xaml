@@ -201,27 +201,43 @@
                         </ComboBox>
                     </Grid>
 
-                    <ListBox
-                        Grid.Row="1"
-                        Margin="0,16,0,18"
-                        ItemsSource="{Binding Categories}"
-                        SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
-                        Style="{StaticResource CategoryChipListStyle}">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Button
-                                    Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                    CommandParameter="{Binding}"
-                                    Content="{Binding Name}"
-                                    Style="{StaticResource CategoryChipButtonStyle}" />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <Grid Grid.Row="1" Margin="0,16,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ListBox
+                            Margin="0,0,12,0"
+                            ItemsSource="{Binding Categories}"
+                            SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                            Style="{StaticResource CategoryChipListStyle}">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Button
+                                        Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                        CommandParameter="{Binding}"
+                                        Content="{Binding Name}"
+                                        Style="{StaticResource CategoryChipButtonStyle}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Label Content="Sort by" Target="{Binding ElementName=ProductSortComboBox}"
+                                   Foreground="{StaticResource SalesMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <ComboBox x:Name="ProductSortComboBox" Width="140" Height="36" MinHeight="36"
+                                      Style="{StaticResource SalesComboStyle}"
+                                      ItemsSource="{Binding ProductSortOptions}" DisplayMemberPath="Value" SelectedValuePath="Key"
+                                      SelectedValue="{Binding SelectedProductSortField, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="False" AutomationProperties.Name="Sort menu items by"
+                                      ToolTip="Sort menu items by item code or item name (ascending)." />
+                        </StackPanel>
+                    </Grid>
 
                     <ListBox
                         Grid.Row="2"

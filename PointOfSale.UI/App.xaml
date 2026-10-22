@@ -264,6 +264,10 @@
                 <viewaccounts:AccountRegisterView />
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelaccounts:AccountInquiryViewModel}">
+                <viewaccounts:AccountInquiryView />
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type viewmodelaccounts:OpeningBalanceViewModel}">
                 <viewaccounts:OpeningBalanceView />
             </DataTemplate>
