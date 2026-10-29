@@ -1594,6 +1594,9 @@ namespace PointOfSale.UI.ViewModels.Sales
             IsPromoLoyaltyPanelVisible = false;
             RemoveAppliedDiscount(true);
             RemoveLoyaltyRedemption(true);
+            SelectedCustomer = null;
+            CustomerSearchText = string.Empty;
+            IsCustomerDropDownOpen = false;
             Quantity = 1;
             SelectedPaymentTerminal = null;
             ReferenceNumber = string.Empty;
