@@ -5,6 +5,7 @@ namespace PointOfSale.Core.DTOs
 {
     public class DashboardOverviewDto
     {
+        // Sales metrics use stored invoice subtotals before bill discounts.
         public decimal TotalSales { get; set; }
         public int OrderCount { get; set; }
         public decimal AverageOrderValue { get; set; }

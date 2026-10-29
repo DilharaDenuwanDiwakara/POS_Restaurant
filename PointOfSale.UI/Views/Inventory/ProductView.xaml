@@ -7,33 +7,13 @@
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="800">
     <UserControl.Resources>
-        <Style TargetType="ScrollBar" BasedOn="{StaticResource SalesScrollBarStyle}"/>
+        <ResourceDictionary Source="/Resources/Styles/ScopedScrollBarStyle.xaml" />
 
-        <Style x:Key="UnitConversionPanelStyle" TargetType="Border">
-            <Setter Property="BorderBrush" Value="#D8DEE8"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="Background" Value="#F8FAFC"/>
-            <Setter Property="Margin" Value="0,4,0,14"/>
-        </Style>
 
-        <Style x:Key="UnitConversionCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="#E9EEF6"/>
-            <Setter Property="BorderBrush" Value="#C7D4EA"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="7"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
-        </Style>
 
-        <Style x:Key="UnitConversionTextStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-        </Style>
+
+
+
     </UserControl.Resources>
 
     <Grid>
@@ -67,8 +47,8 @@
                             <Grid Margin="0,0,0,12">
                                 <TextBlock Text="Product Form" Style="{StaticResource SubHeaderTextStyle}" />
 
-                                <Button Command="{Binding NewProductCommand}" 
-                                        Style="{StaticResource RefreshButtonStyle}" 
+                                <Button Command="{Binding NewProductCommand}"
+                                        Style="{StaticResource RefreshButtonStyle}"
                                         ToolTip="Reset"
                                         HorizontalAlignment="Right"/>
                             </Grid>
@@ -261,7 +241,7 @@
                                 <TextBox x:Name="ReorderPointTextBox" Grid.Row="1"
                                          Text="{Binding ReorderPoint, UpdateSourceTrigger=PropertyChanged}"
                                          MaxLength="5"
-                                         Style="{StaticResource TextBoxStyle}" 
+                                         Style="{StaticResource TextBoxStyle}"
                                          Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
                                          PreviewKeyDown="MoveFocusOnEnter"
                                          GotKeyboardFocus="SelectAllText_GotFocus"
@@ -296,7 +276,7 @@
                                 <TextBox x:Name="AdditionalStockQuantityTextBox" Grid.Row="1"
                                          Text="{Binding AdditionalStockQuantity, UpdateSourceTrigger=PropertyChanged}"
                                          MaxLength="5"
-                                         Style="{StaticResource TextBoxStyle}" 
+                                         Style="{StaticResource TextBoxStyle}"
                                          Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
                                          PreviewKeyDown="MoveFocusOnEnter"
                                          GotKeyboardFocus="SelectAllText_GotFocus"
@@ -354,16 +334,16 @@
                     <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#E0E0E0" Padding="0,12,0,0">
                         <!-- Action Buttons -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            
+
                             <Button x:Name="SaveButton"
                                     Content="{Binding SaveButtonText}"
-                                    Command="{Binding SaveProductCommand}" 
+                                    Command="{Binding SaveProductCommand}"
                                     Click="SaveButton_Click"
-                                    Style="{StaticResource PrimaryButtonStyle}" 
+                                    Style="{StaticResource PrimaryButtonStyle}"
                                     Margin="0,0,10,0"/>
 
-                            <Button Content="Edit" 
-                                    Command="{Binding EditProductCommand}" 
+                            <Button Content="Edit"
+                                    Command="{Binding EditProductCommand}"
                                     Style="{StaticResource SecondaryButtonStyle}"/>
 
                         </StackPanel>
@@ -371,8 +351,8 @@
                     </Border>
 
                 </Grid>
-                
-                
+
+
             </Border>
 
             <Grid Grid.Column="1">
@@ -399,8 +379,8 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Text="Product List" 
-                                           Style="{StaticResource SubHeaderTextStyle}" 
+                                <TextBlock Text="Product List"
+                                           Style="{StaticResource SubHeaderTextStyle}"
                                            VerticalAlignment="Center"
                                            Margin="0"/>
 
@@ -410,7 +390,7 @@
                                              Style="{StaticResource SearchTextBoxStyle}"
                                              CharacterCasing="Upper"
                                              PreviewTextInput="AlphaNumericWithSpace_PreviewTextInput"
-                                             DataObject.Pasting="AlphaNumericWithSpace_Pasting" 
+                                             DataObject.Pasting="AlphaNumericWithSpace_Pasting"
                                              Margin="0"/>
 
                                     <TextBlock Text="code / Name"
@@ -419,24 +399,14 @@
                                                VerticalAlignment="Center"
                                                IsHitTestVisible="False">
                                         <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Hidden"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Text, ElementName=SearchInput}" Value="">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Text, ElementName=SearchInput}" Value="{x:Null}">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.ProductView.TextBlock.01" />
                                         </TextBlock.Style>
                                     </TextBlock>
                                 </Grid>
 
                                 <Button Grid.Column="3"
-                                        Command="{Binding SearchProductCommand}" 
-                                        Style="{StaticResource SearchButtonStyle}" 
+                                        Command="{Binding SearchProductCommand}"
+                                        Style="{StaticResource SearchButtonStyle}"
                                         ToolTip="Search Products"
                                         Margin="5,0,0,0">
 
@@ -444,8 +414,8 @@
 
 
                                 <Button Grid.Column="5"
-                                        Command="{Binding DeleteProductCommand}" 
-                                        Style="{StaticResource DeleteButtonStyle}" 
+                                        Command="{Binding DeleteProductCommand}"
+                                        Style="{StaticResource DeleteButtonStyle}"
                                         ToolTip="Delete Product">
 
                                 </Button>
@@ -453,9 +423,9 @@
                         </Border>
 
                         <!-- Data Grid -->
-                        <DataGrid Grid.Row="1" 
-                                  ItemsSource="{Binding ProductList}" 
-                                  SelectedItem="{Binding SelectedProduct, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding ProductList}"
+                                  SelectedItem="{Binding SelectedProduct, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                                   Style="{StaticResource DataGridStyle}"
                                   Margin="0,4,0,0"
                                   AutoGenerateColumns="False"
@@ -473,35 +443,27 @@
                                 <DataGridTextColumn Header="Unit Measure" Binding="{Binding UnitMeasureName}" Width="Auto" />
                                 <DataGridTextColumn Header="Reorder Point" Binding="{Binding ReorderPoint}" Width="Auto" >
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
                                 <DataGridTextColumn Header="Max Stock Qty" Binding="{Binding MaxStockQuantity}" Width="Auto" >
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
                                 <DataGridTextColumn Header="Add.Stock Qty" Binding="{Binding AdditionalStockQuantity}" Width="Auto" >
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 <DataGridTextColumn Header="Wastage %" Binding="{Binding WastagePercentage}" Width="Auto">
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                
+
                                 <DataGridCheckBoxColumn Header="Purchasable" Binding="{Binding IsPurchasable}" Width="Auto" />
                                 <DataGridCheckBoxColumn Header="TrackExpiry" Binding="{Binding TrackExpiry}" Width="Auto" />
                                 <DataGridCheckBoxColumn Header="Taxable" Binding="{Binding IsTaxApplicable}" Width="Auto" />
@@ -514,9 +476,9 @@
                 </Border>
 
             </Grid>
-            
+
         </Grid>
-        
+
     </Grid>
 
 </UserControl>

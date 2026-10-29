@@ -25,6 +25,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             Date = source.SalesDate;
             InvoiceNo = source.InvoiceNumber;
             CustomerName = source.CustomerName;
+            SubTotal = source.TotalAmount;
             NetAmount = source.NetAmount;
             PaymentMethod = source.PaymentStatus;
             Discount = source.Discount;
@@ -35,6 +36,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         public DateTime Date { get; }
         public string InvoiceNo { get; }
         public string CustomerName { get; }
+        public decimal SubTotal { get; }
         public decimal NetAmount { get; }
         public string PaymentMethod { get; }
         public decimal Discount { get; set; }

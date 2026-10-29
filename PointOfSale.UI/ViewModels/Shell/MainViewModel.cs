@@ -135,6 +135,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         // --- SECURITY ---
         public bool CanAccessSecurity => _userSessionService.HasPermission("ACCESS_SECURITY");
         public bool CanNavUsers => _userSessionService.HasPermission("NAV_USER_MANAGEMENT");
+        public bool CanNavRoles => CanAccessSecurity && CanNavUsers;
 
         // --- SETTINGS ---
         public bool CanAccessSettings => _userSessionService.HasPermission("ACCESS_SETTINGS");
@@ -180,6 +181,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public ICommand ViewProfileCommand { get; private set; }
         public ICommand ToggleSidebarCommand { get; private set; }
         public ICommand NavigateToUserCommand { get; private set; }
+        public ICommand NavigateToRoleManagementCommand { get; private set; }
         public ICommand NavigateToDashboardCommand { get; private set; }
 
         public ICommand NavigateToTableCommand { get; private set; }
@@ -214,6 +216,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public ICommand NavigateToShiftManagementCommand { get; private set; }
         public ICommand NavigateToDiscountCommand { get; private set; }
         public ICommand NavigateToPromotionCommand { get; private set; }
+        public ICommand NavigateToBankPromotionCommand { get; private set; }
         public ICommand NavigateToSalesReturnCommand { get; private set; }
         public ICommand NavigateToMainSalesReturnCommand { get; private set; }
         public ICommand NavigateToAccountsPayableCommand { get; private set; }
@@ -354,6 +357,8 @@ namespace PointOfSale.UI.ViewModels.Shell
 
             NavigateToPromotionCommand = new RelayCommand(_ =>
                 NavigateTo<PromotionViewModel>("Sales  →  Auto Promotions"));
+            NavigateToBankPromotionCommand = new RelayCommand(_ =>
+                NavigateTo<BankPromotionViewModel>("Sales  →  Bank Card Promotions"), _ => CanNavPromotion);
 
             NavigateToSalesReturnCommand = new RelayCommand(_ =>
                 NavigateTo<SalesReturnViewModel>("Sales  →  Sales Return"));
@@ -393,6 +398,8 @@ namespace PointOfSale.UI.ViewModels.Shell
             // --- Security Module ---
             NavigateToUserCommand = new RelayCommand(_ =>
                 NavigateTo<UserViewModel>("Security  →  User Management"));
+            NavigateToRoleManagementCommand = new RelayCommand(_ =>
+                NavigateTo<RoleManagementViewModel>("Security  →  Role Management"), _ => CanNavRoles);
 
             // --- Settings Module ---
             NavigateToSettingsCommand = new RelayCommand(_ =>

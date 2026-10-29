@@ -46,7 +46,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             AddLineCommand = new RelayCommand(_ => AddLine(), _ => CanAddLine);
             RemoveLineCommand = new RelayCommand<StockAdjustmentLine>(RemoveLine);
             ClearCommand = new RelayCommand(_ => ClearAll(), _ => !IsBusy);
-            RefreshCommand = new RelayCommand(async _ => await LoadDependenciesAsync(), _ => !IsBusy);
+            RefreshCommand = new AsyncRelayCommand(async _ => await LoadDependenciesAsync(), _ => !IsBusy);
             SaveCommand = new AsyncRelayCommand(async _ => await ExecuteSaveAsync(), _ => CanExecuteSave());
             SearchCommand = new AsyncRelayCommand(async _ => await SearchAdjustmentHistoryAsync(), _ => !IsBusy);
 
@@ -194,17 +194,24 @@ namespace PointOfSale.UI.ViewModels.Inventory
             {
                 if (SetProperty(ref _isBusy, value))
                 {
-                    OnPropertyChanged(nameof(IsOverlayVisible));
+                    OnPropertyChanged(nameof(IsLoading));
                     RefreshCommands();
                 }
             }
         }
 
+        private bool _isOverlayVisible;
         public bool IsOverlayVisible
         {
-            get => IsBusy;
-            set => IsBusy = value;
+            get => _isOverlayVisible;
+            private set
+            {
+                if (SetProperty(ref _isOverlayVisible, value))
+                    OnPropertyChanged(nameof(IsLoading));
+            }
         }
+
+        public bool IsLoading => IsBusy && !IsOverlayVisible;
 
         public ICommand AddLineCommand { get; }
         public ICommand RemoveLineCommand { get; }
@@ -234,9 +241,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
         {
             try
             {
+                IsBusy = true;
                 var branchId = _userSessionService.BranchId;
-                var locations = await _inventoryRepository.GetLocationsByBranchAsync(branchId);
-                var products = await _productRepository.GetAllAsync();
+                var locationsTask = _inventoryRepository.GetLocationsByBranchAsync(branchId);
+                var productsTask = _productRepository.GetAllAsync();
+                await Task.WhenAll(locationsTask, productsTask);
+                var locations = (await locationsTask).ToList();
+                var products = (await productsTask).ToList();
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -263,11 +274,15 @@ namespace PointOfSale.UI.ViewModels.Inventory
                     }
                 });
 
-                await SearchAdjustmentHistoryAsync();
+                await SearchAdjustmentHistoryAsync(manageBusy: false);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to load stock adjustment data: {ex.Message}", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 
@@ -343,6 +358,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             try
             {
+                IsOverlayVisible = true;
                 IsBusy = true;
 
                 var stockAdjustment = new StockAdjustment
@@ -359,7 +375,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 stockAdjustmentId = await _stockAdjustmentRepository.CreateAsync(stockAdjustment);
                 //MessageBox.Show("Stock adjustment saved successfully.", "Stock Adjustment", MessageBoxButton.OK, MessageBoxImage.Information);
                 ClearAll();
-                await SearchAdjustmentHistoryAsync();
+                await SearchAdjustmentHistoryAsync(manageBusy: false);
 
                 try
                 {
@@ -381,6 +397,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             finally
             {
                 IsBusy = false;
+                IsOverlayVisible = false;
             }
         }
 
@@ -470,12 +487,12 @@ namespace PointOfSale.UI.ViewModels.Inventory
             (AddLineCommand as RelayCommand)?.RaiseCanExecuteChanged();
             (RemoveLineCommand as RelayCommand<StockAdjustmentLine>)?.RaiseCanExecuteChanged();
             (ClearCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            (RefreshCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (RefreshCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             (SearchCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             SaveCommand?.RaiseCanExecuteChanged();
         }
 
-        private async Task SearchAdjustmentHistoryAsync()
+        private async Task SearchAdjustmentHistoryAsync(bool manageBusy = true)
         {
             if (SearchDateTo.Date < SearchDateFrom.Date)
             {
@@ -485,7 +502,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
             try
             {
-                IsBusy = true;
+                if (manageBusy) IsBusy = true;
 
                 var items = await _stockAdjustmentRepository.GetHistoryAsync(
                     SearchDateFrom,
@@ -504,7 +521,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
             finally
             {
-                IsBusy = false;
+                if (manageBusy) IsBusy = false;
             }
         }
 

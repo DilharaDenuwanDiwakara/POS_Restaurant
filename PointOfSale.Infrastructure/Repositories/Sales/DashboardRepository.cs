@@ -21,6 +21,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
 
             var start = fromDate.Date;
             var endExclusive = toDate.Date.AddDays(1);
+            var today = DateTime.Today;
 
             // Inline SQL — uses [Status] = 'COMPLETED' so no IsHold/IsVoid columns are needed.
             // Each SELECT is separated by a semicolon so ADO.NET receives 8 result sets,
@@ -35,21 +36,28 @@ SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
       AND  s.[SalesDate] <  @ToDateExclusive
       AND  s.[Status]    =  'COMPLETED'
       AND  (@BranchId IS NULL OR s.[BranchId] = @BranchId)
+), TodaySummary AS (
+    -- Today's KPIs are independent of the selected reporting period.
+    SELECT ISNULL(SUM(s.[SubTotal]), 0) AS TodaySales,
+           COUNT(1) AS TodayOrderCount
+    FROM [Sales].[Sales] s
+    WHERE s.[SalesDate] >= @Today
+      AND s.[SalesDate] < @Tomorrow
+      AND s.[Status] = 'COMPLETED'
+      AND (@BranchId IS NULL OR s.[BranchId] = @BranchId)
 )
 SELECT
-    ISNULL(SUM(fs.[NetAmount]), 0)                                                  AS TotalSales,
+    ISNULL(SUM(fs.[SubTotal]), 0)                                                  AS TotalSales,
     COUNT(1)                                                                        AS OrderCount,
-    ISNULL(AVG(CAST(fs.[NetAmount] AS DECIMAL(18,4))), 0)                           AS AverageOrderValue,
+    ISNULL(AVG(CAST(fs.[SubTotal] AS DECIMAL(18,4))), 0)                           AS AverageOrderValue,
     ISNULL(SUM(fs.[DiscountAmount]), 0)                                             AS TotalDiscount,
     CASE WHEN ISNULL(SUM(fs.[SubTotal]), 0) = 0 THEN 0
          ELSE (SUM(fs.[DiscountAmount]) / NULLIF(SUM(fs.[SubTotal]), 0)) * 100 END  AS DiscountRatePercent,
     AVG(CASE WHEN o.[Id] IS NOT NULL
              THEN DATEDIFF(MINUTE, o.[OrderDate], fs.[SalesDate]) END)              AS AverageTableTurnMinutes,
-    ISNULL(SUM(CASE WHEN CAST(fs.[SalesDate] AS DATE) = CAST(GETDATE() AS DATE)
-                    THEN fs.[NetAmount] ELSE 0 END), 0)                             AS TodaySales,
-    ISNULL(SUM(CASE WHEN CAST(fs.[SalesDate] AS DATE) = CAST(GETDATE() AS DATE)
-                    THEN 1 ELSE 0 END), 0)                                          AS TodayOrderCount,
-    ISNULL((SUM(fs.[NetAmount]) / NULLIF(SUM(o.[GuestCount]), 0)), 0)              AS AveragePerHead
+    (SELECT TodaySales FROM TodaySummary)                                            AS TodaySales,
+    (SELECT TodayOrderCount FROM TodaySummary)                                       AS TodayOrderCount,
+    ISNULL((SUM(fs.[SubTotal]) / NULLIF(SUM(o.[GuestCount]), 0)), 0)              AS AveragePerHead
 FROM FS fs
 LEFT JOIN [Restaurant].[Order] o ON o.[Id] = fs.[OrderId];
 
@@ -81,7 +89,7 @@ INNER JOIN FS ON FS.[Id] = p.[SalesId];
 ),
 SPD AS (
     SELECT CAST(s.[SalesDate] AS DATE) AS DayDate,
-           ISNULL(SUM(s.[NetAmount]), 0) AS SalesAmount,
+           ISNULL(SUM(s.[SubTotal]), 0) AS SalesAmount,
            COUNT(1)                      AS OrderCount
     FROM   [Sales].[Sales] s
     WHERE  s.[SalesDate] >= @FromDate
@@ -133,10 +141,11 @@ ORDER BY SUM(sl.[Quantity]) DESC,
 ),
 SPH AS (
     SELECT DATEPART(HOUR, s.[SalesDate])  AS HourOfDay,
-           ISNULL(SUM(s.[NetAmount]), 0)  AS SalesAmount,
+           ISNULL(SUM(s.[SubTotal]), 0)  AS SalesAmount,
            COUNT(1)                       AS OrderCount
     FROM   [Sales].[Sales] s
-    WHERE  CAST(s.[SalesDate] AS DATE) = CAST(GETDATE() AS DATE)
+    WHERE  s.[SalesDate] >= @Today
+      AND  s.[SalesDate] < @Tomorrow
       AND  s.[Status] = 'COMPLETED'
       AND  (@BranchId IS NULL OR s.[BranchId] = @BranchId)
     GROUP BY DATEPART(HOUR, s.[SalesDate])
@@ -275,6 +284,8 @@ ORDER BY SeverityRank ASC, SortDate ASC, ItemName ASC;
                 command.Parameters.Add("@FromDate", SqlDbType.DateTime2).Value = start;
                 command.Parameters.Add("@ToDate", SqlDbType.DateTime2).Value = toDate.Date;
                 command.Parameters.Add("@ToDateExclusive", SqlDbType.DateTime2).Value = endExclusive;
+                command.Parameters.Add("@Today", SqlDbType.DateTime2).Value = today;
+                command.Parameters.Add("@Tomorrow", SqlDbType.DateTime2).Value = today.AddDays(1);
 
                 await connection.OpenAsync();
 

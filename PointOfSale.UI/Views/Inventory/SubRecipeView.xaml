@@ -6,6 +6,9 @@
              d:DesignHeight="620"
              d:DesignWidth="1100"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <CollectionViewSource x:Key="PrepItemsView" Source="{Binding PrepItems}" />
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -50,13 +53,14 @@
                     <StackPanel>
                         <TextBlock Text="Prep Item"
                                    Style="{StaticResource LabelStyle}" />
-                        <ComboBox ItemsSource="{Binding PrepItems}"
+                        <ComboBox x:Name="PrepItemComboBox"
+                                  ItemsSource="{Binding Source={StaticResource PrepItemsView}}"
                                   SelectedItem="{Binding SelectedPrepItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   SelectedValuePath="ProductId"
                                   DisplayMemberPath="ProductName"
                                   TextSearch.TextPath="ProductName"
                                   IsEditable="True"
-                                  IsTextSearchEnabled="True"
+                                  IsTextSearchEnabled="False"
                                   IsTextSearchCaseSensitive="False"
                                   PreviewKeyDown="MoveFocusOnEnter"
                                   Style="{StaticResource ComboBoxStyle}" />
@@ -111,7 +115,7 @@
                                 Margin="0,0,12,0">
                         <TextBlock Text="Unit Measure"
                                    Style="{StaticResource LabelStyle}" />
-                        <ComboBox ItemsSource="{Binding AvailableUnitMeasures}"
+                        <ComboBox x:Name="UnitMeasureComboBox" ItemsSource="{Binding AvailableUnitMeasures}"
                                   SelectedValue="{Binding SelectedUnitMeasureId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   SelectedValuePath="UnitMeasureId"
                                   DisplayMemberPath="UnitMeasureName"
@@ -125,7 +129,7 @@
                                 Margin="0,0,12,0">
                         <TextBlock Text="Quantity"
                                    Style="{StaticResource LabelStyle}" />
-                        <TextBox Text="{Binding QuantityInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        <TextBox x:Name="QuantityTextBox" Text="{Binding QuantityInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  PreviewKeyDown="MoveFocusOnEnter"
                                  Style="{StaticResource TextBoxStyle}" />
                     </StackPanel>
@@ -136,7 +140,6 @@
                             Command="{Binding AddIngredientCommand}"
                             Style="{StaticResource PrimaryButtonStyle}"
                             Click="AddIngredientButton_Click"
-                            PreviewKeyDown="MoveFocusOnEnter"
                             Width="150"
                             VerticalAlignment="Bottom" />
                 </Grid>
@@ -169,9 +172,10 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Button Content="Remove"
-                                            Command="{Binding DataContext.RemoveIngredientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
+                                            Command="{Binding DataContext.RemoveIngredientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             Style="{StaticResource DeleteButtonStyle}"
+                                            Loaded="RemoveIngredientButton_Loaded"
                                             ToolTip="Remove ingredient" />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

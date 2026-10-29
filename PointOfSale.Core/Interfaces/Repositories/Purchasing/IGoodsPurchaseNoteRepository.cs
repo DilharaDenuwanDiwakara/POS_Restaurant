@@ -20,6 +20,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Purchasing
 
         Task<IEnumerable<GoodPurchaseNote>> GetPOsForApprovalAsync(int branchId, int? supplierId, DateTime? dateFrom, DateTime? dateTo);
         Task ApproveRejectPOAsync(long purchaseNoteId, bool isApproved, int actionBy, string remarks);
+        Task<bool> CancelPurchaseOrderAsync(int poId, int userId);
         Task SoftDeletePOAsync(long purchaseNoteId, int deletedBy);
     }
 }

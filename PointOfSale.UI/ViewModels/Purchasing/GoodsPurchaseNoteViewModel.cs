@@ -80,7 +80,10 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             NewPOCommand = new RelayCommand(_ => CreateNewPO());
             SearchCommand = new AsyncRelayCommand(async _ => await SearchPOsAsync());
             LoadDraftPOCommand = new AsyncRelayCommand(async parameter => await LoadDraftPurchaseOrderAsync(GetPurchaseOrder(parameter)));
-            DeleteDraftPOCommand = new AsyncRelayCommand(async parameter => await DeleteDraftPurchaseOrderAsync(GetPurchaseOrder(parameter)));
+            DeleteDraftPOCommand = new AsyncRelayCommand(
+                async parameter => await DeleteDraftPurchaseOrderAsync(GetPurchaseOrder(parameter)));
+            CancelApprovedPOCommand = new AsyncRelayCommand(
+                async parameter => await CancelApprovedPurchaseOrderAsync(GetPurchaseOrder(parameter)));
             PrintPurchaseOrderCommand = new AsyncRelayCommand(async parameter => await PrintPurchaseOrderAsync(parameter));
             RemoveLineCommand = new RelayCommand<GoodsPurchaseNoteLine>(RemoveLineItem);
 
@@ -390,6 +393,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public ICommand SearchCommand { get; set; }
         public ICommand LoadDraftPOCommand { get; }
         public ICommand DeleteDraftPOCommand { get; }
+        public ICommand CancelApprovedPOCommand { get; }
         public ICommand PrintPurchaseOrderCommand { get; }
         public ICommand RemoveLineCommand { get; }
         public ICommand SearchBarcodeCommand { get; }
@@ -479,6 +483,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
                         ex => MessageBox.Show($"Unable to load PO line items: {ex.Message}", "Order History", MessageBoxButton.OK, MessageBoxImage.Error))));
                 (LoadDraftPOCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
                 (DeleteDraftPOCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                (CancelApprovedPOCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
 
                 if (HistoryList.Count == 0)
                 {
@@ -695,6 +700,11 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             return purchaseOrder != null && (purchaseOrder.IsDraft || purchaseOrder.IsRejected);
         }
 
+        private static bool IsApprovedPurchaseOrder(GoodPurchaseNote purchaseOrder)
+        {
+            return string.Equals(purchaseOrder?.Status?.Trim(), "APPROVED", StringComparison.OrdinalIgnoreCase);
+        }
+
         private async Task PrintPurchaseOrderAsync(object parameter)
         {
             var purchaseOrder = GetPurchaseOrder(parameter);
@@ -780,7 +790,7 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             }
 
             var result = MessageBox.Show(
-                $"Delete draft purchase order {draft.PONumber}?\n\nThis only removes the draft. Approved and pending purchase orders cannot be deleted here.",
+                $"Delete draft purchase order {draft.PONumber}?\n\nThe draft will be removed from Order History.",
                 "Delete Draft",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
@@ -792,7 +802,8 @@ namespace PointOfSale.UI.ViewModels.Purchasing
 
             try
             {
-                await _goodsPurchaseNoteRepository.SoftDeletePOAsync(draft.GoodsPurchaseNoteId, _userSessionService.UserId);
+                await _goodsPurchaseNoteRepository.CancelPurchaseOrderAsync(
+                    Convert.ToInt32(draft.GoodsPurchaseNoteId), _userSessionService.UserId);
 
                 if (CurrentOrderId == draft.GoodsPurchaseNoteId)
                 {
@@ -811,6 +822,48 @@ namespace PointOfSale.UI.ViewModels.Purchasing
             catch (Exception ex)
             {
                 MessageBox.Show($"Unable to delete draft PO: {ex.Message}", "Delete Draft", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task CancelApprovedPurchaseOrderAsync(GoodPurchaseNote purchaseOrder)
+        {
+            if (!IsApprovedPurchaseOrder(purchaseOrder))
+            {
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Cancel approved purchase order {purchaseOrder.PONumber}?\n\nIt will remain in Order History as CANCELLED.",
+                "Cancel Purchase Order",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                await _goodsPurchaseNoteRepository.CancelPurchaseOrderAsync(
+                    Convert.ToInt32(purchaseOrder.GoodsPurchaseNoteId), _userSessionService.UserId);
+
+                var historyRow = HistoryList?.FirstOrDefault(row =>
+                    row.GoodsPurchaseNoteId == purchaseOrder.GoodsPurchaseNoteId);
+
+                if (historyRow != null)
+                {
+                    historyRow.UpdateStatus(PurchaseOrderStatus.CANCELLED.ToString());
+
+                    if (FilterStatus.HasValue && FilterStatus.Value != PurchaseOrderStatus.CANCELLED)
+                    {
+                        HistoryList.Remove(historyRow);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to cancel approved PO: {ex.Message}", "Cancel Purchase Order", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -20,10 +20,13 @@ namespace PointOfSale.Core.Interfaces.Security
 
         Task<IEnumerable<Roles>> GetAllRolesAsync();
         Task<IEnumerable<PermissionNode>> GetAllPermissionsAsync();
+        Task<List<int>> GetRolePermissionIdsAsync(int roleId);
+        Task SaveRolePermissionsAsync(int roleId, List<int> grantedPermissionIds);
 
         // User-Specific Settings
         Task<IEnumerable<int>> GetUserPermissionIdsAsync(int userId);
-        Task SaveUserPermissionsAsync(int userId, List<int> grantedPermissionIds);
+        Task<List<PermissionNode>> GetUserPermissionOverridesAsync(int userId);
+        Task SaveUserPermissionsAsync(int userId, List<PermissionNode> userOverrides, int modifiedByUserId);
 
     }
 }

@@ -139,9 +139,7 @@
                         <DataGridTextColumn Header="Name" Binding="{Binding TaxName}" Width="*"/>
                         <DataGridTextColumn Header="Rate (%)" Binding="{Binding Rate}" Width="120">
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Right"/>
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <DataGridTextColumn Header="Order" Binding="{Binding CalculationOrder}" Width="80" Visibility="Collapsed"/>

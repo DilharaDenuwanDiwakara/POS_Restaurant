@@ -390,18 +390,10 @@
                                 <DataGridTextColumn Header="Tax Registration" Binding="{Binding TaxRegistrationNumber}" Width="Auto" />
                                 <DataGridTextColumn Header="Contacts Count" Binding="{Binding ContactsCount, Mode=OneWay}" Width="Auto">
                                     <DataGridTextColumn.CellStyle>
-                                        <Style TargetType="DataGridCell">
-                                            <Setter Property="ToolTip" Value="{Binding ContactDetailsTooltip}"/>
-                                            <Setter Property="ToolTipService.ShowDuration" Value="30000"/>
-                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                                            <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                            <Setter Property="FontWeight" Value="SemiBold"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.SupplierView.DataGridCell.01" />
                                     </DataGridTextColumn.CellStyle>
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="Auto" />
@@ -423,40 +415,7 @@
                                                               ToolTip="View attached documents"
                                                               Cursor="Hand">
                                                     <ToggleButton.Style>
-                                                        <Style TargetType="ToggleButton">
-                                                            <Setter Property="Background" Value="Transparent"/>
-                                                            <Setter Property="BorderBrush" Value="#D1D5DB"/>
-                                                            <Setter Property="BorderThickness" Value="1"/>
-                                                            <Setter Property="Padding" Value="8,4"/>
-                                                            <Setter Property="Template">
-                                                                <Setter.Value>
-                                                                    <ControlTemplate TargetType="ToggleButton">
-                                                                        <Border x:Name="Bg"
-                                                                                Background="{TemplateBinding Background}"
-                                                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                                                BorderThickness="{TemplateBinding BorderThickness}"
-                                                                                CornerRadius="4"
-                                                                                Padding="{TemplateBinding Padding}">
-                                                                            <ContentPresenter HorizontalAlignment="Center"
-                                                                                              VerticalAlignment="Center"/>
-                                                                        </Border>
-                                                                        <ControlTemplate.Triggers>
-                                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                                <Setter TargetName="Bg" Property="Background" Value="#EFF6FF"/>
-                                                                                <Setter TargetName="Bg" Property="BorderBrush" Value="#2563EB"/>
-                                                                            </Trigger>
-                                                                            <Trigger Property="IsChecked" Value="True">
-                                                                                <Setter TargetName="Bg" Property="Background" Value="#DBEAFE"/>
-                                                                                <Setter TargetName="Bg" Property="BorderBrush" Value="#2563EB"/>
-                                                                            </Trigger>
-                                                                            <Trigger Property="IsEnabled" Value="False">
-                                                                                <Setter TargetName="Bg" Property="Opacity" Value="0.4"/>
-                                                                            </Trigger>
-                                                                        </ControlTemplate.Triggers>
-                                                                    </ControlTemplate>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                        </Style>
+                                                        <StaticResource ResourceKey="Style.View.SupplierView.ToggleButton.01" />
                                                     </ToggleButton.Style>
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                         <TextBlock Text="&#xE8A5;"
@@ -508,32 +467,7 @@
                                                                                 Cursor="Hand"
                                                                                 ToolTip="{Binding DocumentName}">
                                                                             <Button.Style>
-                                                                                <Style TargetType="Button">
-                                                                                    <Setter Property="Background" Value="Transparent"/>
-                                                                                    <Setter Property="BorderThickness" Value="0"/>
-                                                                                    <Setter Property="Padding" Value="10,7"/>
-                                                                                    <Setter Property="Template">
-                                                                                        <Setter.Value>
-                                                                                            <ControlTemplate TargetType="Button">
-                                                                                                <Border x:Name="Bg"
-                                                                                                        Background="{TemplateBinding Background}"
-                                                                                                        CornerRadius="4"
-                                                                                                        Padding="{TemplateBinding Padding}">
-                                                                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                                                                                      VerticalAlignment="Center"/>
-                                                                                                </Border>
-                                                                                                <ControlTemplate.Triggers>
-                                                                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                                                                        <Setter TargetName="Bg" Property="Background" Value="#F3F4F6"/>
-                                                                                                    </Trigger>
-                                                                                                    <Trigger Property="IsPressed" Value="True">
-                                                                                                        <Setter TargetName="Bg" Property="Background" Value="#E5E7EB"/>
-                                                                                                    </Trigger>
-                                                                                                </ControlTemplate.Triggers>
-                                                                                            </ControlTemplate>
-                                                                                        </Setter.Value>
-                                                                                    </Setter>
-                                                                                </Style>
+                                                                                <StaticResource ResourceKey="Style.View.SupplierView.Button.01" />
                                                                             </Button.Style>
                                                                             <StackPanel Orientation="Horizontal">
                                                                                 <TextBlock Text="&#xE8A7;"
@@ -565,17 +499,13 @@
                                 
                                 <DataGridTextColumn Header="Credit Limit" Binding="{Binding CreditLimit, StringFormat='Rs. {0:N2}'}" Width="Auto" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
                                 <DataGridTextColumn Header="Credit Period" Binding="{Binding CreditPeriodDays}" Width="Auto">
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 

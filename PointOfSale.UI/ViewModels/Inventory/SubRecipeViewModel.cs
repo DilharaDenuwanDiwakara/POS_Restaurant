@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -22,6 +21,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private readonly IUnitMeasureRepository _unitMeasureRepository;
         private readonly IDialogService _dialogService;
 
+        private int _recipeLoadVersion;
         private int _selectedOutputProductId;
         private int _selectedIngredientId;
         private int _selectedUnitMeasureId;
@@ -31,8 +31,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
         private Product _selectedPrepItem;
         private Product _selectedIngredient;
         private SubRecipeLineDto _selectedRecipeLine;
-        private bool _isSelectedPrepItemUsedInMenuItem;
-        private readonly HashSet<string> _loadedRecipeLineKeys = new HashSet<string>();
 
         public SubRecipeViewModel(
             ISubRecipeService subRecipeService,
@@ -53,7 +51,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             RecipeLines.CollectionChanged += RecipeLines_CollectionChanged;
 
             AddIngredientCommand = new RelayCommand(_ => AddIngredient(), _ => !IsBusy);
-            RemoveIngredientCommand = new RelayCommand(line => RemoveIngredient(line as SubRecipeLineDto), _ => CanRemoveIngredient());
+            RemoveIngredientCommand = new RelayCommand(line => RemoveIngredient(line as SubRecipeLineDto), line => !IsBusy && line is SubRecipeLineDto recipeLine && RecipeLines.Contains(recipeLine));
             SaveSubRecipeCommand = new AsyncRelayCommand(async _ => await SaveSubRecipeAsync(), _ => CanSaveSubRecipe());
             RefreshCommand = new AsyncRelayCommand(async _ => await InitializeAsync(), _ => !IsBusy);
 
@@ -201,18 +199,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
             private set => SetProperty(ref _totalRecipeCost, value);
         }
 
-        public bool IsSelectedPrepItemUsedInMenuItem
-        {
-            get => _isSelectedPrepItemUsedInMenuItem;
-            private set
-            {
-                if (SetProperty(ref _isSelectedPrepItemUsedInMenuItem, value))
-                {
-                    RaiseCommandStates();
-                }
-            }
-        }
-
         private async Task InitializeAsync()
         {
             try
@@ -260,11 +246,11 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         private async Task LoadRecipeAsync(int outputProductId)
         {
+            var loadVersion = ++_recipeLoadVersion;
             if (outputProductId <= 0)
             {
                 ClearRecipeLines();
-                IsSelectedPrepItemUsedInMenuItem = false;
-                _loadedRecipeLineKeys.Clear();
+                IsBusy = false;
                 return;
             }
 
@@ -274,15 +260,16 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 ErrorMessage = null;
 
                 var lines = await _subRecipeService.GetSubRecipeAsync(outputProductId);
-                IsSelectedPrepItemUsedInMenuItem = await _subRecipeService.IsUsedAsMenuIngredientAsync(outputProductId);
+                if (loadVersion != _recipeLoadVersion)
+                {
+                    return;
+                }
                 ClearRecipeLines();
-                _loadedRecipeLineKeys.Clear();
 
                 foreach (var line in lines)
                 {
                     EnrichRecipeLine(line);
                     RecipeLines.Add(line);
-                    _loadedRecipeLineKeys.Add(BuildLineKey(line));
                 }
 
                 CalculateTotalCost();
@@ -290,12 +277,13 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
             catch (Exception ex)
             {
+                if (loadVersion != _recipeLoadVersion) return;
                 ErrorMessage = ex.Message;
                 _dialogService.ShowMessage(ex.Message, "Sub-Recipes", DialogMessageType.Error);
             }
             finally
             {
-                IsBusy = false;
+                if (loadVersion == _recipeLoadVersion) IsBusy = false;
             }
         }
 
@@ -388,15 +376,6 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 return;
             }
 
-            if (IsSelectedPrepItemUsedInMenuItem)
-            {
-                _dialogService.ShowMessage(
-                    "This prep item is used by a menu item. Ingredients cannot be removed.",
-                    "Sub-Recipes",
-                    DialogMessageType.Warning);
-                return;
-            }
-
             RecipeLines.Remove(recipeLine);
             CalculateTotalCost();
             RaiseCommandStates();
@@ -464,6 +443,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
             }
 
             CalculateTotalCost();
+            RaiseCommandStates();
         }
 
         private void RecipeLine_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -482,21 +462,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
                 IsBusy = true;
                 ErrorMessage = null;
 
-                if (IsSelectedPrepItemUsedInMenuItem && HasRemovedLoadedIngredient())
-                {
-                    _dialogService.ShowMessage(
-                        "This prep item is used by a menu item. Ingredients cannot be removed.",
-                        "Sub-Recipes",
-                        DialogMessageType.Warning);
-                    return;
-                }
-
                 await _subRecipeService.SaveAsync(SelectedOutputProductId, RecipeLines.ToList());
-                _loadedRecipeLineKeys.Clear();
-                foreach (var line in RecipeLines)
-                {
-                    _loadedRecipeLineKeys.Add(BuildLineKey(line));
-                }
 
                 _dialogService.ShowMessage("Sub-recipe saved successfully.", "Sub-Recipes", DialogMessageType.Information);
             }
@@ -513,30 +479,7 @@ namespace PointOfSale.UI.ViewModels.Inventory
 
         private bool CanSaveSubRecipe()
         {
-            return !IsBusy && SelectedOutputProductId > 0 && RecipeLines.Any();
-        }
-
-        private bool CanRemoveIngredient()
-        {
-            return !IsBusy && !IsSelectedPrepItemUsedInMenuItem;
-        }
-
-        private bool HasRemovedLoadedIngredient()
-        {
-            if (!_loadedRecipeLineKeys.Any())
-            {
-                return false;
-            }
-
-            var currentKeys = new HashSet<string>(RecipeLines.Select(BuildLineKey));
-            return _loadedRecipeLineKeys.Any(key => !currentKeys.Contains(key));
-        }
-
-        private static string BuildLineKey(SubRecipeLineDto line)
-        {
-            return line == null
-                ? string.Empty
-                : line.ProductId + ":" + line.UnitMeasureId;
+            return !IsBusy && SelectedOutputProductId > 0;
         }
 
         private bool TryGetQuantity(out decimal quantity)

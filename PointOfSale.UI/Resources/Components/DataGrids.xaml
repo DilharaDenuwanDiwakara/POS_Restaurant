@@ -205,6 +205,9 @@
             <DataTrigger Binding="{Binding Status}" Value="REJECTED">
                 <Setter Property="Background" Value="{StaticResource StatusRejectedBackgroundBrush}" />
             </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="CANCELLED">
+                <Setter Property="Background" Value="{StaticResource StatusRejectedBackgroundBrush}" />
+            </DataTrigger>
         </Style.Triggers>
     </Style>
 
@@ -239,6 +242,9 @@
                 <Setter Property="Foreground" Value="{StaticResource StatusCompletedForegroundBrush}" />
             </DataTrigger>
             <DataTrigger Binding="{Binding Status}" Value="REJECTED">
+                <Setter Property="Foreground" Value="{StaticResource StatusRejectedForegroundBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="CANCELLED">
                 <Setter Property="Foreground" Value="{StaticResource StatusRejectedForegroundBrush}" />
             </DataTrigger>
         </Style.Triggers>

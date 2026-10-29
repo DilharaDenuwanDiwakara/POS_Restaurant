@@ -106,31 +106,22 @@
                             <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="140"/>
                             <DataGridTextColumn Header="UOM" Binding="{Binding UOM}" Width="80">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat=N3}" Width="100">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Total Cost" Binding="{Binding TotalCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                        <Setter Property="FontWeight" Value="SemiBold"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.04" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                         </DataGrid.Columns>

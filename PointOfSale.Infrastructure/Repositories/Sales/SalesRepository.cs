@@ -15,6 +15,69 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
         public SalesRepository(DatabaseConnection dbConnection) : base(dbConnection) { }
 
         #region Public method
+        public async Task<BankPromoWithExclusionsDto> GetBankPromoWithExclusionsAsync(string binPrefix)
+        {
+            if (binPrefix == null)
+                throw new ArgumentNullException(nameof(binPrefix));
+            if (binPrefix.Length != 6 || binPrefix.Any(c => c < '0' || c > '9'))
+                throw new ArgumentException("BIN prefix must contain exactly six ASCII digits.", nameof(binPrefix));
+
+            const string sql = @"
+SELECT bp.[Id] AS BankPromotionId, bp.[BankId], bp.[PromoName],
+       bp.[DiscountPercentage], ev.[VariantId], UPPER(LTRIM(RTRIM(bm.[CardType]))) AS CardType,
+       UPPER(LTRIM(RTRIM(bm.[CardBrand]))) AS CardBrand, UPPER(LTRIM(RTRIM(bp.[RequiredCardType]))) AS RequiredCardType
+FROM [System].[BankBINMapping] bm
+INNER JOIN [Sales].[BankPromotion] bp ON bp.[BankId] = bm.[BankId]
+LEFT JOIN [Sales].[BankPromoExcludedVariant] ev ON ev.[BankPromotionId] = bp.[Id]
+WHERE bm.[BINPrefix] = @BINPrefix
+  AND bm.[IsActive] = 1
+  AND bp.[IsActive] = 1
+  AND GETDATE() >= bp.[ValidFrom]
+  AND GETDATE() <= bp.[ValidTo]
+  AND (UPPER(LTRIM(RTRIM(bp.[RequiredCardType]))) = 'ALL'
+       OR UPPER(LTRIM(RTRIM(bp.[RequiredCardType]))) = UPPER(LTRIM(RTRIM(bm.[CardType]))))
+ORDER BY bp.[Id], ev.[VariantId];";
+
+            using (var connection = GetConnection())
+            using (var command = new SqlCommand(sql, connection))
+            {
+                command.Parameters.Add("@BINPrefix", SqlDbType.VarChar, 6).Value = binPrefix;
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    BankPromoWithExclusionsDto promotion = null;
+                    while (await reader.ReadAsync())
+                    {
+                        var promotionId = GetValue<int>(reader, "BankPromotionId");
+                        if (promotion == null)
+                        {
+                            promotion = new BankPromoWithExclusionsDto
+                            {
+                                BankPromotionId = promotionId,
+                                BankId = GetValue<int>(reader, "BankId"),
+                                PromoName = GetValue<string>(reader, "PromoName"),
+                                DiscountPercentage = GetValue<decimal>(reader, "DiscountPercentage"),
+                                CardType = GetValue<string>(reader, "CardType"),
+                                CardBrand = GetValue<string>(reader, "CardBrand"),
+                                RequiredCardType = GetValue<string>(reader, "RequiredCardType")
+                            };
+                        }
+                        else if (promotion.BankPromotionId != promotionId)
+                        {
+                            throw new InvalidOperationException("Multiple active bank promotions match the BIN prefix.");
+                        }
+
+                        var variantOrdinal = reader.GetOrdinal("VariantId");
+                        if (!reader.IsDBNull(variantOrdinal))
+                            promotion.ExcludedVariantIds.Add(reader.GetInt32(variantOrdinal));
+                    }
+
+                    return promotion;
+                }
+            }
+        }
+
         public async Task<long> CreateAsync(Sale sale)
         {
             if (sale.Lines != null && sale.Lines.Any())

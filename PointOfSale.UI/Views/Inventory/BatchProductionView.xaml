@@ -46,8 +46,10 @@
 
                         <StackPanel Grid.Row="1">
                             <TextBlock Text="Location" Style="{StaticResource LabelStyle}"/>
-                            <ComboBox ItemsSource="{Binding Locations}"
-                                      SelectedValue="{Binding SelectedLocationId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            <ComboBox x:Name="LocationComboBox"
+                                      PreviewKeyDown="ProductionInput_PreviewKeyDown"
+                                      ItemsSource="{Binding Locations}"
+                                      SelectedValue="{Binding SelectedLocationId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Name"
                                       IsTextSearchEnabled="True"
@@ -56,8 +58,10 @@
 
                         <StackPanel Grid.Row="2" Margin="0,14,0,0">
                             <TextBlock Text="Item to Produce" Style="{StaticResource LabelStyle}"/>
-                            <ComboBox ItemsSource="{Binding PrepItems}"
-                                      SelectedItem="{Binding SelectedProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            <ComboBox x:Name="ProductComboBox"
+                                      PreviewKeyDown="ProductionInput_PreviewKeyDown"
+                                      ItemsSource="{Binding PrepItems}"
+                                      SelectedItem="{Binding SelectedProduct, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                       SelectedValuePath="ProductId"
                                       DisplayMemberPath="ProductName"
                                       IsEditable="True"
@@ -111,7 +115,9 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBox Text="{Binding ProducedQuantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                <TextBox x:Name="YieldQuantityTextBox"
+                                         PreviewKeyDown="ProductionInput_PreviewKeyDown"
+                                         Text="{Binding ProducedQuantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                          Style="{StaticResource TextBoxStyle}"/>
                                 <Border Grid.Column="1"
                                         Margin="10,0,0,0"
@@ -129,6 +135,9 @@
                                                Foreground="#334155"/>
                                 </Border>
                             </Grid>
+                            <TextBlock Text="{Binding ProducedQuantityError}"
+                                       Foreground="{StaticResource DangerBrush}"
+                                       TextWrapping="Wrap" Margin="0,4,0,0"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="5"
@@ -140,7 +149,7 @@
                                        Margin="0,0,16,0"
                                        Style="{StaticResource LabelStyle}"
                                        Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"/>
-                            <Button Content="Process Batch"
+                            <Button x:Name="ProcessBatchButton" Content="Process Batch"
                                     Command="{Binding ProcessBatchCommand}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     Width="180"/>

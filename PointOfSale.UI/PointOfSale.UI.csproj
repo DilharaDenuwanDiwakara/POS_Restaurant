@@ -502,6 +502,10 @@
     <Compile Include="ViewModels\Sales\MainSalesReturnViewModel.cs" />
     <Compile Include="ViewModels\Sales\OpenShiftDialogViewModel.cs" />
     <Compile Include="ViewModels\Sales\PromotionViewModel.cs" />
+    <Compile Include="ViewModels\Sales\BankPromotionViewModel.cs" />
+    <Compile Include="Views\Sales\BankPromotionView.xaml.cs">
+      <DependentUpon>BankPromotionView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\Sales\SalesReturnModel.cs" />
     <Compile Include="ViewModels\Sales\ShiftManagementViewModel.cs" />
     <Compile Include="ViewModels\Sales\InvoiceLineItemModel.cs" />
@@ -516,6 +520,11 @@
     <Compile Include="ViewModels\Security\ManagerAuthorizationViewModel.cs" />
     <Compile Include="ViewModels\Security\UserProfileViewModel.cs" />
     <Compile Include="ViewModels\Security\UserViewModel.cs" />
+    <Compile Include="ViewModels\Security\RoleViewModel.cs" />
+    <Compile Include="ViewModels\Security\RoleManagementViewModel.cs" />
+    <Compile Include="Views\Security\RoleManagementView.xaml.cs">
+      <DependentUpon>RoleManagementView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\System\AccountMappingViewModel.cs" />
     <Compile Include="ViewModels\System\BankViewModel.cs" />
     <Compile Include="ViewModels\System\CompanySettingsViewModel.cs" />
@@ -792,6 +801,22 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Resources\Styles\ViewStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Styles\ScopedMenuTabItemStyle.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Styles\ScopedPaymentTabPanelStyle.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Styles\ScopedScrollBarStyle.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Resources\Styles\SalesStyles.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -1028,6 +1053,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Sales\BankPromotionView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Sales\Dialogs\OpenShiftDialogView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -1093,6 +1122,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Security\UserView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Security\RoleManagementView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

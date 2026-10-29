@@ -10,7 +10,12 @@ namespace PointOfSale.UI.Commands
         private readonly Predicate<object> _canExecute;
         private bool _isExecuting;
 
-        public event EventHandler CanExecuteChanged;
+        private event EventHandler _canExecuteChanged;
+        public event EventHandler CanExecuteChanged
+        {
+            add { _canExecuteChanged += value; CommandManager.RequerySuggested += value; }
+            remove { _canExecuteChanged -= value; CommandManager.RequerySuggested -= value; }
+        }
 
         public AsyncRelayCommand(Func<object, Task> execute, Predicate<object> canExecute = null)
         {
@@ -23,6 +28,7 @@ namespace PointOfSale.UI.Commands
 
         public async void Execute(object parameter)
         {
+            if (!CanExecute(parameter)) return;
             _isExecuting = true;
             RaiseCanExecuteChanged();
 
@@ -38,6 +44,6 @@ namespace PointOfSale.UI.Commands
         }
 
         public void RaiseCanExecuteChanged() =>
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            _canExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 }

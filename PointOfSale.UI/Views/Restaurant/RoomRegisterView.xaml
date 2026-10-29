@@ -143,17 +143,13 @@
                             
                             <DataGridTextColumn Header="Floor" Binding="{Binding FloorNumber}" Width="80">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn Header="Max Capacity" Binding="{Binding MaxCapacity}" Width="120">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             

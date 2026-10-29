@@ -76,6 +76,15 @@ namespace PointOfSale.UI.Services
             return window.ShowDialog();
         }
 
+        public bool ShowConfirmation(string message, string title)
+        {
+            var owner = Application.Current?.MainWindow;
+            var result = owner != null
+                ? MessageBox.Show(owner, message, title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No)
+                : MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+            return result == MessageBoxResult.Yes;
+        }
+
         public void ShowMessage(string message, string title, DialogMessageType messageType = DialogMessageType.Information)
         {
             MessageBox.Show(message, title, MessageBoxButton.OK, ToMessageBoxImage(messageType));

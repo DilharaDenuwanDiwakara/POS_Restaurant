@@ -67,6 +67,7 @@ namespace PointOfSale.UI
 
             // --- Register Repositories ---
             services.AddSingleton<IUserRepository, UserRepository>();
+            services.AddSingleton<IRoleRepository, RoleRepository>();
             services.AddSingleton<ISupplierRepository, SupplierRepository>();
 
             services.AddSingleton<IBrandRepository, BrandRepository>();
@@ -86,6 +87,9 @@ namespace PointOfSale.UI
             services.AddSingleton<IDashboardRepository, DashboardRepository>();
             services.AddSingleton<IDiscountRepository, DiscountRepository>();
             services.AddSingleton<IPromotionRepository, PromotionRepository>();
+            services.AddSingleton<IBINMappingRepository, BINMappingRepository>();
+            services.AddSingleton<IBankPromotionRepository, BankPromotionRepository>();
+            services.AddTransient<PointOfSale.Core.Services.BankPromotionCheckoutService>();
             services.AddSingleton<IRegisterRepository, RegisterRepository>();
             services.AddSingleton<ISalesRepository, SalesRepository>();
             services.AddSingleton<ISalesReportRepository, SalesReportRepository>();
@@ -178,6 +182,7 @@ namespace PointOfSale.UI
             services.AddTransient<SalesReportsViewModel>();
             services.AddTransient<DiscountViewModel>();
             services.AddTransient<PromotionViewModel>();
+            services.AddTransient<BankPromotionViewModel>();
             services.AddTransient<SalesReturnViewModel>();
             services.AddTransient<ManagerAuthorizationViewModel>();
             services.AddTransient<OpenShiftDialogView>();
@@ -185,6 +190,8 @@ namespace PointOfSale.UI
             services.AddTransient<MainSalesReturnViewModel>();
 
             services.AddTransient<UserViewModel>();
+            services.AddTransient<RoleViewModel>();
+            services.AddTransient<RoleManagementViewModel>();
             services.AddTransient<UserProfileViewModel>();
             services.AddTransient<SupplierViewModel>();
 

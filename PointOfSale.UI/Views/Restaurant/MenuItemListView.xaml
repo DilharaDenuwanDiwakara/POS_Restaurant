@@ -103,10 +103,7 @@
                       Style="{StaticResource DataGridStyle}">
 
                 <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
-                        <Setter Property="Height" Value="Auto"/>
-                        <Setter Property="MinHeight" Value="50"/>
-                    </Style>
+                    <StaticResource ResourceKey="Style.View.MenuItemListView.DataGridRow.01" />
                 </DataGrid.RowStyle>
 
                 <DataGrid.Columns>
@@ -129,10 +126,7 @@
 
                     <DataGridTextColumn Header="Item Code" Binding="{Binding ItemCode}" Width="110">
                         <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Padding" Value="4,4"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.MenuItemListView.TextBlock.01" />
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
@@ -151,11 +145,7 @@
 
                     <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="Auto">
                         <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Padding" Value="4,4"/>
-                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.Shared.TextBlock.06" />
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
@@ -174,20 +164,13 @@
 
                     <DataGridTextColumn Header="Base Price" Binding="{Binding Price, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                         <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.MenuItemListView.TextBlock.02" />
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <DataGridTextColumn Header="Taxes" Binding="{Binding AppliedTaxes}" Width="160">
                         <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Padding" Value="4,4"/>
-                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.Shared.TextBlock.06" />
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 

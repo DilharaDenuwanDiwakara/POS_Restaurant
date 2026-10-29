@@ -13,6 +13,7 @@ namespace PointOfSale.Core.Interfaces.Services
     {
         bool? ShowDialog<TViewModel>(out TViewModel viewModel) where TViewModel : class;
         bool? ShowDialog<TViewModel>(Action<TViewModel> configureViewModel, out TViewModel viewModel) where TViewModel : class;
+        bool ShowConfirmation(string message, string title);
         void ShowMessage(string message, string title, DialogMessageType messageType = DialogMessageType.Information);
     }
 }

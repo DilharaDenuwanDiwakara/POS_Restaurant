@@ -81,9 +81,7 @@
                         <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="*"/>
                         <DataGridTextColumn Header="Available Qty" Binding="{Binding AvailableQuantity}" Width="120">
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Center" />
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
@@ -91,9 +89,7 @@
                                         Binding="{Binding ReceivedDate, StringFormat=\{0:dd/MM/yyyy\}}"
                                         Width="Auto">
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
@@ -102,10 +98,7 @@
                                         Width="120"
                                         Visibility="{Binding Context, Converter={StaticResource BatchContextToVisibilityConverter}, ConverterParameter=UnitCost}" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Right" />
-                                    <Setter Property="Margin" Value="0,0,5,0" />
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.BatchSelectionView.TextBlock.01" />
                             </DataGridTextColumn.ElementStyle>
 
                         </DataGridTextColumn>

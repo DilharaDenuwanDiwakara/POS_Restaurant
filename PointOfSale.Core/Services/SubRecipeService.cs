@@ -50,11 +50,6 @@ namespace PointOfSale.Core.Services
             }
 
             var lines = (recipeLines ?? Enumerable.Empty<SubRecipeLineDto>()).ToList();
-            if (!lines.Any())
-            {
-                throw new InvalidOperationException("Add at least one ingredient before saving the sub-recipe.");
-            }
-
             foreach (var line in lines)
             {
                 if (line.ProductId <= 0)

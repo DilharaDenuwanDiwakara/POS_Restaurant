@@ -1,0 +1,249 @@
+<UserControl x:Class="PointOfSale.UI.Views.Sales.BankPromotionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Bank Card Promotions" Style="{StaticResource HeaderTextStyle}"/>
+        <StackPanel Grid.Row="1" Margin="0,0,0,12">
+            <TextBlock Text="Manage promotions, configure variant exclusions, and maintain bank BIN settings."
+                       Style="{StaticResource Style.View.BankPromotionView.HelpText}"/>
+            <TextBlock Text="Working..." Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"/>
+            <TextBlock Text="{Binding ErrorMessage}" Style="{StaticResource ErrorStyle}"
+                       Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}"/>
+            <Border Style="{StaticResource Style.Badge.Success}" Margin="0,8,0,0"
+                    Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+            </Border>
+        </StackPanel>
+        <TabControl Grid.Row="2" Style="{StaticResource TabControlStyle}" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" IsEnabled="{Binding IsFormEnabled}">
+            <TabItem Header="Ongoing Promotions" Style="{StaticResource TabItemStyle}">
+                <Border Style="{StaticResource PanelCardStyle}" Margin="0,12,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,16">
+                            <Button DockPanel.Dock="Right" Content="Add New Promotion" Width="190" Command="{Binding AddNewPromotionCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}"/>
+                            <TextBlock Text="Manage bank promotions" Style="{StaticResource SubHeaderTextStyle}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding OngoingPromotions}" SelectedItem="{Binding SelectedPromotion, Mode=TwoWay}"
+                                  SelectionMode="Single" Style="{StaticResource DataGridStyle}" IsReadOnly="True" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Bank Name" Binding="{Binding BankName}" Width="*" MinWidth="140"/>
+                                <DataGridTextColumn Header="Promo Name" Binding="{Binding PromoName}" Width="2*" MinWidth="180"/>
+                                <DataGridTextColumn Header="Discount %" Binding="{Binding DiscountPercentage, StringFormat={}{0:0.##}%}" Width="110"/>
+                                <DataGridTextColumn Header="Required Card Type" Binding="{Binding RequiredCardType}" Width="140"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                                <DataGridTemplateColumn Header="Action" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button AutomationProperties.Name="Edit promotion" CommandParameter="{Binding}"
+                                                    Command="{Binding DataContext.EditPromotionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" Style="{StaticResource EditButtonStyle}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </TabItem>
+            <TabItem Header="Promotion Setup" Style="{StaticResource TabItemStyle}">
+                <DockPanel Margin="0,12,0,0" LastChildFill="True">
+                    <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource Brush.Card.Border}" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button KeyboardNavigation.TabIndex="12" Content="Clear" Command="{Binding ClearCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                            <Button KeyboardNavigation.TabIndex="13" Content="Save Promotion" Width="170" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+                        </StackPanel>
+                    </Border>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="320"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Promotion Details" Style="{StaticResource SubHeaderTextStyle}"/>
+                                    <TextBlock Text="Bank" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox x:Name="BankInput" KeyboardNavigation.TabIndex="0" PreviewKeyDown="MoveFocusOnEnter" ItemsSource="{Binding Banks}" SelectedItem="{Binding SelectedBank}" DisplayMemberPath="BankName"
+                                              Style="{StaticResource ComboBoxStyle}"/>
+                                    <TextBlock Text="Promo Name" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox x:Name="PromotionNameInput" KeyboardNavigation.TabIndex="1" PreviewKeyDown="MoveFocusOnEnter" Text="{Binding PromoName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             MaxLength="200" Style="{StaticResource TextBoxStyle}"/>
+                                    <TextBlock Text="Discount Percentage (%)" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox x:Name="DiscountInput" KeyboardNavigation.TabIndex="2" Text="{Binding DiscountPercentage, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" Tag="Percentage"
+                                             PreviewTextInput="NumericInput_PreviewTextInput" PreviewKeyDown="NumericInput_PreviewKeyDown" DataObject.Pasting="NumericInput_Pasting"
+                                             Style="{StaticResource TextBoxStyle}"/>
+                                    <TextBlock Text="Required Card Type" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox x:Name="RequiredCardTypeInput" KeyboardNavigation.TabIndex="3" PreviewKeyDown="MoveFocusOnEnter"
+                                              ItemsSource="{Binding RequiredCardTypes}" SelectedItem="{Binding RequiredCardType, UpdateSourceTrigger=PropertyChanged}"
+                                              ToolTip="All accepts both credit and debit cards." Style="{StaticResource ComboBoxStyle}"/>
+                                    <TextBlock Text="Valid From" Style="{StaticResource LabelStyle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="110"/>
+                                        </Grid.ColumnDefinitions>
+                                        <DatePicker x:Name="ValidFromDateInput" KeyboardNavigation.TabIndex="4" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="0" Margin="0,0,8,12" SelectedDate="{Binding ValidFromDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                    DisplayDateStart="1753-01-01" Style="{StaticResource DatePickerStyle}">
+                                            <DatePicker.Resources>
+                                                <Style TargetType="{x:Type DatePickerTextBox}">
+                                                    <Setter Property="IsReadOnly" Value="True"/>
+                                                </Style>
+                                            </DatePicker.Resources>
+                                        </DatePicker>
+                                        <ComboBox x:Name="ValidFromTimeInput" KeyboardNavigation.TabIndex="5" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="1" ItemsSource="{Binding TimeOptions}" IsEditable="True" IsTextSearchEnabled="False"
+                                                  Text="{Binding ValidFromTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                  ToolTip="24-hour time: HH:mm or HH:mm:ss" Style="{StaticResource ComboBoxStyle}"/>
+                                    </Grid>
+                                    <TextBlock Text="Valid To" Style="{StaticResource LabelStyle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="110"/>
+                                        </Grid.ColumnDefinitions>
+                                        <DatePicker x:Name="ValidToDateInput" KeyboardNavigation.TabIndex="6" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="0" Margin="0,0,8,12" SelectedDate="{Binding ValidToDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                    DisplayDateStart="1753-01-01" Style="{StaticResource DatePickerStyle}">
+                                            <DatePicker.Resources>
+                                                <Style TargetType="{x:Type DatePickerTextBox}">
+                                                    <Setter Property="IsReadOnly" Value="True"/>
+                                                </Style>
+                                            </DatePicker.Resources>
+                                        </DatePicker>
+                                        <ComboBox x:Name="ValidToTimeInput" KeyboardNavigation.TabIndex="7" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="1" ItemsSource="{Binding TimeOptions}" IsEditable="True" IsTextSearchEnabled="False"
+                                                  Text="{Binding ValidToTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                  ToolTip="24-hour time: HH:mm or HH:mm:ss" Style="{StaticResource ComboBoxStyle}"/>
+                                    </Grid>
+                                    <TextBlock Text="24-hour time (HH:mm or HH:mm:ss), using the database server's local time."
+                                               Style="{StaticResource Style.View.BankPromotionView.HelpText}"/>
+                                    <CheckBox x:Name="PromotionActiveInput" KeyboardNavigation.TabIndex="8" PreviewKeyDown="MoveFocusOnEnter" Content="Promotion is active" IsChecked="{Binding IsActive}" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Variant Exclusions" Style="{StaticResource SubHeaderTextStyle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="1.5*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                            <TextBlock Text="1. Select Category" Style="{StaticResource LabelStyle}"/>
+                                            <ComboBox x:Name="CategoryInput" KeyboardNavigation.TabIndex="9" PreviewKeyDown="MoveFocusOnEnter" ItemsSource="{Binding Categories}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedCategory}"
+                                                      Style="{StaticResource ComboBoxStyle}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                            <TextBlock Text="2. Select Variant" Style="{StaticResource LabelStyle}"/>
+                                            <ComboBox x:Name="VariantInput" KeyboardNavigation.TabIndex="10" PreviewKeyDown="MoveFocusOnEnter" ItemsSource="{Binding AvailableVariants}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedVariant}"
+                                                      IsEnabled="{Binding CanSelectVariant}" Style="{StaticResource ComboBoxStyle}"/>
+                                        </StackPanel>
+                                        <Button x:Name="ExcludeVariantButton" KeyboardNavigation.TabIndex="11" Grid.Column="2" Content="Exclude Variant" Width="150" Height="30" Command="{Binding AddExcludedVariantCommand}"
+                                                Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Top" Margin="0,19,0,12"/>
+                                    </Grid>
+                                    <TextBlock Text="{Binding VariantStatusMessage}" Style="{StaticResource Style.View.BankPromotionView.HelpText}" Margin="0,0,0,12"/>
+                                </StackPanel>
+                                <DataGrid Grid.Row="1" RowStyle="{StaticResource Style.View.BankPromotionView.ExclusionRow}" ItemsSource="{Binding ExcludedVariants}" Style="{StaticResource DataGridStyle}" IsReadOnly="True" HeadersVisibility="Column">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Code" Binding="{Binding ItemCode}" Width="85"/>
+                                        <DataGridTextColumn Header="Variant" Binding="{Binding Name}" ElementStyle="{StaticResource Style.View.BankPromotionView.VariantName}" Width="*" MinWidth="150"/>
+                                        <DataGridTemplateColumn Header="Action" Width="100">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button AutomationProperties.Name="Remove excluded variant" ToolTip="Remove exclusion" CommandParameter="{Binding}"
+                                                            Command="{Binding DataContext.RemoveExcludedVariantCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" Style="{StaticResource DeleteButtonStyle}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Global BIN Settings" Style="{StaticResource TabItemStyle}">
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="320"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}" Margin="0,0,8,0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="Bank BIN Settings" Style="{StaticResource SubHeaderTextStyle}"/>
+                                <TextBlock Text="BINs are saved immediately and shared by this bank's promotions." Style="{StaticResource Style.View.BankPromotionView.HelpText}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Bank" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox x:Name="GlobalBankInput" KeyboardNavigation.TabIndex="0" PreviewKeyDown="MoveFocusOnEnter" ItemsSource="{Binding Banks}" SelectedItem="{Binding SelectedGlobalBank}" DisplayMemberPath="BankName" IsEnabled="{Binding CanChangeGlobalBank}"
+                                          Style="{StaticResource ComboBoxStyle}"/>
+                                <TextBlock Text="BIN Prefix (6 digits)" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="BinPrefixInput" KeyboardNavigation.TabIndex="1" Text="{Binding BinPrefix, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" MaxLength="6" Tag="BIN"
+                                         PreviewTextInput="NumericInput_PreviewTextInput" PreviewKeyDown="NumericInput_PreviewKeyDown" DataObject.Pasting="NumericInput_Pasting"
+                                         Style="{StaticResource TextBoxStyle}"/>
+                                <TextBlock Text="Card Type" Style="{StaticResource LabelStyle}"/>
+                                <ComboBox x:Name="BinCardTypeInput" KeyboardNavigation.TabIndex="2" PreviewKeyDown="MoveFocusOnEnter"
+                                          ItemsSource="{Binding CardTypes}" SelectedItem="{Binding BinCardType, UpdateSourceTrigger=PropertyChanged}"
+                                          Style="{StaticResource ComboBoxStyle}"/>
+                                <TextBlock Text="Card Brand" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="BinCardBrandInput" KeyboardNavigation.TabIndex="3" PreviewKeyDown="MoveFocusOnEnter"
+                                         Text="{Binding BinCardBrand, UpdateSourceTrigger=PropertyChanged}" MaxLength="30" CharacterCasing="Upper"
+                                         ToolTip="For example, Visa or Mastercard." Style="{StaticResource TextBoxStyle}"/>
+
+                                <CheckBox x:Name="BinActiveInput" KeyboardNavigation.TabIndex="4" PreviewKeyDown="MoveFocusOnEnter" Content="BIN is active" IsChecked="{Binding IsBinActive}" Margin="0,8,0,0"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button x:Name="SaveBinButton" KeyboardNavigation.TabIndex="5" Content="{Binding BinSaveButtonText}" Command="{Binding SaveBinCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+                                    <Button KeyboardNavigation.TabIndex="6" Content="Cancel" Command="{Binding CancelBinEditCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0"
+                                            Visibility="{Binding IsEditingBin, Converter={StaticResource BoolToVisibility}}"/>
+                                </StackPanel>
+                                <TextBlock Text="Loading BINs..." Visibility="{Binding IsLoadingBins, Converter={StaticResource BoolToVisibility}}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource PanelCardStyle}" Margin="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Saved BINs" Style="{StaticResource SubHeaderTextStyle}"/>
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding BinPrefixes}" Style="{StaticResource DataGridStyle}" IsReadOnly="True" HeadersVisibility="Column">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="BIN Prefix" Binding="{Binding BINPrefix}" Width="*"/>
+                                    <DataGridTextColumn Header="Card Type" Binding="{Binding CardType, TargetNullValue=Unclassified}" Width="*"/>
+                                    <DataGridTextColumn Header="Card Brand" Binding="{Binding CardBrand}" Width="1.5*"/>
+                                    <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="100"/>
+                                    <DataGridTemplateColumn Header="Action" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <Button AutomationProperties.Name="Edit BIN" ToolTip="Edit BIN" CommandParameter="{Binding}"
+                                                            Command="{Binding DataContext.EditBinCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Style="{StaticResource EditButtonStyle}"/>
+                                                    <Button AutomationProperties.Name="Delete BIN" ToolTip="Delete BIN" CommandParameter="{Binding}"
+                                                            Command="{Binding DataContext.DeleteBinCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Style="{StaticResource DeleteButtonStyle}" Margin="4,0,0,0"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

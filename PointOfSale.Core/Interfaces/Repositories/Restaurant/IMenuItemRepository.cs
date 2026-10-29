@@ -9,6 +9,7 @@ namespace PointOfSale.Core.Interfaces.Repositories.Restaurant
     {
         Task<int> CreateAsync(MenuItem menuItem, IEnumerable<int> taxIds, int createdBy);
         Task<IEnumerable<MenuVariantDto>> GetAllVariantsForSalesAsync();
+        Task<IEnumerable<Variant>> GetVariantsByCategoryIdAsync(int categoryId);
         Task<IEnumerable<MenuItemDto>> GetAllWithDetailsAsync();
 
         Task<IEnumerable<VariantPriceDto>> GetVariantsByItemIdAsync(int menuItemId);

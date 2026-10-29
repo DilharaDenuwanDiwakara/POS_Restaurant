@@ -1,0 +1,1231 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:enums="clr-namespace:PointOfSale.Core.Enums;assembly=PointOfSale.Core">
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Inquiry.Caption" TargetType="TextBlock" BasedOn="{StaticResource CaptionStyle}">
+        <Setter Property="FontStyle" Value="Normal" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Inquiry.BalanceCard" TargetType="Border" BasedOn="{StaticResource PanelCardStyle}">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="16,12" />
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Inquiry.Amount" TargetType="TextBlock" BasedOn="{StaticResource HeaderTextStyle}">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="Margin" Value="0,8,0,0" />
+        <Setter Property="TextAlignment" Value="Right" />
+        <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Inquiry.Header" TargetType="DataGridColumnHeader" BasedOn="{StaticResource Style.DataGrid.ColumnHeader}">
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Inquiry.Cell" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Inquiry.Number" TargetType="TextBlock" BasedOn="{StaticResource Inquiry.Cell}">
+        <Setter Property="TextAlignment" Value="Right" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Inquiry.AccountItem" TargetType="ComboBoxItem" BasedOn="{StaticResource ComboBoxItemStyle}">
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Margin" Value="{Binding Depth, Converter={StaticResource LevelToMarginConverter}}" />
+        <Setter Property="ToolTip" Value="{Binding ToolTip}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsGroupHeading}" Value="True">
+                <Setter Property="IsEnabled" Value="False" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="Foreground" Value="{StaticResource BrandBrush}" />
+                <Setter Property="Background" Value="{StaticResource Brush.App.Background}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Inventory/InternalIssueView.xaml -->
+    <Style x:Key="ItemCategoryRadioStyle" TargetType="RadioButton">
+        <Setter Property="MinWidth" Value="132"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Foreground" Value="#334155"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="SegmentBorder"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          RecognizesAccessKey="True"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="SegmentBorder" Property="Background" Value="#EEF2F7"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="SegmentBorder" Property="Background" Value="#FFFFFF"/>
+                            <Setter TargetName="SegmentBorder" Property="BorderBrush" Value="#C9D8E8"/>
+                            <Setter Property="Foreground" Value="#0F4C81"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.55"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Inventory/ProductView.xaml -->
+    <Style x:Key="UnitConversionPanelStyle" TargetType="Border">
+        <Setter Property="BorderBrush" Value="#D8DEE8"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="Background" Value="#F8FAFC"/>
+        <Setter Property="Margin" Value="0,4,0,14"/>
+    </Style>
+
+    <!-- Inventory/ProductView.xaml -->
+    <Style x:Key="UnitConversionCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="#E9EEF6"/>
+        <Setter Property="BorderBrush" Value="#C7D4EA"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="7"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+
+    <!-- Inventory/ProductView.xaml -->
+    <Style x:Key="UnitConversionTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- Purchasing/GoodsPurchaseNoteView.xaml -->
+    <Style x:Key="PurchaseOrderHistoryFullTextCellStyle" TargetType="TextBlock">
+        <Setter Property="TextWrapping" Value="NoWrap"/>
+        <Setter Property="TextTrimming" Value="None"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Purchasing/GoodsPurchaseNoteView.xaml -->
+    <Style x:Key="PurchaseOrderHistoryRightAlignedCellStyle" TargetType="TextBlock" BasedOn="{StaticResource PurchaseOrderHistoryFullTextCellStyle}">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+
+    <!-- Purchasing/GoodsReceiveNoteApprovalView.xaml -->
+    <Style x:Key="DiscrepancyAwareDataGridRowStyle"
+           TargetType="{x:Type DataGridRow}"
+           BasedOn="{StaticResource Style.DataGrid.Row}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasQuantityDiscrepancy}" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsReceiveNoteView.xaml -->
+    <Style x:Key="GrnHistoryFullTextCellStyle" TargetType="TextBlock">
+        <Setter Property="TextWrapping" Value="NoWrap"/>
+        <Setter Property="TextTrimming" Value="None"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Purchasing/GoodsReceiveNoteView.xaml -->
+    <Style x:Key="GrnHistoryRightAlignedCellStyle" TargetType="TextBlock" BasedOn="{StaticResource GrnHistoryFullTextCellStyle}">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+
+    <!-- Purchasing/SupplierReturnView.xaml -->
+    <Style x:Key="SupplierReturnHistoryFullTextCellStyle" TargetType="TextBlock">
+        <Setter Property="TextWrapping" Value="NoWrap"/>
+        <Setter Property="TextTrimming" Value="None"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Purchasing/SupplierReturnView.xaml -->
+    <Style x:Key="SupplierReturnHistoryRightAlignedCellStyle" TargetType="TextBlock" BasedOn="{StaticResource SupplierReturnHistoryFullTextCellStyle}">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+
+    <!-- Sales/SalesReturnView.xaml -->
+    <Style x:Key="TouchDataGridRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
+        <Setter Property="Height" Value="64"/>
+        <Setter Property="MinHeight" Value="64"/>
+    </Style>
+
+    <!-- Sales/SalesReturnView.xaml -->
+    <Style x:Key="ReadOnlyCellTextStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="14"/>
+    </Style>
+
+    <!-- Sales/SalesReturnView.xaml -->
+    <Style x:Key="TouchComboBoxItemStyle" TargetType="ComboBoxItem" BasedOn="{StaticResource ComboBoxItemStyle}">
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="MinHeight" Value="44"/>
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="BottomActionButtonStyle" TargetType="Button">
+        <Setter Property="Height" Value="58" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="8"
+                        SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Opacity" Value="0.92" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Opacity" Value="0.84" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Security/Dialogs/DeviceRegistrationWindow.xaml -->
+    <Style x:Key="LinkButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource SecondaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.6"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Style.View.AccountInquiryView.WrapPanel.01" TargetType="WrapPanel">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                <Setter Property="IsEnabled" Value="False" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsLoadingAccounts}" Value="True">
+                <Setter Property="IsEnabled" Value="False" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Style.View.AccountInquiryView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding SelectedAccount}" Value="{x:Null}">
+                <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Style.View.AccountInquiryView.Button.01" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding ElementName=FromDateInput, Path=(Validation.HasError)}" Value="True">
+                <Setter Property="IsEnabled" Value="False" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding ElementName=ToDateInput, Path=(Validation.HasError)}" Value="True">
+                <Setter Property="IsEnabled" Value="False" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding ElementName=FromDateInput, Path=SelectedDate}" Value="{x:Null}">
+                <Setter Property="IsEnabled" Value="False" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding ElementName=ToDateInput, Path=SelectedDate}" Value="{x:Null}">
+                <Setter Property="IsEnabled" Value="False" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Style.View.AccountInquiryView.Border.01" TargetType="Border">
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding TransactionLines.Count}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+            <DataTrigger Binding="{Binding IsLoading}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Style.View.AccountInquiryView.TextBlock.02" TargetType="TextBlock" BasedOn="{StaticResource SubHeaderTextStyle}">
+        <Setter Property="Text" Value="Generate an account inquiry" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasReport}" Value="True"><Setter Property="Text" Value="No transactions in this period" /></DataTrigger>
+            <DataTrigger Binding="{Binding HasError}" Value="True"><Setter Property="Text" Value="Report unavailable" /></DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Accounts/AccountInquiryView.xaml -->
+    <Style x:Key="Style.View.AccountInquiryView.TextBlock.03" TargetType="TextBlock" BasedOn="{StaticResource Inquiry.Caption}">
+        <Setter Property="Text" Value="Select an account, choose a date range, and select Generate report to view ledger activity." />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasReport}" Value="True"><Setter Property="Text" Value="There are no ledger entries for these dates. Opening and closing balances are shown above." /></DataTrigger>
+            <DataTrigger Binding="{Binding HasError}" Value="True"><Setter Property="Text" Value="Review the message above, check your filters, and generate the report again." /></DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Accounts/ExpensesView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+
+    <!-- Accounts/ExpensesView.xaml -->
+    <Style x:Key="Style.View.ExpensesView.TextBlock.01" TargetType="TextBlock">
+        <Style.Triggers>
+            <Trigger Property="Text" Value="">
+                <Setter Property="Visibility" Value="Collapsed"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Accounts/OpeningBalanceView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBox.01" TargetType="TextBox">
+        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+    </Style>
+
+    <!-- Inventory/BatchSelectionView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBlock.02" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Inventory/BatchSelectionView.xaml -->
+    <Style x:Key="Style.View.BatchSelectionView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Margin" Value="0,0,5,0" />
+    </Style>
+
+    <!-- Inventory/CategoryView.xaml -->
+    <Style x:Key="Style.View.Shared.TreeViewItem.01" TargetType="{x:Type TreeViewItem}">
+        <Setter Property="IsExpanded" Value="False"/>
+    </Style>
+
+    <!-- Inventory/InternalIssueView.xaml -->
+    <Style x:Key="Style.View.InternalIssueView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Inventory/InventoryReportView.xaml -->
+    <Style x:Key="Style.View.InventoryReportView.StackPanel.01" TargetType="StackPanel">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding SelectedReportType}" Value="Reorder Level List">
+                <Setter Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding SelectedReportType}" Value="Expiry Reach List">
+                <Setter Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Inventory/ProductView.xaml -->
+    <Style x:Key="Style.View.ProductView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="Visibility" Value="Hidden"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Text, ElementName=SearchInput}" Value="">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Text, ElementName=SearchInput}" Value="{x:Null}">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Inventory/ProvisioningView.xaml -->
+    <Style x:Key="Style.View.Shared.DataGridRow.01" TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
+        <Setter Property="Height" Value="Auto"/>
+        <Setter Property="MinHeight" Value="42"/>
+        <Setter Property="DetailsVisibility" Value="Visible"/>
+    </Style>
+
+    <!-- Inventory/ProvisioningView.xaml -->
+    <Style x:Key="Style.View.ProvisioningView.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&gt;"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#334155"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="v"/>
+                <Setter Property="ToolTip" Value="Collapse yield details"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E5E7EB"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Inventory/ProvisioningView.xaml -->
+    <Style x:Key="Style.View.ProvisioningView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsLoadingDetails}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Inventory/StockAdjustmentView.xaml -->
+    <Style x:Key="Style.View.StockAdjustmentView.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&gt;"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#334155"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="v"/>
+                <Setter Property="ToolTip" Value="Collapse adjustment"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E5E7EB"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Inventory/StockTransferView.xaml -->
+    <Style x:Key="Style.View.StockTransferView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+
+    <!-- Inventory/StockTransferView.xaml -->
+    <Style x:Key="Style.View.StockTransferView.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&gt;"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#334155"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="v"/>
+                <Setter Property="ToolTip" Value="Collapse transfer"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E5E7EB"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Inventory/StockTransferView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBlock.03" TargetType="TextBlock">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsLoadingLineItems}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Inventory/WastageApprovalView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBlock.04" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Inventory/WastageView.xaml -->
+    <Style x:Key="Style.View.WastageView.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&gt;" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="#334155" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="v" />
+                <Setter Property="ToolTip" Value="Collapse wastage" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E5E7EB" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsPurchaseNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsPurchaseNoteView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="Visibility" Value="Visible"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding LastGrnCostPrice}" Value="0">
+                <Setter Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsPurchaseNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsPurchaseNoteView.TextBlock.02" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Foreground" Value="#5B8DB8"/>
+    </Style>
+
+    <!-- Purchasing/GoodsPurchaseNoteView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBlock.05" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Background" Value="#FFFDE7"/>
+    </Style>
+
+    <!-- Purchasing/GoodsPurchaseNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsPurchaseNoteView.TextBox.01" TargetType="TextBox">
+        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+        <Setter Property="Background" Value="#FFFDE7"/>
+    </Style>
+
+    <!-- Purchasing/GoodsPurchaseNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsPurchaseNoteView.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&gt;"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#334155"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="v"/>
+                <Setter Property="ToolTip" Value="Collapse purchase order"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E5E7EB"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsPurchaseNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsPurchaseNoteView.Button.01" TargetType="Button" BasedOn="{StaticResource EditButtonStyle}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Source.IsDraft}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Source.IsRejected}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsPurchaseNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsPurchaseNoteView.Button.02" TargetType="Button" BasedOn="{StaticResource DeleteButtonStyle}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Source.IsDraft}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="Style.View.GoodsPurchaseNoteView.Button.03" TargetType="Button" BasedOn="{StaticResource DataGridFlatActionButtonStyle}">
+        <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+        <Setter Property="ToolTip" Value="Cancel approved purchase order" />
+        <Setter Property="Content" Value=" " />
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Path Data="{StaticResource Icon.Action.Cancel}" Style="{StaticResource DataGridActionIconStyle}" />
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsApproved}" Value="True">
+                <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsReceiveNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsReceiveNoteView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="Text" Value="{Binding ExpiryDate, StringFormat='{}{0:dd/MM/yyyy}', TargetNullValue='—'}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding TrackExpiry}" Value="False">
+                <Setter Property="Text"      Value="N/A"/>
+                <Setter Property="Foreground" Value="#B0BEC5"/>
+                <Setter Property="FontStyle"  Value="Italic"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsReceiveNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsReceiveNoteView.TextBlock.02" TargetType="TextBlock">
+        <Setter Property="Text" Value="{Binding SellingPrice, StringFormat='Rs. {0:N2}', TargetNullValue='—'}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsSellable}" Value="False">
+                <Setter Property="Foreground" Value="#B0BEC5"/>
+                <Setter Property="FontStyle"  Value="Italic"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsReceiveNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsReceiveNoteView.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&gt;"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#334155"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="v"/>
+                <Setter Property="ToolTip" Value="Collapse GRN"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E5E7EB"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsReceiveNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsReceiveNoteView.Button.01" TargetType="Button" BasedOn="{StaticResource EditButtonStyle}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsDraft}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsRejected}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/GoodsReceiveNoteView.xaml -->
+    <Style x:Key="Style.View.GoodsReceiveNoteView.Button.02" TargetType="Button" BasedOn="{StaticResource DeleteButtonStyle}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsDraft}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/SupplierReturnView.xaml -->
+    <Style x:Key="Style.View.SupplierReturnView.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&gt;"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#334155"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="v"/>
+                <Setter Property="ToolTip" Value="Collapse supplier return"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E5E7EB"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Purchasing/SupplierView.xaml -->
+    <Style x:Key="Style.View.SupplierView.DataGridCell.01" TargetType="DataGridCell">
+        <Setter Property="ToolTip" Value="{Binding ContactDetailsTooltip}"/>
+        <Setter Property="ToolTipService.ShowDuration" Value="30000"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Purchasing/SupplierView.xaml -->
+    <Style x:Key="Style.View.SupplierView.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="#D1D5DB"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Bg"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#EFF6FF"/>
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="#2563EB"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#DBEAFE"/>
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="#2563EB"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bg" Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Purchasing/SupplierView.xaml -->
+    <Style x:Key="Style.View.SupplierView.Button.01" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="10,7"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bg"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#F3F4F6"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#E5E7EB"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Restaurant/Dialogs/PriceUpdateWindow.xaml -->
+    <Style x:Key="Style.View.PriceUpdateWindow.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="10,0"/>
+    </Style>
+
+    <!-- Restaurant/Dialogs/PriceUpdateWindow.xaml -->
+    <Style x:Key="Style.View.PriceUpdateWindow.TextBlock.02" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="#2E7D32"/>
+        <Setter Property="Padding" Value="10,0"/>
+    </Style>
+
+    <!-- Restaurant/Dialogs/PriceUpdateWindow.xaml -->
+    <Style x:Key="Style.View.PriceUpdateWindow.TextBox.01" TargetType="TextBox">
+        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+        <Setter Property="Padding" Value="5,0"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Restaurant/MenuItemListView.xaml -->
+    <Style x:Key="Style.View.MenuItemListView.DataGridRow.01" TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
+        <Setter Property="Height" Value="Auto"/>
+        <Setter Property="MinHeight" Value="50"/>
+    </Style>
+
+    <!-- Restaurant/MenuItemListView.xaml -->
+    <Style x:Key="Style.View.MenuItemListView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="4,4"/>
+    </Style>
+
+    <!-- Restaurant/MenuItemListView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBlock.06" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="4,4"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- Restaurant/MenuItemListView.xaml -->
+    <Style x:Key="Style.View.MenuItemListView.TextBlock.02" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+
+    <!-- Restaurant/MenuItemView.xaml -->
+    <Style x:Key="Style.View.MenuItemView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="TextAlignment" Value="Right" />
+        <Setter Property="Margin" Value="0,0,5,0" />
+    </Style>
+
+    <!-- Restaurant/MenuItemView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBlock.07" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <!-- Restaurant/MenuItemView.xaml -->
+    <Style x:Key="Style.View.MenuItemView.TextBlock.02" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Restaurant/MenuProfitabilityView.xaml -->
+    <Style x:Key="Style.View.MenuProfitabilityView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- Restaurant/MenuProfitabilityView.xaml -->
+    <Style x:Key="Style.View.MenuProfitabilityView.Border.01" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource StatusCompletedBackgroundBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
+                <Setter Property="Background" Value="{StaticResource StatusPartiallyReceivedBackgroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Cost">
+                <Setter Property="Background" Value="{StaticResource StatusPartiallyReceivedBackgroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">
+                <Setter Property="Background" Value="{StaticResource StatusRejectedBackgroundBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Restaurant/MenuProfitabilityView.xaml -->
+    <Style x:Key="Style.View.MenuProfitabilityView.TextBlock.02" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource StatusCompletedForegroundBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
+                <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Cost">
+                <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">
+                <Setter Property="Foreground" Value="{StaticResource StatusRejectedForegroundBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Sales/CustomerView.xaml -->
+    <Style x:Key="Style.View.CustomerView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- Sales/PromotionView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBlock.08" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Sales/SalesListView.xaml -->
+    <Style x:Key="Style.View.SalesListView.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&gt;" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="#334155" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="v" />
+                <Setter Property="ToolTip" Value="Collapse invoice" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E5E7EB" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Sales/SalesReturn.xaml -->
+    <Style x:Key="Style.View.SalesReturn.DataGridRow.01" BasedOn="{StaticResource Style.DataGrid.Row}" TargetType="DataGridRow">
+        <Setter Property="Height" Value="Auto" />
+        <Setter Property="MinHeight" Value="42" />
+        <!--  මෙතනින් තමයි click කරද්දී විතරක් open වෙන්න හැදුවේ  -->
+        <Setter Property="DetailsVisibility" Value="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}" />
+    </Style>
+
+    <!-- Sales/SalesReturn.xaml -->
+    <Style x:Key="Style.View.SalesReturn.ToggleButton.01" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&gt;" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="#334155" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="v" />
+                <Setter Property="ToolTip" Value="Collapse return details" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E5E7EB" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Sales/SalesReturnView.xaml -->
+    <Style x:Key="Style.View.Shared.TextBlock.09" TargetType="TextBlock" BasedOn="{StaticResource ReadOnlyCellTextStyle}">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="TextAlignment" Value="Right"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <!-- Sales/SalesReturnView.xaml -->
+    <Style x:Key="Style.View.Shared.DataGridColumnHeader.01" TargetType="DataGridColumnHeader" BasedOn="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+
+    <!-- Sales/SalesReturnView.xaml -->
+    <Style x:Key="Style.View.SalesReturnView.TextBlock.01" TargetType="TextBlock" BasedOn="{StaticResource ReadOnlyCellTextStyle}">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="TextAlignment" Value="Right"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.DataGridRow.01" BasedOn="{StaticResource Style.DataGrid.Row}" TargetType="DataGridRow">
+        <Setter Property="MinHeight" Value="48" />
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="ToolTip" Value="{Binding ProductName}" />
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.TextBlock.02" TargetType="TextBlock">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="ToolTip" Value="{Binding Note}" />
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.TextBlock.03" TargetType="TextBlock">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="ToolTip" Value="{Binding OfferDisplay}" />
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.TextBlock.04" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.TextBlock.05" TargetType="TextBlock">
+        <Setter Property="TextAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.TextBlock.06" BasedOn="{StaticResource ChangeLabelTextStyle}" TargetType="TextBlock">
+        <Setter Property="Visibility" Value="Visible" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.TextBlock.07" BasedOn="{StaticResource ChangeLabelTextStyle}" TargetType="TextBlock">
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
+                <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.TextBlock.08" BasedOn="{StaticResource ChangeAmountTextStyle}" TargetType="TextBlock">
+        <Setter Property="Visibility" Value="Visible" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Sales/SalesView.xaml -->
+    <Style x:Key="Style.View.SalesView.TextBlock.09" BasedOn="{StaticResource ChangeAmountTextStyle}" TargetType="TextBlock">
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
+                <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Sales/ShiftManagementView.xaml -->
+    <Style x:Key="Style.View.ShiftManagementView.TextBox.01" TargetType="TextBox" BasedOn="{StaticResource ReadOnlyTextBoxStyle}">
+        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsSelectedVarianceNegative}" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Security/RoleManagementView.xaml -->
+    <Style x:Key="Style.View.RoleManagementView.ProgressBar.01" TargetType="ProgressBar">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsLoadingPermissions}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Security/RoleManagementView.xaml -->
+    <Style x:Key="Style.View.RoleManagementView.Grid.01" TargetType="Grid">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                <Setter Property="IsEnabled" Value="False"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Security/RoleManagementView.xaml -->
+    <Style x:Key="Style.View.RoleManagementView.ListBoxItem.01" TargetType="ListBoxItem">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="#EAF2FF"/>
+                <Setter Property="BorderBrush" Value="#303F9F"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Security/RoleManagementView.xaml -->
+    <Style x:Key="Style.View.RoleManagementView.TextBlock.01" TargetType="TextBlock">
+        <Setter Property="Text" Value="{Binding Name}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Name}" Value="">
+                <Setter Property="Text" Value="Unsaved role"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Security/RoleManagementView.xaml -->
+    <Style x:Key="Style.View.RoleManagementView.Button.01" TargetType="Button" BasedOn="{StaticResource EditButtonStyle}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Id}" Value="0">
+                <Setter Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Security/RoleManagementView.xaml -->
+    <Style x:Key="Style.View.RoleManagementView.Button.02" TargetType="Button" BasedOn="{StaticResource DeleteButtonStyle}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Id}" Value="0">
+                <Setter Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Security/UserView.xaml -->
+    <Style x:Key="Style.View.UserView.ListBoxItem.01" TargetType="ListBoxItem">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="Margin" Value="0,0,0,3"/>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="#EAF2FF"/>
+                <Setter Property="BorderBrush" Value="#303F9F"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Sales/BankPromotionView.xaml -->
+    <Style x:Key="Style.View.BankPromotionView.HelpText" TargetType="TextBlock" BasedOn="{StaticResource CaptionStyle}">
+        <Setter Property="FontStyle" Value="Normal" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="Style.View.BankPromotionView.VariantName" TargetType="TextBlock">
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="ToolTip" Value="{Binding Name}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="Style.View.BankPromotionView.ExclusionRow" TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
+        <Setter Property="Height" Value="Auto" />
+        <Setter Property="MinHeight" Value="42" />
+    </Style>
+
+</ResourceDictionary>

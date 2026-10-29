@@ -39,10 +39,7 @@
                                     IsReadOnly="True"
                                     FontWeight="SemiBold">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Padding" Value="10,0"/>
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.PriceUpdateWindow.TextBlock.01" />
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
@@ -51,21 +48,11 @@
                                     Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
 
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Foreground" Value="#2E7D32"/>
-                            <Setter Property="Padding" Value="10,0"/>
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.PriceUpdateWindow.TextBlock.02" />
                     </DataGridTextColumn.ElementStyle>
 
                     <DataGridTextColumn.EditingElementStyle>
-                        <Style TargetType="TextBox">
-                            <Setter Property="HorizontalContentAlignment" Value="Right"/>
-                            <Setter Property="Padding" Value="5,0"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.PriceUpdateWindow.TextBox.01" />
                     </DataGridTextColumn.EditingElementStyle>
 
                 </DataGridTextColumn>

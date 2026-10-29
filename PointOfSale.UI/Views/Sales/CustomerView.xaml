@@ -162,16 +162,12 @@
                             <DataGridTextColumn Header="Contact Number" Binding="{Binding ContactNumber}" Width="150"/>
                             <DataGridTextColumn Header="Address" Binding="{Binding BillingAddress}" Width="220">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.CustomerView.TextBlock.01" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Balance Amount" Binding="{Binding Balance, StringFormat='Rs. {0:N2}'}" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="Auto"/>

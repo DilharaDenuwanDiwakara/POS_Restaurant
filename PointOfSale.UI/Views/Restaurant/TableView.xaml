@@ -112,9 +112,7 @@
                             <DataGridTextColumn Header="Table Name" Binding="{Binding Name}" Width="Auto" />
                             <DataGridTextColumn Header="Capacity" Binding="{Binding Capacity}" Width="Auto">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Current Status" Binding="{Binding CurrentStatus}" Width="Auto"/>

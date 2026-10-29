@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System;
 
 namespace PointOfSale.Core.Models.Security
 {
@@ -29,6 +30,20 @@ namespace PointOfSale.Core.Models.Security
         {
             get => _isGranted;
             set => SetProperty(ref _isGranted, value);
+        }
+
+        private DateTime? _validFrom;
+        public DateTime? ValidFrom
+        {
+            get => _validFrom;
+            set => SetProperty(ref _validFrom, value, nameof(ValidFrom));
+        }
+
+        private DateTime? _validTo;
+        public DateTime? ValidTo
+        {
+            get => _validTo;
+            set => SetProperty(ref _validTo, value, nameof(ValidTo));
         }
     }
 }

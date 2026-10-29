@@ -191,32 +191,7 @@
                                     PreviewKeyDown="MenuItemTabs_PreviewKeyDown">
 
                             <TabControl.Resources>
-                                <Style TargetType="TabItem">
-                                    <Setter Property="FontSize" Value="13"/>
-                                    <Setter Property="Padding" Value="15,8"/>
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="TabItem">
-                                                <Border Name="Border" BorderThickness="0,0,0,2" BorderBrush="Transparent" Margin="0,0,10,0">
-                                                    <ContentPresenter x:Name="ContentSite"
-                                                                      VerticalAlignment="Center"
-                                                                      HorizontalAlignment="Center"
-                                                                      ContentSource="Header"
-                                                                      Margin="10,5"/>
-                                                    
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsSelected" Value="True">
-                                                        <Setter TargetName="Border" Property="BorderBrush" Value="#007BFF"/>
-                                                        <Setter Property="Foreground" Value="#007BFF"/>
-                                                        <Setter Property="FontWeight" Value="SemiBold"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
+                                <ResourceDictionary Source="/Resources/Styles/ScopedMenuTabItemStyle.xaml" />
                             </TabControl.Resources>
 
                             <TabItem x:Name="PricingTabItem" Header="Pricing &amp; Portions">
@@ -300,10 +275,7 @@
                                             <DataGridTextColumn Header="Portion" Binding="{Binding PortionSize}" Width="*"/>
                                             <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="TextAlignment" Value="Right" />
-                                                        <Setter Property="Margin" Value="0,0,5,0" />
-                                                    </Style>
+                                                    <StaticResource ResourceKey="Style.View.MenuItemView.TextBlock.01" />
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
 
@@ -410,35 +382,22 @@
                                             <DataGridTextColumn Header="Unit" Binding="{Binding UnitName}" Width="*"/>
                                             <DataGridTextColumn Header="Base Unit Cost" Binding="{Binding BaseUnitCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                                        <Setter Property="Margin" Value="0,0,8,0"/>
-                                                    </Style>
+                                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.07" />
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
                                             <DataGridTextColumn Header="Wastage %" Binding="{Binding WastagePercentage, StringFormat='{}{0:N2}%'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                                        <Setter Property="Margin" Value="0,0,8,0"/>
-                                                    </Style>
+                                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.07" />
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
                                             <DataGridTextColumn Header="True Unit Cost" Binding="{Binding TrueUnitCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                                        <Setter Property="Margin" Value="0,0,8,0"/>
-                                                    </Style>
+                                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.07" />
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
                                             <DataGridTextColumn Header="Line Cost" Binding="{Binding LineCost, StringFormat='Rs. {0:N2}'}" Width="*" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                                 <DataGridTextColumn.ElementStyle>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                                        <Setter Property="Margin" Value="0,0,8,0"/>
-                                                        <Setter Property="FontWeight" Value="SemiBold"/>
-                                                    </Style>
+                                                    <StaticResource ResourceKey="Style.View.MenuItemView.TextBlock.02" />
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
 

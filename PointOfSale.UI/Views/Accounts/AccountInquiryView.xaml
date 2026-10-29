@@ -6,51 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="760"
              UseLayoutRounding="True" SnapsToDevicePixels="True" FontFamily="Segoe UI"
              TextOptions.TextFormattingMode="Display">
-    <UserControl.Resources>
-        <!-- Extend the application's component styles; keep its theme and control templates. -->
-        <Style x:Key="Inquiry.Caption" TargetType="TextBlock" BasedOn="{StaticResource CaptionStyle}">
-            <Setter Property="FontStyle" Value="Normal" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
-        <Style x:Key="Inquiry.BalanceCard" TargetType="Border" BasedOn="{StaticResource PanelCardStyle}">
-            <Setter Property="Margin" Value="0" />
-            <Setter Property="Padding" Value="16,12" />
-        </Style>
-        <Style x:Key="Inquiry.Amount" TargetType="TextBlock" BasedOn="{StaticResource HeaderTextStyle}">
-            <Setter Property="FontSize" Value="24" />
-            <Setter Property="Margin" Value="0,8,0,0" />
-            <Setter Property="TextAlignment" Value="Right" />
-            <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
-        </Style>
-        <Style x:Key="Inquiry.Header" TargetType="DataGridColumnHeader" BasedOn="{StaticResource Style.DataGrid.ColumnHeader}">
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-        </Style>
-        <Style x:Key="Inquiry.Cell" TargetType="TextBlock">
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-            <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
-        </Style>
-        <Style x:Key="Inquiry.Number" TargetType="TextBlock" BasedOn="{StaticResource Inquiry.Cell}">
-            <Setter Property="TextAlignment" Value="Right" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-        </Style>
-        <Style x:Key="Inquiry.AccountItem" TargetType="ComboBoxItem" BasedOn="{StaticResource ComboBoxItemStyle}">
-            <Setter Property="MinHeight" Value="32" />
-            <Setter Property="Margin" Value="{Binding Depth, Converter={StaticResource LevelToMarginConverter}}" />
-            <Setter Property="ToolTip" Value="{Binding ToolTip}" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsHeader}" Value="True">
-                    <Setter Property="FontWeight" Value="SemiBold" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsGroupHeading}" Value="True">
-                    <Setter Property="IsEnabled" Value="False" />
-                    <Setter Property="FontWeight" Value="Bold" />
-                    <Setter Property="Foreground" Value="{StaticResource BrandBrush}" />
-                    <Setter Property="Background" Value="{StaticResource Brush.App.Background}" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -70,16 +26,7 @@
             <StackPanel>
                 <WrapPanel KeyboardNavigation.TabNavigation="Local">
                     <WrapPanel.Style>
-                        <Style TargetType="WrapPanel">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                                    <Setter Property="IsEnabled" Value="False" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsLoadingAccounts}" Value="True">
-                                    <Setter Property="IsEnabled" Value="False" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.AccountInquiryView.WrapPanel.01" />
                     </WrapPanel.Style>
                     <StackPanel Width="384" Margin="0,0,16,8">
                         <TextBlock Text="Account" Style="{StaticResource LabelStyle}" />
@@ -97,14 +44,7 @@
                             <TextBlock Text="Select an account…" Margin="8,0,32,0" VerticalAlignment="Center"
                                        Foreground="{StaticResource Brush.Text.Muted}" IsHitTestVisible="False">
                                 <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedAccount}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.AccountInquiryView.TextBlock.01" />
                                 </TextBlock.Style>
                             </TextBlock>
                             <Button x:Name="ReloadAccountsButton" Grid.Column="2"
@@ -130,22 +70,7 @@
                             ToolTip="Generate the ledger for the selected account and dates (Alt+G)."
                             AutomationProperties.Name="Generate report">
                         <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ElementName=FromDateInput, Path=(Validation.HasError)}" Value="True">
-                                        <Setter Property="IsEnabled" Value="False" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding ElementName=ToDateInput, Path=(Validation.HasError)}" Value="True">
-                                        <Setter Property="IsEnabled" Value="False" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding ElementName=FromDateInput, Path=SelectedDate}" Value="{x:Null}">
-                                        <Setter Property="IsEnabled" Value="False" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding ElementName=ToDateInput, Path=SelectedDate}" Value="{x:Null}">
-                                        <Setter Property="IsEnabled" Value="False" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.AccountInquiryView.Button.01" />
                         </Button.Style>
                     </Button>
                 </WrapPanel>
@@ -241,8 +166,8 @@
                               ClipboardCopyMode="IncludeHeader" AutomationProperties.Name="Account ledger transactions">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Date" Binding="{Binding TransactionDate, StringFormat={}{0:dd/MM/yyyy}}" Width="112" ElementStyle="{StaticResource Inquiry.Cell}" />
-                            <DataGridTextColumn Header="Document no." Binding="{Binding DocumentNo}" Width="140" ElementStyle="{StaticResource Inquiry.Cell}" />
-                            <DataGridTextColumn Header="Source" Binding="{Binding SourceType}" Width="110" ElementStyle="{StaticResource Inquiry.Cell}" />
+                            <DataGridTextColumn Header="Document no." Binding="{Binding DocumentNo}" Width="200" ElementStyle="{StaticResource Inquiry.Cell}" />
+                            <DataGridTextColumn Header="Source" Binding="{Binding SourceType}" Width="150" ElementStyle="{StaticResource Inquiry.Cell}" />
                             <DataGridTextColumn Header="Reference" Binding="{Binding Reference}" Width="140" ElementStyle="{StaticResource Inquiry.Cell}" />
                             <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" MinWidth="180" ElementStyle="{StaticResource Inquiry.Cell}" />
                             <DataGridTextColumn Header="Debit" Binding="{Binding Debit, StringFormat={}{0:N2}}" Width="125" ElementStyle="{StaticResource Inquiry.Number}" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
@@ -252,35 +177,17 @@
                     </DataGrid>
                     <Border x:Name="EmptyState" Background="{StaticResource Brush.Card.Surface}" Margin="1,41,1,1" IsHitTestVisible="False">
                         <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TransactionLines.Count}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
-                                    <DataTrigger Binding="{Binding IsLoading}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
-                                </Style.Triggers>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.AccountInquiryView.Border.01" />
                         </Border.Style>
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24" MaxWidth="440">
                             <TextBlock TextAlignment="Center">
                                 <TextBlock.Style>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource SubHeaderTextStyle}">
-                                        <Setter Property="Text" Value="Generate an account inquiry" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding HasReport}" Value="True"><Setter Property="Text" Value="No transactions in this period" /></DataTrigger>
-                                            <DataTrigger Binding="{Binding HasError}" Value="True"><Setter Property="Text" Value="Report unavailable" /></DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.AccountInquiryView.TextBlock.02" />
                                 </TextBlock.Style>
                             </TextBlock>
                             <TextBlock TextAlignment="Center">
                                 <TextBlock.Style>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Inquiry.Caption}">
-                                        <Setter Property="Text" Value="Select an account, choose a date range, and select Generate report to view ledger activity." />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding HasReport}" Value="True"><Setter Property="Text" Value="There are no ledger entries for these dates. Opening and closing balances are shown above." /></DataTrigger>
-                                            <DataTrigger Binding="{Binding HasError}" Value="True"><Setter Property="Text" Value="Review the message above, check your filters, and generate the report again." /></DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.AccountInquiryView.TextBlock.03" />
                                 </TextBlock.Style>
                             </TextBlock>
                         </StackPanel>

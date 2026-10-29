@@ -14,10 +14,17 @@ namespace PointOfSale.UI.Commands
             _canExecute = canExecute;
         }
 
-        public event EventHandler CanExecuteChanged;
+        // Explicit VM notifications and WPF requery both refresh realized row buttons.
+        private event EventHandler _canExecuteChanged;
+        public event EventHandler CanExecuteChanged
+        {
+            add { _canExecuteChanged += value; CommandManager.RequerySuggested += value; }
+            remove { _canExecuteChanged -= value; CommandManager.RequerySuggested -= value; }
+        }
 
         public bool CanExecute(object parameter)
         {
+            if (parameter != null && !(parameter is T)) return false;
             if (parameter == null && typeof(T).IsValueType && Nullable.GetUnderlyingType(typeof(T)) == null)
                 return false;
 
@@ -26,11 +33,12 @@ namespace PointOfSale.UI.Commands
 
         public void Execute(object parameter)
         {
+            if (!CanExecute(parameter)) return;
             _execute((T)parameter);
         }
         public void RaiseCanExecuteChanged()
         {
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            _canExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 

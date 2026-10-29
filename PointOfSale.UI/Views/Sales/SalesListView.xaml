@@ -104,7 +104,7 @@
                     Margin="0,4"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
-                    HorizontalScrollBarVisibility="Disabled"
+                    HorizontalScrollBarVisibility="Auto"
                     IsReadOnly="True"
                     ItemsSource="{Binding SalesList}"
                     RowDetailsVisibilityMode="Visible"
@@ -113,11 +113,7 @@
                     VerticalScrollBarVisibility="Auto">
 
                     <DataGrid.RowStyle>
-                        <Style BasedOn="{StaticResource Style.DataGrid.Row}" TargetType="DataGridRow">
-                            <Setter Property="Height" Value="Auto" />
-                            <Setter Property="MinHeight" Value="42" />
-                            <Setter Property="DetailsVisibility" Value="Visible" />
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.Shared.DataGridRow.01" />
                     </DataGrid.RowStyle>
 
                     <DataGrid.Columns>
@@ -132,35 +128,7 @@
                                         IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                         ToolTip="Expand invoice">
                                         <ToggleButton.Style>
-                                            <Style TargetType="ToggleButton">
-                                                <Setter Property="Content" Value="&gt;" />
-                                                <Setter Property="FontFamily" Value="Segoe UI" />
-                                                <Setter Property="FontSize" Value="12" />
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                                <Setter Property="Foreground" Value="#334155" />
-                                                <Setter Property="Background" Value="Transparent" />
-                                                <Setter Property="BorderThickness" Value="0" />
-                                                <Setter Property="Cursor" Value="Hand" />
-                                                <Setter Property="Focusable" Value="False" />
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="ToggleButton">
-                                                            <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsChecked" Value="True">
-                                                        <Setter Property="Content" Value="v" />
-                                                        <Setter Property="ToolTip" Value="Collapse invoice" />
-                                                    </Trigger>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#E5E7EB" />
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.SalesListView.ToggleButton.01" />
                                         </ToggleButton.Style>
                                     </ToggleButton>
                                 </DataTemplate>
@@ -182,10 +150,10 @@
 
                         <DataGridTextColumn
                             Width="110"
-                            Binding="{Binding NetAmount, StringFormat='Rs. {0:N2}'}"
+                            Binding="{Binding SubTotal, StringFormat='Rs. {0:N2}'}"
                             ElementStyle="{StaticResource RightAlignedTextStyle}"
                             FontWeight="Bold"
-                            Header="Net Amount"
+                            Header="Sub Total"
                             HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
                         <DataGridTextColumn
                             Width="110"
@@ -200,6 +168,13 @@
                             ElementStyle="{StaticResource RightAlignedTextStyle}"
                             FontWeight="Bold"
                             Header="Tax Amount"
+                            HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
+                        <DataGridTextColumn
+                            Width="110"
+                            Binding="{Binding NetAmount, StringFormat='Rs. {0:N2}'}"
+                            ElementStyle="{StaticResource RightAlignedTextStyle}"
+                            FontWeight="Bold"
+                            Header="Net Amount"
                             HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}" />
 
                         <DataGridTextColumn
@@ -237,14 +212,7 @@
                                         Foreground="#64748B"
                                         Text="Loading invoice items...">
                                         <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsLoadingLineItems}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.Shared.TextBlock.03" />
                                         </TextBlock.Style>
                                     </TextBlock>
 

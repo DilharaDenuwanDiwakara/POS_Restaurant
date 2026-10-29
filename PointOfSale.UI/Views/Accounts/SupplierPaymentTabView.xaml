@@ -21,10 +21,7 @@
 
             <!-- Tab Headers Container -->
             <TabControl.Resources>
-                <Style TargetType="TabPanel">
-                    <Setter Property="Background" Value="#F7F9FA"/>
-                    <Setter Property="Margin" Value="8"/>
-                </Style>
+                <ResourceDictionary Source="/Resources/Styles/ScopedPaymentTabPanelStyle.xaml" />
             </TabControl.Resources>
 
             <!-- Payment Tab -->

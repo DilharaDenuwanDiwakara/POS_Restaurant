@@ -335,8 +335,94 @@ namespace PointOfSale.Infrastructure.Repositories.Security
             return ids;
         }
 
-        public async Task SaveUserPermissionsAsync(int userId, List<int> grantedPermissionIds)
+        public async Task<List<int>> GetRolePermissionIdsAsync(int roleId)
         {
+            var ids = new List<int>();
+            using (var connection = GetConnection())
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT PermissionId FROM [Auth].[RolePermission] WHERE RoleId = @RoleId";
+                command.Parameters.Add("@RoleId", SqlDbType.Int).Value = roleId;
+                await connection.OpenAsync();
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                        ids.Add(reader.GetInt32(0));
+                }
+            }
+            return ids;
+        }
+
+        public async Task SaveRolePermissionsAsync(int roleId, List<int> grantedPermissionIds)
+        {
+            using (var connection = GetConnection())
+            {
+                await connection.OpenAsync();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = connection.CreateCommand())
+                        {
+                            command.Transaction = transaction;
+                            command.CommandText = "DELETE FROM [Auth].[RolePermission] WHERE RoleId = @RoleId";
+                            command.Parameters.Add("@RoleId", SqlDbType.Int).Value = roleId;
+                            await command.ExecuteNonQueryAsync();
+
+                            command.CommandText = "INSERT INTO [Auth].[RolePermission] (RoleId, PermissionId) VALUES (@RoleId, @PermissionId)";
+                            var permissionId = command.Parameters.Add("@PermissionId", SqlDbType.Int);
+                            foreach (var id in (grantedPermissionIds ?? new List<int>()).Distinct())
+                            {
+                                permissionId.Value = id;
+                                await command.ExecuteNonQueryAsync();
+                            }
+                        }
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        public async Task<List<PermissionNode>> GetUserPermissionOverridesAsync(int userId)
+        {
+            var overrides = new List<PermissionNode>();
+            using (var connection = GetConnection())
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT PermissionId, IsGranted, ValidFrom, ValidTo FROM [Auth].[UserPermission] WHERE UserId = @UserId";
+                command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                await connection.OpenAsync();
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        overrides.Add(new PermissionNode
+                        {
+                            PermissionId = reader.GetInt32(0),
+                            IsGranted = reader.GetBoolean(1),
+                            ValidFrom = reader.IsDBNull(2) ? (DateTime?)null : reader.GetDateTime(2),
+                            ValidTo = reader.IsDBNull(3) ? (DateTime?)null : reader.GetDateTime(3)
+                        });
+                    }
+                }
+            }
+            return overrides;
+        }
+
+        public async Task SaveUserPermissionsAsync(int userId, List<PermissionNode> userOverrides, int modifiedByUserId)
+        {
+            if (modifiedByUserId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(modifiedByUserId), "A signed-in administrator is required.");
+
+            if (userOverrides != null && userOverrides.Any(p => p == null ||
+                (p.ValidFrom.HasValue && p.ValidTo.HasValue && p.ValidFrom.Value > p.ValidTo.Value)))
+                throw new ArgumentException("Overrides must have a valid date range.", nameof(userOverrides));
+
             try
             {
                 using (var connection = GetConnection())
@@ -355,21 +441,28 @@ namespace PointOfSale.Infrastructure.Repositories.Security
                                 await deleteCmd.ExecuteNonQueryAsync();
                             }
 
-                            // 2. Insert new granted permissions
-                            if (grantedPermissionIds != null && grantedPermissionIds.Any())
+                            // 2. Insert the supplied overrides, including their validity and audit fields.
+                            if (userOverrides != null && userOverrides.Any())
                             {
                                 using (var insertCmd = connection.CreateCommand())
                                 {
                                     insertCmd.Transaction = transaction;
-                                    insertCmd.CommandText = "INSERT INTO [Auth].[UserPermission] (UserId, PermissionId, IsGranted) VALUES (@UserId, @PermissionId, 1)";
+                                    insertCmd.CommandText = "INSERT INTO [Auth].[UserPermission] (UserId, PermissionId, IsGranted, ValidFrom, ValidTo, ModifiedBy) VALUES (@UserId, @PermissionId, @IsGranted, @ValidFrom, @ValidTo, @ModifiedBy)";
 
                                     // Add parameters once
-                                    var pUserId = insertCmd.Parameters.AddWithValue("@UserId", userId);
+                                    insertCmd.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
                                     var pPermId = insertCmd.Parameters.Add("@PermissionId", SqlDbType.Int);
+                                    var pIsGranted = insertCmd.Parameters.Add("@IsGranted", SqlDbType.Bit);
+                                    var pValidFrom = insertCmd.Parameters.Add("@ValidFrom", SqlDbType.DateTime2);
+                                    var pValidTo = insertCmd.Parameters.Add("@ValidTo", SqlDbType.DateTime2);
+                                    insertCmd.Parameters.Add("@ModifiedBy", SqlDbType.Int).Value = modifiedByUserId;
 
-                                    foreach (var permId in grantedPermissionIds)
+                                    foreach (var permission in userOverrides)
                                     {
-                                        pPermId.Value = permId;
+                                        pPermId.Value = permission.PermissionId;
+                                        pIsGranted.Value = permission.IsGranted;
+                                        pValidFrom.Value = (object)permission.ValidFrom ?? DBNull.Value;
+                                        pValidTo.Value = (object)permission.ValidTo ?? DBNull.Value;
                                         await insertCmd.ExecuteNonQueryAsync();
                                     }
                                 }

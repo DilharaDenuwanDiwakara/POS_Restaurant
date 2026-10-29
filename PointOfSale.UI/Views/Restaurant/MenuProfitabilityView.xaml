@@ -79,10 +79,7 @@
                 
                 <DataGridTextColumn Header="Menu Item" Binding="{Binding MenuItemName}" Width="*">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.MenuProfitabilityView.TextBlock.01" />
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
@@ -90,34 +87,25 @@
 
                 <DataGridTextColumn Header="BOM Cost" Binding="{Binding TotalBOMCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
                 <DataGridTextColumn Header="Selling Price" Binding="{Binding SellingPrice, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
                 <DataGridTextColumn Header="Gross Profit" Binding="{Binding GrossProfit, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.04" />
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
                 <DataGridTextColumn Header="Food Cost %" Binding="{Binding FoodCostPercentage, StringFormat='{}{0:N2}%'}" Width="110" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                        </Style>
+                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
@@ -126,37 +114,11 @@
                         <DataTemplate>
                             <Border CornerRadius="4" Padding="8,4" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{StaticResource StatusCompletedBackgroundBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
-                                                <Setter Property="Background" Value="{StaticResource StatusPartiallyReceivedBackgroundBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Cost">
-                                                <Setter Property="Background" Value="{StaticResource StatusPartiallyReceivedBackgroundBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">
-                                                <Setter Property="Background" Value="{StaticResource StatusRejectedBackgroundBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.MenuProfitabilityView.Border.01" />
                                 </Border.Style>
                                 <TextBlock Text="{Binding BOMStatus}" FontWeight="SemiBold">
                                     <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource StatusCompletedForegroundBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Recipe">
-                                                    <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding BOMStatus}" Value="Missing Cost">
-                                                    <Setter Property="Foreground" Value="{StaticResource StatusPartiallyReceivedForegroundBrush}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding BOMStatus}" Value="High Cost">
-                                                    <Setter Property="Foreground" Value="{StaticResource StatusRejectedForegroundBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.MenuProfitabilityView.TextBlock.02" />
                                     </TextBlock.Style>
                                 </TextBlock>
                             </Border>

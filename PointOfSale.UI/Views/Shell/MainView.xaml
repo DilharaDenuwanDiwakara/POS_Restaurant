@@ -361,6 +361,15 @@
                                 </RadioButton>
 
                                 <RadioButton
+                                    Command="{Binding NavigateToBankPromotionCommand}"
+                                    Style="{StaticResource Style.Nav.RadioButton}"
+                                    Visibility="{Binding CanNavPromotion, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Bank Card Promotions" />
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <RadioButton
                                     Command="{Binding NavigateToMainSalesReturnCommand}"
                                     Style="{StaticResource Style.Nav.RadioButton}"
                                     Visibility="{Binding CanNavMainSalesReturn, Converter={StaticResource BoolToVisibility}}">
@@ -710,6 +719,12 @@
                                         <TextBlock Text="User Management" />
                                     </StackPanel>
                                 </RadioButton>
+                                <RadioButton
+                                    Command="{Binding NavigateToRoleManagementCommand}"
+                                    Style="{StaticResource Style.Nav.RadioButton}"
+                                    Visibility="{Binding CanNavRoles, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock Text="Role Management" />
+                                </RadioButton>
 
                             </StackPanel>
                         </Expander>
@@ -791,7 +806,7 @@
                 </Grid.ColumnDefinitions>
                 
                 <TextBlock Grid.Column="2" Style="{StaticResource Style.Text.Status}" Margin="20,0,0,0">
-                    <Run Text="v1.6.2 | "/>
+                    <Run Text="v1.6.3 | "/>
                     <Run Text="{Binding CurrentDateTime, StringFormat='dd/MM/yyyy - HH:mm:ss'}"/>
                 </TextBlock>
 

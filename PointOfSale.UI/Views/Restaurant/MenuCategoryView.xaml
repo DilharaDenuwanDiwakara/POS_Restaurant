@@ -153,9 +153,7 @@
                             <DataGridTextColumn Header="Category Name" Binding="{Binding Name}" Width="Auto"/>
                             <DataGridTextColumn Header="Sort Order" Binding="{Binding DisplayOrder}" Width="Auto" >
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Parent Category" Binding="{Binding ParentName}" Width="Auto"/>
@@ -187,9 +185,7 @@
                         </TreeView.ItemTemplate>
 
                         <TreeView.ItemContainerStyle>
-                            <Style TargetType="{x:Type TreeViewItem}">
-                                <Setter Property="IsExpanded" Value="False"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.Shared.TreeViewItem.01" />
                         </TreeView.ItemContainerStyle>
 
                     </TreeView>

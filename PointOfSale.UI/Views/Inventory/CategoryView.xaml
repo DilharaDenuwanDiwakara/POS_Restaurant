@@ -193,9 +193,7 @@
                         </TreeView.ItemTemplate>
 
                         <TreeView.ItemContainerStyle>
-                            <Style TargetType="{x:Type TreeViewItem}">
-                                <Setter Property="IsExpanded" Value="False"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.Shared.TreeViewItem.01" />
                         </TreeView.ItemContainerStyle>
                         
                     </TreeView>

@@ -139,50 +139,38 @@
                         
                         <DataGridTextColumn Header="Cost Price" Binding="{Binding StandardCost, StringFormat='Rs. {0:N2}'}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Right"/>
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
                         <DataGridTextColumn Header="Selling Price" Binding="{Binding SellingPrice, StringFormat='Rs. {0:N2}'}" Width="Auto" Visibility="Collapsed" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
                         <DataGridTextColumn Header="Reorder Point" Binding="{Binding ReorderPoint}" Width="120" >
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         
                         <DataGridTextColumn Header="Available Qty" Binding="{Binding AvailableQuantity, StringFormat=N3}" Width="120" >
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <DataGridTextColumn Header="Unit Measure" Binding="{Binding UnitMeasureName}" Width="150" />
 
                         <DataGridTextColumn Header="Add.Stock Qty" Binding="{Binding AdditionalStockQuantity}" Width="120" >
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
                         <DataGridTextColumn Header="Wastage %" Binding="{Binding WastagePercentage}" Width="120">
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Right"/>
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 

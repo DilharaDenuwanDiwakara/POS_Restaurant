@@ -32,7 +32,8 @@ BEGIN
     INNER JOIN [Purchasing].[Supplier] S ON P.[SupplierId] = S.[Id]
     INNER JOIN [Auth].[User] U ON U.[Id] = P.[CreatedBy]
     WHERE
-        (@SupplierID IS NULL OR P.[SupplierId] = @SupplierID)
+        P.[Status] <> 'DELETED_DRAFT'
+        AND (@SupplierID IS NULL OR P.[SupplierId] = @SupplierID)
         AND (@DateFrom IS NULL OR P.[OrderDate] >= @DateFrom)
         AND (@DateTo IS NULL OR P.[OrderDate] < DATEADD(DAY, 1, @DateTo))
     ORDER BY P.[CreatedDate] DESC

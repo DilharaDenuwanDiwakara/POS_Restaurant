@@ -256,11 +256,7 @@
                                   RowDetailsVisibilityMode="Visible"
                                   Style="{StaticResource DataGridStyle}">
                             <DataGrid.RowStyle>
-                                <Style TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
-                                    <Setter Property="Height" Value="Auto"/>
-                                    <Setter Property="MinHeight" Value="42"/>
-                                    <Setter Property="DetailsVisibility" Value="Visible"/>
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.Shared.DataGridRow.01" />
                             </DataGrid.RowStyle>
 
                             <DataGrid.Columns>
@@ -274,36 +270,7 @@
                                                           VerticalAlignment="Center"
                                                           ToolTip="Expand yield details">
                                                 <ToggleButton.Style>
-                                                    <Style TargetType="ToggleButton">
-                                                        <Setter Property="Content" Value="&gt;"/>
-                                                        <Setter Property="FontFamily" Value="Segoe UI"/>
-                                                        <Setter Property="FontSize" Value="12"/>
-                                                        <Setter Property="FontWeight" Value="SemiBold"/>
-                                                        <Setter Property="Foreground" Value="#334155"/>
-                                                        <Setter Property="Background" Value="Transparent"/>
-                                                        <Setter Property="BorderThickness" Value="0"/>
-                                                        <Setter Property="Cursor" Value="Hand"/>
-                                                        <Setter Property="Focusable" Value="False"/>
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="ToggleButton">
-                                                                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                                                                        <ContentPresenter HorizontalAlignment="Center"
-                                                                                          VerticalAlignment="Center"/>
-                                                                    </Border>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                        <Style.Triggers>
-                                                            <Trigger Property="IsChecked" Value="True">
-                                                                <Setter Property="Content" Value="v"/>
-                                                                <Setter Property="ToolTip" Value="Collapse yield details"/>
-                                                            </Trigger>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Background" Value="#E5E7EB"/>
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
+                                                    <StaticResource ResourceKey="Style.View.ProvisioningView.ToggleButton.01" />
                                                 </ToggleButton.Style>
                                             </ToggleButton>
                                         </DataTemplate>
@@ -346,14 +313,7 @@
                                                        Foreground="#64748B"
                                                        Margin="4,0,0,8">
                                                 <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsLoadingDetails}" Value="True">
-                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
+                                                    <StaticResource ResourceKey="Style.View.ProvisioningView.TextBlock.01" />
                                                 </TextBlock.Style>
                                             </TextBlock>
 

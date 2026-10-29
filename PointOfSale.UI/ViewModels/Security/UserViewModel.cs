@@ -20,19 +20,26 @@ namespace PointOfSale.UI.ViewModels.Security
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IBranchRepository _locationRepository;
+        private readonly IUserSessionService _userSessionService;
+        private int? _loadedPermissionUserId;
+        private int _permissionLoadVersion;
+        private PermissionGroup _selectedPermissionGroup;
 
         public UserViewModel(
             IUserRepository userRepository,
             IPasswordHasher passwordHasher,
-            IBranchRepository locationRepository)
+            IBranchRepository locationRepository,
+            IUserSessionService userSessionService)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
             _locationRepository = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
+            _userSessionService = userSessionService ?? throw new ArgumentNullException(nameof(userSessionService));
 
             // Initialize commands
             SaveUserCommand = new AsyncRelayCommand(async _ => await SaveUserAsync(), _ => CanSaveUser);
-            UpdatePermissionsCommand = new AsyncRelayCommand(async _ => await SavePermissionsAsync(), _ => SelectedUser != null);
+            UpdatePermissionsCommand = new AsyncRelayCommand(async _ => await SavePermissionsAsync(),
+                _ => SelectedUser != null && _loadedPermissionUserId == SelectedUser.UserId);
             LoadUserCommand = new AsyncRelayCommand(async _ => await LoadUserAsync());
             NewUserCommand = new RelayCommand(_ => CreateNewUser());
             EditUserCommand = new AsyncRelayCommand(async _ => await SetEditMode(true), _ => SelectedUser != null);
@@ -48,6 +55,12 @@ namespace PointOfSale.UI.ViewModels.Security
         public ObservableCollection<Roles> Roles { get; } = new ObservableCollection<Roles>();
 
         public ObservableCollection<PermissionGroup> PermissionGroups { get; } = new ObservableCollection<PermissionGroup>();
+
+        public PermissionGroup SelectedPermissionGroup
+        {
+            get => _selectedPermissionGroup;
+            set => SetProperty(ref _selectedPermissionGroup, value);
+        }
         #endregion
 
         #region Properties
@@ -67,7 +80,10 @@ namespace PointOfSale.UI.ViewModels.Security
                     else
                     {
                         // Clear permissions if no user selected
+                        _permissionLoadVersion++;
+                        _loadedPermissionUserId = null;
                         PermissionGroups.Clear();
+                        SelectedPermissionGroup = null;
                     }
                     (UpdatePermissionsCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
                     (EditUserCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
@@ -241,13 +257,21 @@ namespace PointOfSale.UI.ViewModels.Security
         }
         private async Task LoadPermissionsForUser(int userId)
         {
+            var version = ++_permissionLoadVersion;
+            _loadedPermissionUserId = null;
+            SelectedPermissionGroup = null;
+            (UpdatePermissionsCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             PermissionGroups.Clear();
 
             try
             {
                 // 1. Fetch Flat List
                 var allPerms = await _userRepository.GetAllPermissionsAsync();
-                var userPermIds = userId > 0 ? await _userRepository.GetUserPermissionIdsAsync(userId) : new List<int>();
+                var userOverrides = userId > 0
+                    ? await _userRepository.GetUserPermissionOverridesAsync(userId)
+                    : new List<PermissionNode>();
+                if (version != _permissionLoadVersion || (SelectedUser?.UserId ?? 0) != userId) return;
+                var overridesById = userOverrides.ToDictionary(p => p.PermissionId);
 
                 // 2. Group by "Module"
                 var grouped = allPerms.GroupBy(p => p.Module);
@@ -257,7 +281,12 @@ namespace PointOfSale.UI.ViewModels.Security
                     var permissionNodes = new ObservableCollection<PermissionNode>();
                     foreach (var p in group)
                     {
-                        p.IsGranted = userPermIds.Contains(p.PermissionId);
+                        if (overridesById.TryGetValue(p.PermissionId, out var userOverride))
+                        {
+                            p.IsGranted = userOverride.IsGranted;
+                            p.ValidFrom = userOverride.ValidFrom;
+                            p.ValidTo = userOverride.ValidTo;
+                        }
                         permissionNodes.Add(p);
                     }
 
@@ -267,6 +296,9 @@ namespace PointOfSale.UI.ViewModels.Security
                         Permissions = permissionNodes
                     });
                 }
+                SelectedPermissionGroup = PermissionGroups.FirstOrDefault();
+                _loadedPermissionUserId = userId;
+                (UpdatePermissionsCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             }
             catch (Exception ex)
             {
@@ -360,16 +392,16 @@ namespace PointOfSale.UI.ViewModels.Security
         {
             int targetUserId = SelectedUser?.UserId ?? UserId;
 
-            if (targetUserId <= 0)
+            if (targetUserId <= 0 || _loadedPermissionUserId != targetUserId)
             {
-                MessageBox.Show("Please select a user first.");
+                MessageBox.Show("Please select a user and wait for their permissions to load.");
                 return;
             }
 
             try
             {
-                // Get IDs of checked boxes
-                var grantedIds = new List<int>();
+                // Keep the checked grants together with their validity dates.
+                var userOverrides = new List<PermissionNode>();
 
                 foreach (var group in PermissionGroups)
                 {
@@ -377,12 +409,12 @@ namespace PointOfSale.UI.ViewModels.Security
                     {
                         if (perm.IsGranted)
                         {
-                            grantedIds.Add(perm.PermissionId);
+                            userOverrides.Add(perm);
                         }
                     }
                 }
 
-                await _userRepository.SaveUserPermissionsAsync(targetUserId, grantedIds);
+                await _userRepository.SaveUserPermissionsAsync(targetUserId, userOverrides, _userSessionService.UserId);
 
                 MessageBox.Show("Permissions updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }

@@ -6,23 +6,7 @@
              mc:Ignorable="d"
              d:DesignHeight="650" d:DesignWidth="1000">
 
-    <UserControl.Resources>
-        <Style x:Key="TouchDataGridRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
-            <Setter Property="Height" Value="64"/>
-            <Setter Property="MinHeight" Value="64"/>
-        </Style>
 
-        <Style x:Key="ReadOnlyCellTextStyle" TargetType="TextBlock">
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FontSize" Value="14"/>
-        </Style>
-
-        <Style x:Key="TouchComboBoxItemStyle" TargetType="ComboBoxItem" BasedOn="{StaticResource ComboBoxItemStyle}">
-            <Setter Property="Padding" Value="12,10"/>
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="MinHeight" Value="44"/>
-        </Style>
-    </UserControl.Resources>
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -88,27 +72,19 @@
 
                     <DataGridTextColumn Header="Sold Qty" Binding="{Binding SoldQty, StringFormat=N2}" Width="*" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource ReadOnlyCellTextStyle}">
-                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                <Setter Property="TextAlignment" Value="Right"/>
-                                <Setter Property="Margin" Value="0,0,8,0"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.Shared.TextBlock.09" />
                         </DataGridTextColumn.ElementStyle>
                         <DataGridTextColumn.HeaderStyle>
-                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+                            <StaticResource ResourceKey="Style.View.Shared.DataGridColumnHeader.01" />
                         </DataGridTextColumn.HeaderStyle>
                     </DataGridTextColumn>
 
                     <DataGridTextColumn Header="Refund" Binding="{Binding NetUnitRefund, StringFormat=N2}" Width="*" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource ReadOnlyCellTextStyle}">
-                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                <Setter Property="TextAlignment" Value="Right"/>
-                                <Setter Property="Margin" Value="0,0,8,0"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.Shared.TextBlock.09" />
                         </DataGridTextColumn.ElementStyle>
                         <DataGridTextColumn.HeaderStyle>
-                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+                            <StaticResource ResourceKey="Style.View.Shared.DataGridColumnHeader.01" />
                         </DataGridTextColumn.HeaderStyle>
                     </DataGridTextColumn>
 
@@ -159,15 +135,10 @@
 
                     <DataGridTextColumn Header="Total Refund" Binding="{Binding RefundAmount, StringFormat=N2}" Width="*" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource ReadOnlyCellTextStyle}">
-                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                <Setter Property="TextAlignment" Value="Right"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="Margin" Value="0,0,8,0"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.SalesReturnView.TextBlock.01" />
                         </DataGridTextColumn.ElementStyle>
                         <DataGridTextColumn.HeaderStyle>
-                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource RightAlignedDataGridColumnHeaderStyle}"/>
+                            <StaticResource ResourceKey="Style.View.Shared.DataGridColumnHeader.01" />
                         </DataGridTextColumn.HeaderStyle>
                     </DataGridTextColumn>
 

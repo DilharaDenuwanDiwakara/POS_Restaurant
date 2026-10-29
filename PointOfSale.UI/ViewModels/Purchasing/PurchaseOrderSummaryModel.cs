@@ -36,6 +36,15 @@ namespace PointOfSale.UI.ViewModels.Purchasing
         public string Status => Source.Status;
         public string Username => Source.Username;
         public bool IsDraft => Source.IsDraft;
+        public bool IsApproved => string.Equals(Status?.Trim(), "APPROVED", StringComparison.OrdinalIgnoreCase);
+
+        public void UpdateStatus(string status)
+        {
+            Source.Status = status;
+            OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(IsDraft));
+            OnPropertyChanged(nameof(IsApproved));
+        }
 
         private ObservableCollection<GoodsPurchaseNoteLine> _lineItems;
         public ObservableCollection<GoodsPurchaseNoteLine> LineItems

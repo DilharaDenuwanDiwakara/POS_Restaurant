@@ -26,5 +26,8 @@ namespace PointOfSale.Core.Interfaces.Repositories.Sales
         Task<List<SalesListDto>> GetSalesListAsync(DateTime from, DateTime to, int? branchId, string paymentType);
 
         Task<List<SalesLineItemDto>> GetSalesLineItemsAsync(long salesId);
+
+        /// <summary>Returns the active promotion and variant exclusions, or null if no promotion matches.</summary>
+        Task<BankPromoWithExclusionsDto> GetBankPromoWithExclusionsAsync(string binPrefix);
     }
 }

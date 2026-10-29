@@ -143,14 +143,7 @@
                                     HorizontalContentAlignment="Right"
                                     FontWeight="SemiBold">
                                 <TextBox.Style>
-                                    <Style TargetType="TextBox" BasedOn="{StaticResource ReadOnlyTextBoxStyle}">
-                                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsSelectedVarianceNegative}" Value="True">
-                                                <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.ShiftManagementView.TextBox.01" />
                                 </TextBox.Style>
                             </TextBox>
                         </Grid>

@@ -170,9 +170,7 @@
                                                         Width="150"
                                                         HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
@@ -196,13 +194,7 @@
                                        Margin="4,6,4,2"
                                        AutomationProperties.LiveSetting="Polite">
                                 <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Style.Triggers>
-                                            <Trigger Property="Text" Value="">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.ExpensesView.TextBlock.01" />
                                 </TextBlock.Style>
                             </TextBlock>
 
@@ -294,9 +286,7 @@
                             <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
                             <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='Rs. {0:N2}'}" Width="150" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTemplateColumn Header="Action" Width="90">

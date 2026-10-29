@@ -17,6 +17,36 @@ namespace PointOfSale.Infrastructure.Repositories.Restaurant
         {
         }
 
+        public async Task<IEnumerable<Variant>> GetVariantsByCategoryIdAsync(int categoryId)
+        {
+            if (categoryId <= 0) throw new ArgumentOutOfRangeException(nameof(categoryId));
+            var variants = new List<Variant>();
+            const string sql = @"
+SELECT v.Id, v.ItemCode, v.Name AS VariantName, v.Price, m.Name AS MenuItemName
+FROM [Restaurant].[Variant] v
+INNER JOIN [Restaurant].[MenuItem] m ON m.Id = v.MenuItemId
+WHERE m.MenuCategoryId = @CategoryId AND m.IsActive = 1
+ORDER BY m.Name, v.Name, v.ItemCode, v.Id;";
+            using (var connection = GetConnection())
+            using (var command = new SqlCommand(sql, connection))
+            {
+                command.Parameters.Add("@CategoryId", SqlDbType.Int).Value = categoryId;
+                await connection.OpenAsync();
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                        variants.Add(new Variant
+                        {
+                            Id = GetValue<int>(reader, "Id"),
+                            ItemCode = GetValue<string>(reader, "ItemCode"),
+                            Name = MenuVariantDto.FormatDisplayName(GetValue<string>(reader, "MenuItemName"), GetValue<string>(reader, "VariantName")),
+                            Price = GetValue<decimal>(reader, "Price")
+                        });
+                }
+            }
+            return variants;
+        }
+
         public async Task<int> CreateAsync(MenuItem menuItem, IEnumerable<int> taxIds, int createdBy)
         {
             using (var connection = GetConnection())

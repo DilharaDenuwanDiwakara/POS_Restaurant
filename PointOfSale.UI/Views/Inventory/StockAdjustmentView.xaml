@@ -11,7 +11,14 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Stock Adjustment" Style="{StaticResource HeaderTextStyle}"/>
+        <Grid>
+            <TextBlock Text="Stock Adjustment" Style="{StaticResource HeaderTextStyle}"/>
+            <TextBlock x:Name="DataLoadingIndicator"
+                       Text="Loading stock adjustment data..."
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Style="{StaticResource LabelStyle}"
+                       Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"/>
+        </Grid>
 
         <TabControl Grid.Row="1"
                     Style="{StaticResource TabControlStyle}"
@@ -175,24 +182,18 @@
                                     <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="*"/>
                                     <DataGridTextColumn Header="Current Stock" Binding="{Binding CurrentStock, StringFormat=N3}" Width="130" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
                                     <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="100"/>
                                     <DataGridTextColumn Header="Quantity" Binding="{Binding AdjustmentQuantity, StringFormat=N3}" Width="120" FontWeight="Bold">
                                         <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
                                     <DataGridTextColumn Header="Signed Qty" Binding="{Binding Quantity, StringFormat=N3}" Width="120" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                         <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
                                     <DataGridTemplateColumn Header="Reason" Width="*">
@@ -292,11 +293,7 @@
                               HorizontalScrollBarVisibility="Auto"
                               VerticalScrollBarVisibility="Auto">
                         <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow" BasedOn="{StaticResource Style.DataGrid.Row}">
-                                <Setter Property="Height" Value="Auto"/>
-                                <Setter Property="MinHeight" Value="42"/>
-                                <Setter Property="DetailsVisibility" Value="Visible"/>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.Shared.DataGridRow.01" />
                         </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
@@ -310,36 +307,7 @@
                                                       VerticalAlignment="Center"
                                                       ToolTip="Expand adjustment">
                                             <ToggleButton.Style>
-                                                <Style TargetType="ToggleButton">
-                                                    <Setter Property="Content" Value="&gt;"/>
-                                                    <Setter Property="FontFamily" Value="Segoe UI"/>
-                                                    <Setter Property="FontSize" Value="12"/>
-                                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                                    <Setter Property="Foreground" Value="#334155"/>
-                                                    <Setter Property="Background" Value="Transparent"/>
-                                                    <Setter Property="BorderThickness" Value="0"/>
-                                                    <Setter Property="Cursor" Value="Hand"/>
-                                                    <Setter Property="Focusable" Value="False"/>
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="ToggleButton">
-                                                                <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                                                                    <ContentPresenter HorizontalAlignment="Center"
-                                                                                      VerticalAlignment="Center"/>
-                                                                </Border>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                    <Style.Triggers>
-                                                        <Trigger Property="IsChecked" Value="True">
-                                                            <Setter Property="Content" Value="v"/>
-                                                            <Setter Property="ToolTip" Value="Collapse adjustment"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#E5E7EB"/>
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
+                                                <StaticResource ResourceKey="Style.View.StockAdjustmentView.ToggleButton.01" />
                                             </ToggleButton.Style>
                                         </ToggleButton>
                                     </DataTemplate>

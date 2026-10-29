@@ -278,6 +278,27 @@ namespace PointOfSale.Infrastructure.Repositories.Purchasing
                 await command.ExecuteNonQueryAsync();
             }
         }
+
+        public async Task<bool> CancelPurchaseOrderAsync(int poId, int userId)
+        {
+            try
+            {
+                using (var connection = GetConnection())
+                using (var command = CreateCommand(connection, "[Purchasing].[uspCancelPurchaseOrder]"))
+                {
+                    command.Parameters.Add("@Id", SqlDbType.Int).Value = poId;
+                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+
+                    await connection.OpenAsync();
+                    await command.ExecuteNonQueryAsync();
+                    return true;
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException($"Unable to cancel purchase order {poId}.", ex);
+            }
+        }
         #endregion
 
         #region Private Method

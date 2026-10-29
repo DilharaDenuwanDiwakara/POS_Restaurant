@@ -257,17 +257,13 @@
                                 <DataGridTextColumn Header="Phone" Binding="{Binding CustomerPhoneNumber}" Width="120"/>
                                 <DataGridTextColumn Header="Pax" Binding="{Binding NumberOfPax}" Width="80">
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.02" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
                                 <DataGridTextColumn Header="Advance" Binding="{Binding AdvancePayment, StringFormat='Rs. {0:N2}'}" Width="100" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 <DataGridTextColumn Header="Remarks" Binding="{Binding Remarks}" Width="150"/>

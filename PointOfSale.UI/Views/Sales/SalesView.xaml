@@ -15,7 +15,7 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <Style BasedOn="{StaticResource SalesScrollBarStyle}" TargetType="ScrollBar" />
+        <ResourceDictionary Source="/Resources/Styles/ScopedScrollBarStyle.xaml" />
     </Window.Resources>
 
     <Window.InputBindings>
@@ -498,9 +498,7 @@
                             SelectedItem="{Binding SelectedCartItem}"
                             Style="{StaticResource SalesDataGridStyle}">
                             <DataGrid.RowStyle>
-                                <Style BasedOn="{StaticResource Style.DataGrid.Row}" TargetType="DataGridRow">
-                                    <Setter Property="MinHeight" Value="48" />
-                                </Style>
+                                <StaticResource ResourceKey="Style.View.SalesView.DataGridRow.01" />
                             </DataGrid.RowStyle>
 
                             <DataGrid.Columns>
@@ -517,11 +515,7 @@
                                     Header="Product Name"
                                     IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextWrapping" Value="Wrap" />
-                                            <Setter Property="VerticalAlignment" Value="Center" />
-                                            <Setter Property="ToolTip" Value="{Binding ProductName}" />
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.SalesView.TextBlock.01" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
@@ -531,11 +525,7 @@
                                     Header="Note"
                                     Visibility="Collapsed">
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                                            <Setter Property="VerticalAlignment" Value="Center" />
-                                            <Setter Property="ToolTip" Value="{Binding Note}" />
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.SalesView.TextBlock.02" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
@@ -546,11 +536,7 @@
                                     IsReadOnly="True"
                                     Visibility="Collapsed">
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                                            <Setter Property="VerticalAlignment" Value="Center" />
-                                            <Setter Property="ToolTip" Value="{Binding OfferDisplay}" />
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.SalesView.TextBlock.03" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
@@ -567,10 +553,7 @@
                                     Header="Price"
                                     IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Right" />
-                                            <Setter Property="VerticalAlignment" Value="Center" />
-                                        </Style>
+                                        <StaticResource ResourceKey="Style.View.SalesView.TextBlock.04" />
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
@@ -1114,10 +1097,7 @@
                                             HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}"
                                             IsReadOnly="True">
                                             <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="TextAlignment" Value="Right" />
-                                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                                </Style>
+                                                <StaticResource ResourceKey="Style.View.SalesView.TextBlock.05" />
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
                                         <DataGridTextColumn
@@ -1149,14 +1129,7 @@
                                         VerticalAlignment="Center"
                                         Text="REMAINING:">
                                         <TextBlock.Style>
-                                            <Style BasedOn="{StaticResource ChangeLabelTextStyle}" TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.SalesView.TextBlock.06" />
                                         </TextBlock.Style>
                                     </TextBlock>
 
@@ -1165,14 +1138,7 @@
                                         VerticalAlignment="Center"
                                         Text="CHANGE DUE:">
                                         <TextBlock.Style>
-                                            <Style BasedOn="{StaticResource ChangeLabelTextStyle}" TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.SalesView.TextBlock.07" />
                                         </TextBlock.Style>
                                     </TextBlock>
 
@@ -1181,14 +1147,7 @@
                                         VerticalAlignment="Center"
                                         Text="{Binding RemainingBalance, StringFormat='Rs. {0:N2}'}">
                                         <TextBlock.Style>
-                                            <Style BasedOn="{StaticResource ChangeAmountTextStyle}" TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.SalesView.TextBlock.08" />
                                         </TextBlock.Style>
                                     </TextBlock>
 
@@ -1197,14 +1156,7 @@
                                         VerticalAlignment="Center"
                                         Text="{Binding ChangeDueAmount, StringFormat='Rs. {0:N2}'}">
                                         <TextBlock.Style>
-                                            <Style BasedOn="{StaticResource ChangeAmountTextStyle}" TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding HasRemainingBalance}" Value="False">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
+                                            <StaticResource ResourceKey="Style.View.SalesView.TextBlock.09" />
                                         </TextBlock.Style>
                                     </TextBlock>
                                 </Grid>
@@ -1319,39 +1271,7 @@
                         </Border>
                     </Grid>
                     <Grid Grid.Row="3" Margin="0,14,0,0">
-                        <Grid.Resources>
-                            <Style x:Key="BottomActionButtonStyle" TargetType="Button">
-                                <Setter Property="Height" Value="58" />
-                                <Setter Property="FontSize" Value="16" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                                <Setter Property="Foreground" Value="White" />
-                                <Setter Property="BorderThickness" Value="0" />
-                                <Setter Property="Cursor" Value="Hand" />
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border
-                                                Background="{TemplateBinding Background}"
-                                                CornerRadius="8"
-                                                SnapsToDevicePixels="True">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Opacity" Value="0.92" />
-                                                </Trigger>
-                                                <Trigger Property="IsPressed" Value="True">
-                                                    <Setter Property="Opacity" Value="0.84" />
-                                                </Trigger>
-                                                <Trigger Property="IsEnabled" Value="False">
-                                                    <Setter Property="Opacity" Value="0.45" />
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </Grid.Resources>
+
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />

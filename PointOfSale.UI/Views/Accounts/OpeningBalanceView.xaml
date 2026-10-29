@@ -76,27 +76,19 @@
 
                             <DataGridTextColumn Header="Debit" Binding="{Binding DebitAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="140" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                 </DataGridTextColumn.ElementStyle>
                                 <DataGridTextColumn.EditingElementStyle>
-                                    <Style TargetType="TextBox">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBox.01" />
                                 </DataGridTextColumn.EditingElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn Header="Credit" Binding="{Binding CreditAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='Rs. {0:N2}'}" Width="140" HeaderStyle="{StaticResource RightAlignedDataGridColumnHeaderStyle}">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBlock.01" />
                                 </DataGridTextColumn.ElementStyle>
                                 <DataGridTextColumn.EditingElementStyle>
-                                    <Style TargetType="TextBox">
-                                        <Setter Property="HorizontalContentAlignment" Value="Right"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="Style.View.Shared.TextBox.01" />
                                 </DataGridTextColumn.EditingElementStyle>
                             </DataGridTextColumn>
                         </DataGrid.Columns>

@@ -67,6 +67,7 @@
       <HintPath>..\packages\System.Configuration.ConfigurationManager.9.0.8\lib\net462\System.Configuration.ConfigurationManager.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
@@ -140,6 +141,8 @@
     <Compile Include="Repositories\Sales\DiscountRepository.cs" />
     <Compile Include="Repositories\Sales\PaymentTerminalRepository.cs" />
     <Compile Include="Repositories\Sales\PromotionRepository.cs" />
+    <Compile Include="Repositories\Sales\BankPromotionRepository.cs" />
+    <Compile Include="Repositories\System\BINMappingRepository.cs" />
     <Compile Include="Repositories\Sales\RegisterRepository.cs" />
     <Compile Include="Repositories\Sales\ShiftRepository.cs" />
     <Compile Include="Repositories\Sales\SalesHoldRepository.cs" />
@@ -147,6 +150,7 @@
     <Compile Include="Repositories\Sales\SalesRepository.cs" />
     <Compile Include="Repositories\Sales\SalesReturnRepository.cs" />
     <Compile Include="Repositories\Security\UserRepository.cs" />
+    <Compile Include="Repositories\Security\RoleRepository.cs" />
     <Compile Include="Repositories\System\AccountMappingRepository.cs" />
     <Compile Include="Repositories\System\BankRepository.cs" />
     <Compile Include="Repositories\System\BankBranchRepository.cs" />
@@ -176,9 +180,11 @@
     <None Include="Database\Inventory\uspGetStockTransferLines.sql" />
     <None Include="Database\Security\WastageApproval_Permission.sql" />
     <None Include="Database\Sales\HoldRecallProcedures.sql" />
+    <None Include="Database\Sales\BankPromotionSchema.sql" />
     <None Include="Database\System\CompanyContactNumber_Length.sql" />
     <None Include="Database\Purchasing\uspGetAllGoodsReceiveNotes.sql" />
     <None Include="Database\Purchasing\uspGetAllGoodsPurchaseNotes.sql" />
+    <None Include="Database\Purchasing\uspCancelPurchaseOrder.sql" />
     <None Include="Database\Purchasing\uspSoftDeleteGoodsReceiveNote.sql" />
     <None Include="Database\Purchasing\uspSubmitDraftPurchaseOrder.sql" />
     <None Include="Database\Purchasing\uspSoftDeletePurchaseNote.sql" />

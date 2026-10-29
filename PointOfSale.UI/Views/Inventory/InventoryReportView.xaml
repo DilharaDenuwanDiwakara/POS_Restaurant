@@ -78,16 +78,7 @@
                     <!-- Category filter: only relevant for "Current Inventory Stock" -->
                     <StackPanel>
                         <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedReportType}" Value="Reorder Level List">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding SelectedReportType}" Value="Expiry Reach List">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
+                            <StaticResource ResourceKey="Style.View.InventoryReportView.StackPanel.01" />
                         </StackPanel.Style>
 
                         <TextBlock Text="Filter by Category:" Style="{StaticResource LabelStyle}"/>

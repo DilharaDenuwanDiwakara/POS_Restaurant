@@ -18,6 +18,7 @@ namespace PointOfSale.Core.Models.Restaurant
         private decimal _price;
 
         public int Id { get; set; }
+        public string ItemCode { get; set; }
         public string Name
         {
             get => _name;

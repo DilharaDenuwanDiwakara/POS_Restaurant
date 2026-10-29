@@ -85,6 +85,7 @@
                         Padding="14,12">
                     <StackPanel>
                         <TextBlock Text="Total Sales"
+                                   ToolTip="Invoice subtotals before bill discounts"
                                    Foreground="{StaticResource Brush.Text.Muted}"
                                    FontSize="11"
                                    FontWeight="SemiBold"
@@ -165,6 +166,7 @@
                         Padding="14,12">
                     <StackPanel>
                         <TextBlock Text="Today's Sales"
+                                   ToolTip="Today's completed invoice subtotals before bill discounts"
                                    Foreground="{StaticResource Brush.Text.Muted}"
                                    FontSize="11"
                                    FontWeight="SemiBold"
@@ -347,7 +349,7 @@
                                            FontSize="15"
                                            FontWeight="Bold"
                                            Foreground="{StaticResource Brush.Text.Primary}"/>
-                                <TextBlock Text="Daily net sales"
+                                <TextBlock Text="Daily sales before bill discounts"
                                            FontSize="12"
                                            Foreground="{StaticResource Brush.Text.Muted}"/>
                             </StackPanel>
