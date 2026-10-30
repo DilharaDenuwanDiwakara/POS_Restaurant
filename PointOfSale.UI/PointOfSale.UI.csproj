@@ -514,6 +514,7 @@
     <Compile Include="ViewModels\Sales\SalesReportsViewModel.cs" />
     <Compile Include="ViewModels\Sales\SalesReturnViewModel.cs" />
     <Compile Include="ViewModels\Sales\SalesViewModel.cs" />
+    <Compile Include="ViewModels\Sales\SalesViewModel.BankPromotion.cs" />
     <Compile Include="ViewModels\Sales\MenuProductComparer.cs" />
     <Compile Include="ViewModels\Security\DeviceRegistrationViewModel.cs" />
     <Compile Include="ViewModels\Security\LoginViewModel.cs" />

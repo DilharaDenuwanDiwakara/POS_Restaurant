@@ -130,13 +130,34 @@ ORDER BY bp.[Id], ev.[VariantId];";
                 command.Parameters.Add(outputParam);
 
                 await connection.OpenAsync();
-                await command.ExecuteNonQueryAsync();
-
-                var salesIdValue = outputParam.Value;
-                if (salesIdValue == DBNull.Value || Convert.ToInt32(salesIdValue) <= 0)
-                    throw new InvalidOperationException("The sale was not held. The database did not return a valid sales id.");
-
-                return Convert.ToInt32(salesIdValue);
+                // Hold and promotion metadata must commit together. A failed metadata update
+                // must never leave a discounted invoice without its payment restrictions.
+                using (var transaction = connection.BeginTransaction())
+                {
+                    command.Transaction = transaction;
+                    await command.ExecuteNonQueryAsync();
+                    var salesIdValue = outputParam.Value;
+                    if (salesIdValue == DBNull.Value || Convert.ToInt32(salesIdValue) <= 0)
+                        throw new InvalidOperationException("The sale was not held. The database did not return a valid sales id.");
+                    var salesId = Convert.ToInt32(salesIdValue);
+                    using (var metadata = new SqlCommand(@"
+UPDATE [Sales].[Sales] SET PromoType=@PromoType, PromoBankId=@PromoBankId,
+    BankPromotionId=@BankPromotionId, BankDiscountAmount=@BankDiscountAmount
+WHERE Id=@SalesId;", connection, transaction))
+                    {
+                        metadata.Parameters.Add("@SalesId", SqlDbType.BigInt).Value = salesId;
+                        metadata.Parameters.Add("@PromoType", SqlDbType.VarChar, 20).Value = (object)dto.PromoType ?? DBNull.Value;
+                        metadata.Parameters.Add("@PromoBankId", SqlDbType.Int).Value = (object)dto.PromoBankId ?? DBNull.Value;
+                        metadata.Parameters.Add("@BankPromotionId", SqlDbType.Int).Value = (object)dto.BankPromotionId ?? DBNull.Value;
+                        var amount = metadata.Parameters.Add("@BankDiscountAmount", SqlDbType.Decimal);
+                        amount.Precision = 18;
+                        amount.Scale = 2;
+                        amount.Value = dto.BankDiscountAmount;
+                        await metadata.ExecuteNonQueryAsync();
+                    }
+                    transaction.Commit();
+                    return salesId;
+                }
             }
         }
 
@@ -241,6 +262,28 @@ ORDER BY bp.[Id], ev.[VariantId];";
                 }
             }
 
+            // Load promotion metadata independently of the legacy recall procedure's shape.
+            if (sale != null)
+            {
+                using (var connection = GetConnection())
+                using (var command = new SqlCommand(@"
+SELECT PromoType, PromoBankId, BankPromotionId, BankDiscountAmount
+FROM [Sales].[Sales] WHERE Id=@SalesId;", connection))
+                {
+                    command.Parameters.Add("@SalesId", SqlDbType.BigInt).Value = salesId;
+                    await connection.OpenAsync();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            sale.PromoType = GetValue<string>(reader, "PromoType");
+                            sale.PromoBankId = GetValue<int?>(reader, "PromoBankId");
+                            sale.BankPromotionId = GetValue<int?>(reader, "BankPromotionId");
+                            sale.BankDiscountAmount = GetValue<decimal>(reader, "BankDiscountAmount");
+                        }
+                    }
+                }
+            }
             return sale;
         }
 

@@ -131,7 +131,7 @@ namespace PointOfSale.UI.Views.Sales
                 return;
             }
 
-            if (sender == CardReferenceNumberTextBox && WouldExceedMaxLength(CardReferenceNumberTextBox, e.Text, 4))
+            if (sender == CardReferenceNumberTextBox && WouldExceedMaxLength(CardReferenceNumberTextBox, e.Text, 6))
             {
                 e.Handled = true;
             }
@@ -152,7 +152,7 @@ namespace PointOfSale.UI.Views.Sales
                 return;
             }
 
-            if (sender == CardReferenceNumberTextBox && WouldExceedMaxLength(CardReferenceNumberTextBox, text, 4))
+            if (sender == CardReferenceNumberTextBox && WouldExceedMaxLength(CardReferenceNumberTextBox, text, 6))
             {
                 e.CancelCommand();
             }
@@ -399,7 +399,7 @@ namespace PointOfSale.UI.Views.Sales
             {
                 if (targetTextBox == CardReferenceNumberTextBox)
                 {
-                    if (!IsDigitsOnly(value) || WouldExceedMaxLength(targetTextBox, value, 4))
+                    if (!IsDigitsOnly(value) || WouldExceedMaxLength(targetTextBox, value, 6))
                         return;
                 }
 

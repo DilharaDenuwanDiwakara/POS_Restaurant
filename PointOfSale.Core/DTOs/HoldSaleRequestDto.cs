@@ -7,6 +7,10 @@ namespace PointOfSale.Core.DTOs
         public int? SalesId { get; set; }
         public int BranchId { get; set; }
         public int? CustomerId { get; set; }
+        public string PromoType { get; set; }
+        public int? PromoBankId { get; set; }
+        public int? BankPromotionId { get; set; }
+        public decimal BankDiscountAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public decimal Discount { get; set; }
         public bool IsTaxInvoice { get; set; }

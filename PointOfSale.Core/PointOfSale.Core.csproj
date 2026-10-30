@@ -81,6 +81,7 @@
     <Compile Include="Interfaces\Repositories\System\IBankRepository.cs" />
     <Compile Include="Interfaces\Repositories\System\IBINMappingRepository.cs" />
     <Compile Include="Services\BankPromotionCheckoutService.cs" />
+    <Compile Include="Services\CheckoutService.cs" />
     <Compile Include="Interfaces\Repositories\System\IBankBranchRepository.cs" />
     <Compile Include="Interfaces\Repositories\System\IAccountMappingRepository.cs" />
     <Compile Include="Models\Accounts\Entities\Account.cs" />

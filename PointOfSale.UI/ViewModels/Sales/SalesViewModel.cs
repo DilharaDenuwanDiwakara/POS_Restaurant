@@ -35,7 +35,7 @@ using PointOfSale.UI.Views.Shell;
 
 namespace PointOfSale.UI.ViewModels.Sales
 {
-    public class SalesViewModel : BaseViewModel
+    public partial class SalesViewModel : BaseViewModel
     {
         private readonly ISalesRepository _salesRepository;
         private readonly IDiscountRepository _discountRepository;
@@ -437,12 +437,14 @@ namespace PointOfSale.UI.ViewModels.Sales
             set
             {
                 var normalizedValue = IsPaymentTypeCard ? KeepDigitsOnly(value) : value;
-                if (IsPaymentTypeCard && normalizedValue?.Length > 4)
-                    normalizedValue = normalizedValue.Substring(0, 4);
+                if (IsPaymentTypeCard && normalizedValue?.Length > 6)
+                    normalizedValue = normalizedValue.Substring(0, 6);
 
                 if (SetProperty(ref _referenceNumber, normalizedValue))
                 {
                     OnPropertyChanged(nameof(CardReferenceNumber));
+                    if (IsPaymentTypeCard || HasBankPromotion || IsBankPromotionEvaluating)
+                        OnCardReferenceChanged();
                     ValidatePayment();
                     RaiseSaveCommandState();
                 }
@@ -466,6 +468,12 @@ namespace PointOfSale.UI.ViewModels.Sales
             set
             {
                 var clamped = value < 0 ? 0 : (value > 100 ? 100 : value);
+                if (HasBankPromotion && clamped > 0)
+                {
+                    PaymentErrorMessage = "Remove the bank promotion before applying a cash/bill discount.";
+                    OnPropertyChanged(nameof(LineDiscountPercent));
+                    return;
+                }
                 if (SetProperty(ref _lineDiscountPercent, clamped)) { CalculateTotals(); }
             }
         }
@@ -580,6 +588,8 @@ namespace PointOfSale.UI.ViewModels.Sales
         {
             get
             {
+                if (HasBankPromotion)
+                    return $"BANK PROMOTION: {_bankPromotion.PromoName} ({AppliedDiscountPercent:0.##}%)";
                 var discountCode = GetActiveAppliedDiscountCode();
                 return string.IsNullOrWhiteSpace(discountCode)
                     ? string.Empty
@@ -589,7 +599,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         public bool HasAppliedDiscount =>
             AppliedDiscountAmount > 0 &&
-            (!string.IsNullOrWhiteSpace(AppliedDiscountCode) ||
+            (HasBankPromotion || !string.IsNullOrWhiteSpace(AppliedDiscountCode) ||
              !string.IsNullOrWhiteSpace(_appliedAutoBillDiscountName));
 
         public bool HasAppliedLoyaltyPoints => AppliedLoyaltyPoints > 0;
@@ -612,6 +622,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         public bool HasAppliedAutoDiscount => !string.IsNullOrWhiteSpace(AppliedAutoDiscountName);
 
         public string AppliedDiscountDisplay =>
+            HasBankPromotion ? _bankPromotion.PromoName :
             HasAppliedDiscountCode ? AppliedDiscountCode :
             HasAppliedAutoDiscount ? AppliedAutoDiscountName :
             HasAppliedLoyaltyPoints ? $"LOYALTY ({AppliedLoyaltyPoints} PTS)" :
@@ -741,9 +752,10 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         // Helper to check if payment is valid
         public bool IsPaymentValid =>
+            BankPaymentEntryIsValid() &&
             IsPaymentPanelVisible &&
             CurrentPaymentAmount > 0 &&
-            (!IsPaymentTypeCard || (SelectedPaymentTerminal != null && HasFourDigitReference(ReferenceNumber))) &&
+            (!IsPaymentTypeCard || (SelectedPaymentTerminal != null && HasSixDigitReference(ReferenceNumber))) &&
             (!IsPaymentTypeCredit || (HasSelectedStoreCreditCustomer() && !string.IsNullOrWhiteSpace(ReferenceNumber))) &&
             (!IsPaymentTypeBankTransfer || !string.IsNullOrWhiteSpace(ReferenceNumber));
         #endregion
@@ -1042,6 +1054,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         {
             // If Quantity changes in the Grid, recalculate the whole invoice
             if (e.PropertyName == nameof(SalesLine.Quantity) ||
+                e.PropertyName == nameof(SalesLine.UnitPrice) ||
                 e.PropertyName == nameof(SalesLine.ManualDiscount) ||
                 e.PropertyName == nameof(SalesLine.LineDiscount))
             {
@@ -1237,13 +1250,14 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private bool CanAddPayment()
         {
+            if (!BankPaymentEntryIsValid()) return false;
             if (CartItems?.Any() != true) return false;
             if (!IsPaymentPanelVisible) return false;
             if (CurrentPaymentAmount <= 0) return false;
             if (!IsPaymentTypeCash && CurrentPaymentAmount > RemainingBalance) return false;
 
             if (IsPaymentTypeCard &&
-                (SelectedPaymentTerminal == null || !HasFourDigitReference(ReferenceNumber)))
+                (SelectedPaymentTerminal == null || !HasSixDigitReference(ReferenceNumber)))
                 return false;
 
             if (IsPaymentTypeCredit &&
@@ -1303,7 +1317,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         private void ClearPaymentEntryInputs()
         {
             CurrentPaymentAmount = 0m;
-            ReferenceNumber = string.Empty;
+            ClearReferenceEntryAfterPayment();
             PaymentErrorMessage = string.Empty;
             OnPropertyChanged(nameof(IsPaymentValid));
         }
@@ -1350,6 +1364,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private void ResetImportedOrderPricingState()
         {
+            ResetBankPromotion();
             _autoBillDiscountAmount = 0;
             AppliedAutoDiscountName = string.Empty;
 
@@ -1496,11 +1511,20 @@ namespace PointOfSale.UI.ViewModels.Sales
                 ApplyAutoPromotions();
 
                 SubTotal = CartItems.Sum(x => x.Amount);
+                if (HasBankPromotion) SubTotal = NormalizeMoney(SubTotal);
 
                 decimal baseBillDiscount;
                 decimal appliedDiscountAmount = 0;
                 decimal appliedDiscountPercent = 0;
-                if (_appliedDiscountValidation != null)
+                BankDiscountAmount = HasBankPromotion
+                    ? (_recalledBankDiscountAmount ?? CheckoutService.CalculateBankPromotion(_bankPromotion, CartItems).DiscountAmount) : 0m;
+                if (HasBankPromotion)
+                {
+                    baseBillDiscount = BankDiscountAmount;
+                    appliedDiscountAmount = baseBillDiscount;
+                    appliedDiscountPercent = _bankPromotion.DiscountPercentage;
+                }
+                else if (_appliedDiscountValidation != null)
                 {
                     baseBillDiscount = CalculateDiscountAmount(SubTotal, _appliedDiscountValidation);
                     appliedDiscountAmount = baseBillDiscount;
@@ -1542,6 +1566,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 }
 
                 BillDiscount = baseBillDiscount + LoyaltyDiscountAmount;
+                OnPropertyChanged(nameof(PromoType));
 
                 NetAmount = Math.Max(0, SubTotal - BillDiscount);
 
@@ -1581,6 +1606,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         }
         private void ExecuteCancelInvoice()
         {
+            ResetBankPromotion();
             _currentRestaurantOrderId = null;
             CartItems.Clear();
             AppliedPayments.Clear();
@@ -1641,6 +1667,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         #region Saving
         private bool CanSaveSale()
         {
+            if (!BankPaymentsAreValid()) return false;
             // 1. Must have items
             if (CartItems?.Any() != true) return false;
 
@@ -1657,7 +1684,9 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private bool CanPrintPreBill()
         {
-            return CartItems?.Any() == true && CurrentOpenSalesId <= 0;
+            return CartItems?.Any() == true && CurrentOpenSalesId <= 0 &&
+                !IsBankPromotionEvaluating && !_bankPromotionLookupFailed &&
+                (!HasBankPromotion || BankDiscountAmount > 0);
         }
 
         private async Task SaveSalesAsync(bool printBill = false)
@@ -1667,6 +1696,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             try
             {
                 IsProcessing = true;
+
+                await RevalidateBankPromotionForSaveAsync();
 
                 if (HasAppliedDiscountCode)
                 {
@@ -1849,6 +1880,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 }
 
                 LoadRecalledSaleIntoCart(recalledSale);
+                await RestoreBankPromotionAsync(recalledSale);
                 RequestBarcodeFocus?.Invoke();
             }
             catch (Exception ex)
@@ -1868,6 +1900,10 @@ namespace PointOfSale.UI.ViewModels.Sales
                 SalesId = CurrentOpenSalesId > 0 ? (int?)CurrentOpenSalesId : null,
                 BranchId = CurrentUser.BranchId,
                 CustomerId = SelectedCustomer?.Id > 0 ? (int?)SelectedCustomer.Id : null,
+                PromoType = PromoType,
+                PromoBankId = PromoBankId,
+                BankPromotionId = _bankPromotion?.BankPromotionId,
+                BankDiscountAmount = BankDiscountAmount,
                 TotalAmount = SubTotal,
                 Discount = BillDiscount,
                 IsTaxInvoice = false,
@@ -1957,7 +1993,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                     });
                 }
 
-                LineDiscountPercent = sale.TotalAmount > 0
+                LineDiscountPercent = sale.PromoType != "BANK" && sale.TotalAmount > 0
                     ? Math.Round((sale.Discount / sale.TotalAmount) * 100m, 2, MidpointRounding.AwayFromZero)
                     : 0m;
 
@@ -2117,6 +2153,11 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private async Task ApplyDiscountCodeAsync()
         {
+            if (HasBankPromotion || IsBankPromotionEvaluating)
+            {
+                PaymentErrorMessage = "Remove the bank promotion before applying a cash/bill discount.";
+                return;
+            }
             try
             {
                 if (CartItems.Any(x => x.IsImportedOrderLine))
@@ -2161,6 +2202,8 @@ namespace PointOfSale.UI.ViewModels.Sales
                     return;
                 }
 
+                if (HasBankPromotion || IsBankPromotionEvaluating)
+                    throw new InvalidOperationException("Remove the bank promotion before applying a cash/bill discount.");
                 _appliedDiscountValidation = result;
                 AppliedDiscountCode = result.Code;
                 AppliedDiscountName = result.Name;
@@ -2180,6 +2223,11 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private void ApplyLoyaltyRedemption()
         {
+            if (HasBankPromotion || IsBankPromotionEvaluating)
+            {
+                PaymentErrorMessage = "Remove the bank promotion before redeeming loyalty points.";
+                return;
+            }
             if (CartItems.Any(x => x.IsImportedOrderLine))
             {
                 MessageBox.Show("This served restaurant order already includes its pricing. Loyalty redemption is disabled here.", "Loyalty", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -2333,6 +2381,7 @@ namespace PointOfSale.UI.ViewModels.Sales
 
         private void NotifyAppliedDiscountProperties()
         {
+            OnPropertyChanged(nameof(AppliedDiscountDisplay));
             OnPropertyChanged(nameof(AppliedDiscountLabel));
             OnPropertyChanged(nameof(AppliedDiscountAmount));
             OnPropertyChanged(nameof(AppliedDiscountPercent));
@@ -2888,7 +2937,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 .OrderByDescending(x => x.Amount)
                 .FirstOrDefault();
 
-            if (bestAutoBillRule != null && bestAutoBillRule.Amount > 0)
+            if (!HasBankPromotion && bestAutoBillRule != null && bestAutoBillRule.Amount > 0)
             {
                 _autoBillDiscountAmount = bestAutoBillRule.Amount;
                 _appliedAutoBillDiscountRule = bestAutoBillRule.Rule;
@@ -3267,7 +3316,15 @@ namespace PointOfSale.UI.ViewModels.Sales
         #region Validation
         private void ValidatePayment()
         {
-            if (!IsPaymentPanelVisible)
+            if (IsBankPromotionEvaluating || _bankPromotionLookupFailed)
+            {
+                PaymentErrorMessage = IsBankPromotionEvaluating ? "Checking bank promotion..." : BankPromotionMessage;
+            }
+            else if (HasBankPromotion && !BankPaymentEntryIsValid())
+            {
+                PaymentErrorMessage = BankPaymentMessage;
+            }
+            else if (!IsPaymentPanelVisible)
             {
                 PaymentErrorMessage = string.Empty;
             }
@@ -3285,11 +3342,11 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
             else if (IsPaymentTypeCard && string.IsNullOrWhiteSpace(ReferenceNumber))
             {
-                PaymentErrorMessage = "Enter the 4 digit reference or auth code.";
+                PaymentErrorMessage = "Enter the 6 digit reference or auth code.";
             }
-            else if (IsPaymentTypeCard && !HasFourDigitReference(ReferenceNumber))
+            else if (IsPaymentTypeCard && !HasSixDigitReference(ReferenceNumber))
             {
-                PaymentErrorMessage = "Reference number must be exactly 4 digits.";
+                PaymentErrorMessage = "Reference number must be exactly 6 digits.";
             }
             else if (IsPaymentTypeCredit && !HasSelectedStoreCreditCustomer())
             {
@@ -3402,9 +3459,9 @@ namespace PointOfSale.UI.ViewModels.Sales
             return !string.IsNullOrWhiteSpace(value) && value.All(IsAsciiDigit);
         }
 
-        private static bool HasFourDigitReference(string value)
+        private static bool HasSixDigitReference(string value)
         {
-            return HasDigitsOnlyReference(value) && value.Length == 4;
+            return HasDigitsOnlyReference(value) && value.Length == 6;
         }
 
         private static bool IsAsciiDigit(char value)

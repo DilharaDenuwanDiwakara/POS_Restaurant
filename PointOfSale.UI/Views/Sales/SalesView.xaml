@@ -867,6 +867,8 @@
                                         Style="{StaticResource PaymentHeaderStyle}"
                                         Text="CARD PAYMENT" />
 
+                                    <TextBlock Grid.Row="0" Margin="0,28,0,10" Text="{Binding BankPromotionMessage}" TextWrapping="Wrap" />
+
                                     <Grid Grid.Row="1" Margin="0,0,0,10">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -889,12 +891,12 @@
                                             <TextBlock
                                                 Margin="0,0,0,6"
                                                 Style="{StaticResource InputLabelStyle}"
-                                                Text="Reference No / Auth Code (4 digits):" />
+                                                Text="Reference No / Auth Code (6 digits):" />
                                             <TextBox
                                                 x:Name="CardReferenceNumberTextBox"
                                                 DataObject.Pasting="DigitsOnly_Pasting"
                                                 InputScope="Number"
-                                                MaxLength="4"
+                                                MaxLength="6"
                                                 PreviewTextInput="DigitsOnly_PreviewTextInput"
                                                 Style="{StaticResource CashInputStyle}"
                                                 Text="{Binding ReferenceNumber, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
