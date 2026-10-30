@@ -84,7 +84,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         private Bank _selectedBank;
         public Bank SelectedBank { get => _selectedBank; set { if (SetProperty(ref _selectedBank, value)) StatusMessage = string.Empty; } }
         private string _promoName = string.Empty;
-        public string PromoName { get => _promoName; set { if (SetProperty(ref _promoName, value)) { ValidatePromoName(); StatusMessage = string.Empty; } } }
+        public string PromoName { get => _promoName; set { if (SetProperty(ref _promoName, value?.ToUpperInvariant())) { ValidatePromoName(); StatusMessage = string.Empty; } } }
         // Keep raw input so invalid text cannot leave a previously valid decimal available to Save.
         private string _discountPercentage = string.Empty;
         public string DiscountPercentage { get => _discountPercentage; set { if (SetProperty(ref _discountPercentage, value)) { ValidatePercentage(out _); StatusMessage = string.Empty; } } }

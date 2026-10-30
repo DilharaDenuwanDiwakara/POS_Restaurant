@@ -39,6 +39,8 @@
                                 <DataGridTextColumn Header="Promo Name" Binding="{Binding PromoName}" Width="2*" MinWidth="180"/>
                                 <DataGridTextColumn Header="Discount %" Binding="{Binding DiscountPercentage, StringFormat={}{0:0.##}%}" Width="110"/>
                                 <DataGridTextColumn Header="Required Card Type" Binding="{Binding RequiredCardType}" Width="140"/>
+                                <DataGridTextColumn Header="Valid From" Binding="{Binding ValidFrom, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="170"/>
+                                <DataGridTextColumn Header="Valid To" Binding="{Binding ValidTo, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="170"/>
                                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
                                 <DataGridTemplateColumn Header="Action" Width="100">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -75,7 +77,7 @@
                                               Style="{StaticResource ComboBoxStyle}"/>
                                     <TextBlock Text="Promo Name" Style="{StaticResource LabelStyle}"/>
                                     <TextBox x:Name="PromotionNameInput" KeyboardNavigation.TabIndex="1" PreviewKeyDown="MoveFocusOnEnter" Text="{Binding PromoName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                             MaxLength="200" Style="{StaticResource TextBoxStyle}"/>
+                                             CharacterCasing="Upper" MaxLength="200" Style="{StaticResource TextBoxStyle}"/>
                                     <TextBlock Text="Discount Percentage (%)" Style="{StaticResource LabelStyle}"/>
                                     <TextBox x:Name="DiscountInput" KeyboardNavigation.TabIndex="2" Text="{Binding DiscountPercentage, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" Tag="Percentage"
                                              PreviewTextInput="NumericInput_PreviewTextInput" PreviewKeyDown="NumericInput_PreviewKeyDown" DataObject.Pasting="NumericInput_Pasting"

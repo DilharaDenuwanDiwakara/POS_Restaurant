@@ -46,7 +46,7 @@ internal static class BankPromotionViewChecks
         vm.OngoingPromotions[0].ValidTo = existingEnd;
         vm.OngoingPromotions[0].ValidFrom = existingStart;
         vm.EditPromotionCommand.Execute(vm.OngoingPromotions[0]);
-        Check(vm.SelectedPromotion.Id == 77 && vm.SelectedTabIndex == 1 && vm.PromoName == "Existing" && vm.ExcludedVariants.Count == 1, "Edit selects the master and populates the editor");
+        Check(vm.SelectedPromotion.Id == 77 && vm.SelectedTabIndex == 1 && vm.PromoName == "EXISTING" && vm.ExcludedVariants.Count == 1, "Edit selects the master and populates the editor");
         Check(vm.ValidFromDate == new DateTime(2026, 10, 28) && vm.ValidFromTime == "09:15:30" && vm.ValidToTime == "22:45:15" && vm.ValidToDate == existingEnd.Date, "Edit splits exact stored timestamps into date and time fields");
         Check(vm.RequiredCardType == "CREDIT", "Editing loads the stored required card type");
         vm.ExcludedVariants.Clear();
@@ -86,7 +86,7 @@ internal static class BankPromotionViewChecks
         Check(vm.HasError && !vm.IsLoadingVariants && vm.AvailableVariants.Count == 0, "Category load failure clears old variants and restores loading state");
         variants.Fail = false;
         vm.SaveCommand.Execute(null);
-        Check(saved.Promotion.Id == 0 && saved.Promotion.PromoName == "Card offer" && saved.Promotion.DiscountPercentage == 12.5m && saved.Variants.SequenceEqual(new[] { 101 }), "Insert saves promotion and exact exclusions together without BINs");
+        Check(saved.Promotion.Id == 0 && saved.Promotion.PromoName == "CARD OFFER" && saved.Promotion.DiscountPercentage == 12.5m && saved.Variants.SequenceEqual(new[] { 101 }), "Insert saves promotion and exact exclusions together without BINs");
         Check(saved.Promotion.ValidFrom == new DateTime(2026, 10, 28, 9, 15, 30) && saved.Promotion.ValidTo == new DateTime(2026, 10, 28, 9, 15, 31), "Saved timestamps combine date and time with second precision");
         Check(vm.SelectedBank == null && vm.ExcludedVariants.Count == 0 && !vm.HasErrors, "Successful save clears the draft");
         vm.AddNewPromotionCommand.Execute(null);
@@ -97,7 +97,7 @@ internal static class BankPromotionViewChecks
             Check(saved.Saves == 2 && vm.HasErrors, "Invalid percentage must not save: " + invalid);
         }
         vm.DiscountPercentage = "15"; saved.Fail = true; vm.SaveCommand.Execute(null);
-        Check(vm.HasError && vm.PromoName == "Validation" && vm.SelectedTabIndex == 1 && !vm.IsBusy, "Failed save preserves draft and restores commands");
+        Check(vm.HasError && vm.PromoName == "VALIDATION" && vm.SelectedTabIndex == 1 && !vm.IsBusy, "Failed save preserves draft and restores commands");
         saved.Fail = false;
         vm.SelectedGlobalBank = vm.Banks[0]; vm.BinsLoadTask.GetAwaiter().GetResult();
         vm.BinPrefix = "12345"; vm.AddBinCommand.Execute(null);
@@ -208,13 +208,24 @@ internal static class BankPromotionViewChecks
         using (var stream = File.Create(Path.ChangeExtension(args[0], ".bins.png"))) globalEncoder.Save(stream);
         tabs.SelectedIndex = 0; layout();
         Check(Descendants(view).OfType<DataGrid>().Any(g => ReferenceEquals(g.ItemsSource, vm.OngoingPromotions)), "Master tab renders saved promotions");
+        var promotionGrid = Descendants(view).OfType<DataGrid>().Single(g => ReferenceEquals(g.ItemsSource, vm.OngoingPromotions));
+        foreach (var header in new[] { "Valid From", "Valid To" })
+        {
+            var column = promotionGrid.Columns.Single(c => (string)c.Header == header);
+            var timestamp = header == "Valid From" ? vm.OngoingPromotions[0].ValidFrom : vm.OngoingPromotions[0].ValidTo;
+            Check(((TextBlock)column.GetCellContent(vm.OngoingPromotions[0])).Text == timestamp.ToString("yyyy-MM-dd HH:mm:ss"), "Promotion list displays the saved " + header + " date and time");
+        }
         var editButton = Descendants(view).OfType<Button>().Single(b => System.Windows.Automation.AutomationProperties.GetName(b) == "Edit promotion");
         Check(editButton.IsEnabled, "Promotion Edit must be enabled: parameter=" + editButton.CommandParameter?.GetType().FullName);
         var masterBitmap = new RenderTargetBitmap(1180, 900, 96, 96, PixelFormats.Pbgra32); masterBitmap.Render(view);
         var masterEncoder = new PngBitmapEncoder(); masterEncoder.Frames.Add(BitmapFrame.Create(masterBitmap));
         using (var stream = File.Create(Path.ChangeExtension(args[0], ".master.png"))) masterEncoder.Save(stream);
         InvokeButton(editButton); layout();
-        Check(vm.SelectedTabIndex == 1 && vm.SelectedPromotion.Id == 77 && vm.PromoName == "Existing", "Rendered promotion Edit button navigates and populates the draft");
+        Check(vm.SelectedTabIndex == 1 && vm.SelectedPromotion.Id == 77 && vm.PromoName == "EXISTING", "Rendered promotion Edit button navigates and populates the draft");
+        var nameInput = (TextBox)view.FindName("PromotionNameInput");
+        nameInput.Text = "mixed Promo_123";
+        layout();
+        Check(nameInput.Text == "MIXED PROMO_123" && vm.PromoName == "MIXED PROMO_123", "Promotion name input converts mixed case text to uppercase");
         // Use a real presentation source to verify keyboard focus through composite controls.
         var requiredTypeInput = (ComboBox)view.FindName("RequiredCardTypeInput");
         Check((string)requiredTypeInput.SelectedItem == "CREDIT", "Promotion editor displays required card type");
