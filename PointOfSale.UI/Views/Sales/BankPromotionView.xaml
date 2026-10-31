@@ -217,10 +217,28 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <TextBlock Text="Saved BINs" Style="{StaticResource SubHeaderTextStyle}"/>
-                            <DataGrid Grid.Row="1" ItemsSource="{Binding BinPrefixes}" Style="{StaticResource DataGridStyle}" IsReadOnly="True" HeadersVisibility="Column">
+                            <Grid Grid.Row="1" Margin="0,8,0,12" MaxWidth="480" HorizontalAlignment="Left">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel MaxWidth="360" HorizontalAlignment="Left">
+                                    <Label Content="Search by BIN prefix" Target="{Binding ElementName=BinSearchInput}" Padding="0,0,0,4"/>
+                                    <TextBox x:Name="BinSearchInput" MinWidth="240" Style="{StaticResource TextBoxStyle}" Margin="0"
+                                             Text="{Binding BinSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Search by BIN prefix"
+                                             ToolTip="Enter the starting digits of a BIN prefix"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Clear" Command="{Binding ClearBinSearchCommand}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        VerticalAlignment="Bottom" Margin="12,0,0,0"
+                                        AutomationProperties.Name="Clear BIN search"/>
+                            </Grid>
+                            <DataGrid Grid.Row="2" ItemsSource="{Binding FilteredBinPrefixes}" Style="{StaticResource DataGridStyle}" IsReadOnly="True" HeadersVisibility="Column">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="BIN Prefix" Binding="{Binding BINPrefix}" Width="*"/>
                                     <DataGridTextColumn Header="Card Type" Binding="{Binding CardType, TargetNullValue=Unclassified}" Width="*"/>

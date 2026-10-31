@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Models.Sales;
 using PointOfSale.Core.Models.System;
-using PointOfSale.Core.DTOs;
 
 namespace PointOfSale.Core.Interfaces.Repositories.Sales
 {

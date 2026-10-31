@@ -184,7 +184,15 @@ internal static class BankPromotionViewChecks
         Check(vm.SelectedTabIndex == 2, "User tab navigation updates the ViewModel");
         var binInput = Descendants(view).OfType<TextBox>().Single(t => (string)t.Tag == "BIN");
         Check(binInput.MaxLength == 6, "BIN input length"); checkInput(binInput);
-        Check(Descendants(view).OfType<DataGrid>().Any(g => ReferenceEquals(g.ItemsSource, vm.BinPrefixes)), "Global tab renders selected bank BINs");
+        Check(Descendants(view).OfType<DataGrid>().Any(g => ReferenceEquals(g.ItemsSource, vm.FilteredBinPrefixes)), "Global tab renders selected bank BINs");
+        var binSearch = (TextBox)view.FindName("BinSearchInput");
+        var filteredBinGrid = Descendants(view).OfType<DataGrid>().Single(g => ReferenceEquals(g.ItemsSource, vm.FilteredBinPrefixes));
+        binSearch.Text = " 001 "; layout();
+        Check(filteredBinGrid.Items.Count == 1 && vm.BinPrefixes.Count == 1, "Search trims whitespace and preserves leading zeros without changing saved BINs");
+        binSearch.Text = "1234"; layout();
+        Check(filteredBinGrid.Items.Count == 0 && vm.BinPrefixes.Count == 1, "Search matches starting digits rather than an internal substring");
+        InvokeButton(Descendants(view).OfType<Button>().Single(b => ReferenceEquals(b.Command, vm.ClearBinSearchCommand))); layout();
+        Check(binSearch.Text == "" && filteredBinGrid.Items.Count == 1, "Clear restores the saved BIN list and resets the search input");
         var editBinButton = Descendants(view).OfType<Button>().Single(b => System.Windows.Automation.AutomationProperties.GetName(b) == "Edit BIN");
         Check(editBinButton.IsEnabled, "Rendered BIN Edit action is enabled");
         InvokeButton(editBinButton); layout();
@@ -201,7 +209,7 @@ internal static class BankPromotionViewChecks
         InvokeButton(saveBinButton); layout();
         Check(!vm.IsEditingBin && vm.BinPrefixes.Single().BINPrefix == "002345", "Rendered BIN Save action persists and exits edit mode");
         Check(vm.BinPrefixes.Single().CardType == "CREDIT" && vm.BinPrefixes.Single().CardBrand == "MASTERCARD", "Saving from UI updates BIN type and brand");
-        var binList = Descendants(view).OfType<DataGrid>().Single(g => ReferenceEquals(g.ItemsSource, vm.BinPrefixes));
+        var binList = Descendants(view).OfType<DataGrid>().Single(g => ReferenceEquals(g.ItemsSource, vm.FilteredBinPrefixes));
         Check(binList.Columns.Any(c => (string)c.Header == "Card Type") && binList.Columns.Any(c => (string)c.Header == "Card Brand"), "BIN grid displays card metadata columns");
         var globalBitmap = new RenderTargetBitmap(1180, 900, 96, 96, PixelFormats.Pbgra32); globalBitmap.Render(view);
         var globalEncoder = new PngBitmapEncoder(); globalEncoder.Frames.Add(BitmapFrame.Create(globalBitmap));

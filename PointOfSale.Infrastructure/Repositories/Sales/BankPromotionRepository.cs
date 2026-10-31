@@ -5,13 +5,13 @@ using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading.Tasks;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Sales;
+using PointOfSale.Core.Interfaces.Repositories.System;
+using PointOfSale.Core.Models.Restaurant;
 using PointOfSale.Core.Models.Sales;
 using PointOfSale.Core.Models.System;
-using PointOfSale.Core.DTOs;
-using PointOfSale.Core.Interfaces.Repositories.System;
 using PointOfSale.Infrastructure.Repositories.System;
-using PointOfSale.Core.Models.Restaurant;
 
 namespace PointOfSale.Infrastructure.Repositories.Sales
 {
@@ -52,16 +52,23 @@ ORDER BY p.Id DESC, v.Id;";
                         {
                             promotion = new BankPromotionDto
                             {
-                                Id = id, BankId = reader.GetInt32(1), BankName = reader.GetString(2),
-                                PromoName = reader.GetString(3), DiscountPercentage = reader.GetDecimal(4), IsActive = reader.GetBoolean(5),
-                                ValidFrom = reader.GetDateTime(9), ValidTo = reader.GetDateTime(10), RequiredCardType = reader.GetString(11)
+                                Id = id,
+                                BankId = reader.GetInt32(1),
+                                BankName = reader.GetString(2),
+                                PromoName = reader.GetString(3),
+                                DiscountPercentage = reader.GetDecimal(4),
+                                IsActive = reader.GetBoolean(5),
+                                ValidFrom = reader.GetDateTime(9),
+                                ValidTo = reader.GetDateTime(10),
+                                RequiredCardType = reader.GetString(11)
                             };
                             result.Add(id, promotion);
                         }
                         if (!reader.IsDBNull(6))
                             promotion.ExcludedVariants.Add(new Variant
                             {
-                                Id = reader.GetInt32(6), ItemCode = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                                Id = reader.GetInt32(6),
+                                ItemCode = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                                 Name = reader.IsDBNull(8) ? "Variant #" + reader.GetInt32(6) : reader.GetString(8)
                             });
                     }

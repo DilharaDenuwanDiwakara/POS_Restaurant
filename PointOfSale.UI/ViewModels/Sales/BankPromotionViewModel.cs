@@ -1,16 +1,18 @@
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Data;
+using PointOfSale.Core.DTOs;
 using PointOfSale.Core.Interfaces.Repositories.Restaurant;
 using PointOfSale.Core.Interfaces.Repositories.Sales;
 using PointOfSale.Core.Interfaces.Repositories.System;
+using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.Core.Models.Restaurant;
 using PointOfSale.Core.Models.Sales;
 using PointOfSale.Core.Models.System;
-using PointOfSale.Core.DTOs;
-using PointOfSale.Core.Interfaces.Services;
 using PointOfSale.UI.Commands;
 using Category = PointOfSale.Core.Models.Restaurant.MenuCategory;
 
@@ -34,6 +36,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             _banks = banks ?? throw new ArgumentNullException(nameof(banks));
             _variants = variants ?? throw new ArgumentNullException(nameof(variants));
             _categories = categories ?? throw new ArgumentNullException(nameof(categories));
+            FilteredBinPrefixes = new ListCollectionView(BinPrefixes) { Filter = MatchesBinSearch };
+            ClearBinSearchCommand = new RelayCommand(_ => BinSearchText = string.Empty);
             SaveBinCommand = new AsyncRelayCommand(_ => SaveBinAsync(), _ => !IsBusy && !IsLoadingBins && SelectedGlobalBank != null);
             EditBinCommand = new RelayCommand(p => EditBin((BankBINMapping)p), p => !IsBusy && !IsLoadingBins && p is BankBINMapping bin && bin.BankId == SelectedGlobalBank?.Id && BinPrefixes.Contains(bin));
             DeleteBinCommand = new AsyncRelayCommand(p => DeleteBinAsync((BankBINMapping)p), p => !IsBusy && !IsLoadingBins && p is BankBINMapping bin && bin.Id > 0 && bin.BankId == SelectedGlobalBank?.Id && BinPrefixes.Contains(bin));
@@ -77,6 +81,28 @@ namespace PointOfSale.UI.ViewModels.Sales
         }
         public ObservableCollection<Bank> Banks { get; } = new ObservableCollection<Bank>();
         public ObservableCollection<BankBINMapping> BinPrefixes { get; } = new ObservableCollection<BankBINMapping>();
+        public ICollectionView FilteredBinPrefixes { get; }
+        public RelayCommand ClearBinSearchCommand { get; }
+        private string _binSearchText = string.Empty;
+        private string _binSearchPrefix = string.Empty;
+        public string BinSearchText
+        {
+            get => _binSearchText;
+            set
+            {
+                if (!SetProperty(ref _binSearchText, value ?? string.Empty)) return;
+                _binSearchPrefix = _binSearchText.Trim();
+                FilteredBinPrefixes.Refresh();
+            }
+        }
+
+        private bool MatchesBinSearch(object item)
+        {
+            return item is BankBINMapping bin &&
+                (_binSearchPrefix.Length == 0 ||
+                 (bin.BINPrefix?.StartsWith(_binSearchPrefix, StringComparison.Ordinal) ?? false));
+        }
+
         public ObservableCollection<Variant> ExcludedVariants { get; } = new ObservableCollection<Variant>();
         public ObservableCollection<Category> Categories { get; } = new ObservableCollection<Category>();
         public ObservableCollection<Variant> AvailableVariants { get; } = new ObservableCollection<Variant>();
@@ -465,8 +491,14 @@ namespace PointOfSale.UI.ViewModels.Sales
                 var promotionName = PromoName.Trim();
                 var savedId = await _promotions.SaveAsync(new BankPromotion
                 {
-                    Id = _promotionId, BankId = SelectedBank.Id, PromoName = PromoName.Trim(),
-                    DiscountPercentage = percentage, IsActive = IsActive, ValidFrom = ValidFrom, ValidTo = ValidTo, RequiredCardType = RequiredCardType
+                    Id = _promotionId,
+                    BankId = SelectedBank.Id,
+                    PromoName = PromoName.Trim(),
+                    DiscountPercentage = percentage,
+                    IsActive = IsActive,
+                    ValidFrom = ValidFrom,
+                    ValidTo = ValidTo,
+                    RequiredCardType = RequiredCardType
                 }, ExcludedVariants.Select(v => v.Id).ToList());
                 if (savedId <= 0) throw new InvalidOperationException("The database did not confirm the promotion was saved.");
                 Clear();

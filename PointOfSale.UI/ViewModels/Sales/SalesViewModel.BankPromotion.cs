@@ -147,8 +147,10 @@ namespace PointOfSale.UI.ViewModels.Sales
             // than saving a separate BIN on the invoice header.
             _bankPromotion = new BankPromoWithExclusionsDto
             {
-                BankId = sale.PromoBankId ?? 0, BankPromotionId = sale.BankPromotionId ?? 0,
-                PromoName = "Held bank promotion", DiscountPercentage = 1
+                BankId = sale.PromoBankId ?? 0,
+                BankPromotionId = sale.BankPromotionId ?? 0,
+                PromoName = "Held bank promotion",
+                DiscountPercentage = 1
             };
             _recalledBankDiscountAmount = sale.BankDiscountAmount;
             _bankPromotionLookupFailed = true;
