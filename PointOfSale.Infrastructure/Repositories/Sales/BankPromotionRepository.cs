@@ -31,7 +31,7 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
             const string sql = @"
 SELECT p.Id, p.BankId, b.BankName, p.PromoName, p.DiscountPercentage, p.IsActive,
        v.Id AS VariantId, v.ItemCode,
-       CASE WHEN v.Name = 'STANDARD' THEN m.Name ELSE m.Name + ' - ' + v.Name END AS VariantName, p.ValidFrom, p.ValidTo, p.RequiredCardType
+       CASE WHEN v.Name = 'STANDARD' THEN m.Name ELSE m.Name + ' - ' + v.Name END AS VariantName, p.ValidFrom, p.ValidTo, p.RequiredCardType, p.MinBillAmount, p.MaxBillAmount
 FROM [Sales].[BankPromotion] p
 JOIN [System].[Bank] b ON b.Id = p.BankId
 LEFT JOIN [Sales].[BankPromoExcludedVariant] e ON e.BankPromotionId = p.Id
@@ -60,7 +60,9 @@ ORDER BY p.Id DESC, v.Id;";
                                 IsActive = reader.GetBoolean(5),
                                 ValidFrom = reader.GetDateTime(9),
                                 ValidTo = reader.GetDateTime(10),
-                                RequiredCardType = reader.GetString(11)
+                                RequiredCardType = reader.GetString(11),
+                                MinBillAmount = reader.IsDBNull(12) ? (decimal?)null : reader.GetDecimal(12),
+                                MaxBillAmount = reader.IsDBNull(13) ? (decimal?)null : reader.GetDecimal(13)
                             };
                             result.Add(id, promotion);
                         }
@@ -94,6 +96,11 @@ ORDER BY p.Id DESC, v.Id;";
                 throw new ArgumentException("Select a bank and enter a promotion name of up to 200 characters.");
             if (promotion.DiscountPercentage <= 0 || promotion.DiscountPercentage > 100 || decimal.Round(promotion.DiscountPercentage, 2) != promotion.DiscountPercentage)
                 throw new ArgumentException("Discount must be greater than 0 and at most 100, with up to two decimal places.");
+            foreach (var amount in new[] { promotion.MinBillAmount, promotion.MaxBillAmount })
+                if (amount.HasValue && (amount.Value < 0 || amount.Value > 9999999999999999.99m || decimal.Round(amount.Value, 2) != amount.Value))
+                    throw new ArgumentException("Bill limits must be non-negative amounts with up to two decimal places, or blank.");
+            if (promotion.MinBillAmount > promotion.MaxBillAmount)
+                throw new ArgumentException("Max Bill Amount must be greater than or equal to Min Bill Amount.");
             if (promotion.ValidFrom < SqlDateTime.MinValue.Value ||
                 promotion.ValidTo > SqlDateTime.MaxValue.Value || promotion.ValidTo <= promotion.ValidFrom)
                 throw new ArgumentException("Valid To must be strictly later than Valid From, within the SQL DATETIME range (1753-9999).");
@@ -114,13 +121,13 @@ ORDER BY p.Id DESC, v.Id;";
                         using (var command = new SqlCommand(@"
 IF @Id = 0
 BEGIN
-    INSERT INTO [Sales].[BankPromotion] (BankId, PromoName, DiscountPercentage, IsActive, ValidFrom, ValidTo, RequiredCardType)
-    OUTPUT INSERTED.Id VALUES (@BankId, @PromoName, @DiscountPercentage, @IsActive, @ValidFrom, @ValidTo, @RequiredCardType);
+    INSERT INTO [Sales].[BankPromotion] (BankId, PromoName, DiscountPercentage, IsActive, ValidFrom, ValidTo, RequiredCardType, MinBillAmount, MaxBillAmount)
+    OUTPUT INSERTED.Id VALUES (@BankId, @PromoName, @DiscountPercentage, @IsActive, @ValidFrom, @ValidTo, @RequiredCardType, @MinBillAmount, @MaxBillAmount);
 END
 ELSE
 BEGIN
     UPDATE [Sales].[BankPromotion] SET BankId=@BankId, PromoName=@PromoName,
-        DiscountPercentage=@DiscountPercentage, IsActive=@IsActive, ValidFrom=@ValidFrom, ValidTo=@ValidTo, RequiredCardType=@RequiredCardType
+        DiscountPercentage=@DiscountPercentage, IsActive=@IsActive, ValidFrom=@ValidFrom, ValidTo=@ValidTo, RequiredCardType=@RequiredCardType, MinBillAmount=@MinBillAmount, MaxBillAmount=@MaxBillAmount
     OUTPUT INSERTED.Id WHERE Id=@Id;
 END;", connection, transaction))
                         {
@@ -135,6 +142,15 @@ END;", connection, transaction))
                             command.Parameters.Add("@ValidFrom", SqlDbType.DateTime).Value = promotion.ValidFrom;
                             command.Parameters.Add("@ValidTo", SqlDbType.DateTime).Value = promotion.ValidTo;
                             command.Parameters.Add("@RequiredCardType", SqlDbType.VarChar, 20).Value = requiredCardType;
+                            foreach (var amount in new[] {
+                                new { Name = "@MinBillAmount", Value = promotion.MinBillAmount },
+                                new { Name = "@MaxBillAmount", Value = promotion.MaxBillAmount } })
+                            {
+                                var parameter = command.Parameters.Add(amount.Name, SqlDbType.Decimal);
+                                parameter.Precision = 18;
+                                parameter.Scale = 2;
+                                parameter.Value = (object)amount.Value ?? DBNull.Value;
+                            }
                             var savedId = await command.ExecuteScalarAsync();
                             if (savedId == null || savedId == DBNull.Value)
                                 throw new InvalidOperationException("The promotion no longer exists. Clear the form to create a new one.");

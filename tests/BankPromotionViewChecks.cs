@@ -51,12 +51,23 @@ internal static class BankPromotionViewChecks
         Check(vm.RequiredCardType == "CREDIT", "Editing loads the stored required card type");
         vm.ExcludedVariants.Clear();
         Check(vm.OngoingPromotions[0].ExcludedVariants.Count == 1, "Draft exclusions cannot change master data before saving");
+        Check(vm.MinBillAmount == "100.5" && vm.MaxBillAmount == "500.75", "Editing loads optional bill limits");
         vm.DiscountPercentage = "15";
+        foreach (var invalidAmount in new[] { "-1", "1e3", "10.001", "abc", "10000000000000000" })
+        {
+            vm.MinBillAmount = invalidAmount; vm.SaveCommand.Execute(null);
+            Check(saved.Saves == 0 && vm.HasErrors, "Invalid bill amount cannot save: " + invalidAmount);
+        }
+        vm.MinBillAmount = "600"; vm.MaxBillAmount = "500"; vm.SaveCommand.Execute(null);
+        Check(saved.Saves == 0 && vm.HasErrors, "Reversed bill limits cannot save");
+        vm.MinBillAmount = vm.MaxBillAmount = "100.50";
         vm.SaveCommand.Execute(null);
+        Check(saved.Promotion.MinBillAmount == 100.50m && saved.Promotion.MaxBillAmount == 100.50m, "Equal inclusive decimal limits save to the creation model");
         Check(saved.Promotion.Id == 77 && saved.Variants.Count == 0 && vm.SelectedTabIndex == 0 && vm.HasStatusMessage, "Edit updates the existing ID, removes all exclusions, refreshes and navigates");
         Check(saved.Promotion.RequiredCardType == "CREDIT", "Saving promotion edits preserves its card type restriction");
         vm.AddNewPromotionCommand.Execute(null);
         Check(vm.SelectedPromotion == null && vm.SelectedTabIndex == 1 && vm.SelectedBank == null && vm.PromoName == "", "Add New resets the editor and navigates");
+        Check(vm.MinBillAmount == "" && vm.MaxBillAmount == "", "Add New clears optional bill limits");
         vm.SelectedBank = vm.Banks[0]; vm.PromoName = " Card offer "; vm.DiscountPercentage = "12.5";
         vm.SelectedCategory = vm.Categories[0]; vm.VariantsLoadTask.GetAwaiter().GetResult();
         vm.SelectedVariant = vm.AvailableVariants[0];
@@ -87,6 +98,7 @@ internal static class BankPromotionViewChecks
         variants.Fail = false;
         vm.SaveCommand.Execute(null);
         Check(saved.Promotion.Id == 0 && saved.Promotion.PromoName == "CARD OFFER" && saved.Promotion.DiscountPercentage == 12.5m && saved.Variants.SequenceEqual(new[] { 101 }), "Insert saves promotion and exact exclusions together without BINs");
+        Check(saved.Promotion.MinBillAmount == null && saved.Promotion.MaxBillAmount == null, "Blank bill limits save as NULL");
         Check(saved.Promotion.ValidFrom == new DateTime(2026, 10, 28, 9, 15, 30) && saved.Promotion.ValidTo == new DateTime(2026, 10, 28, 9, 15, 31), "Saved timestamps combine date and time with second precision");
         Check(vm.SelectedBank == null && vm.ExcludedVariants.Count == 0 && !vm.HasErrors, "Successful save clears the draft");
         vm.AddNewPromotionCommand.Execute(null);
@@ -174,6 +186,16 @@ internal static class BankPromotionViewChecks
             input.RaiseEvent(paste); Check(paste.CommandCancelled, "Invalid numeric paste rejected");
         };
         checkInput(percentageInput);
+        foreach (var name in new[] { "MinBillAmountInput", "MaxBillAmountInput" })
+        {
+            var amountInput = (TextBox)view.FindName(name);
+            checkInput(amountInput);
+            var text = amountInput.Text; amountInput.Text = "";
+            var paste = new DataObjectPastingEventArgs(new DataObject(DataFormats.UnicodeText, "12345.67"), false, DataFormats.UnicodeText);
+            amountInput.RaiseEvent(paste);
+            Check(!paste.CommandCancelled, "Bill amount input accepts currency values larger than a percentage");
+            amountInput.Text = text;
+        }
         InvokeButton(removeButton); layout();
         Check(vm.ExcludedVariants.Count == 0, "Rendered Remove button executes its row command");
         vm.AddExcludedVariantCommand.Execute(null); layout();
@@ -183,7 +205,19 @@ internal static class BankPromotionViewChecks
         tabs.SelectedIndex = 2; layout();
         Check(vm.SelectedTabIndex == 2, "User tab navigation updates the ViewModel");
         var binInput = Descendants(view).OfType<TextBox>().Single(t => (string)t.Tag == "BIN");
-        Check(binInput.MaxLength == 6, "BIN input length"); checkInput(binInput);
+        Check(binInput.MaxLength == 8, "BIN input length"); checkInput(binInput);
+        var previousBinText = binInput.Text;
+        binInput.Text = "";
+        foreach (var validBin in new[] { "001234", "0012345", "00123456" })
+        {
+            var paste = new DataObjectPastingEventArgs(new DataObject(DataFormats.UnicodeText, validBin), false, DataFormats.UnicodeText);
+            binInput.RaiseEvent(paste);
+            Check(!paste.CommandCancelled, "BIN input permits six to eight digits when pasted");
+        }
+        var longPaste = new DataObjectPastingEventArgs(new DataObject(DataFormats.UnicodeText, "001234567"), false, DataFormats.UnicodeText);
+        binInput.RaiseEvent(longPaste);
+        Check(longPaste.CommandCancelled, "BIN input rejects a nine digit paste");
+        binInput.Text = previousBinText;
         Check(Descendants(view).OfType<DataGrid>().Any(g => ReferenceEquals(g.ItemsSource, vm.FilteredBinPrefixes)), "Global tab renders selected bank BINs");
         var binSearch = (TextBox)view.FindName("BinSearchInput");
         var filteredBinGrid = Descendants(view).OfType<DataGrid>().Single(g => ReferenceEquals(g.ItemsSource, vm.FilteredBinPrefixes));
@@ -245,7 +279,7 @@ internal static class BankPromotionViewChecks
             keyboardWindow.Show(); keyboardWindow.Activate(); layout();
             vm.SelectedCategory = vm.Categories[0];
             vm.SelectedVariant = vm.AvailableVariants[1]; layout();
-            var keyboardFields = new[] { "BankInput", "PromotionNameInput", "DiscountInput", "RequiredCardTypeInput", "ValidFromDateInput", "ValidFromTimeInput", "ValidToDateInput", "ValidToTimeInput", "PromotionActiveInput", "CategoryInput", "VariantInput", "ExcludeVariantButton" };
+            var keyboardFields = new[] { "BankInput", "PromotionNameInput", "DiscountInput", "MinBillAmountInput", "MaxBillAmountInput", "RequiredCardTypeInput", "ValidFromDateInput", "ValidFromTimeInput", "ValidToDateInput", "ValidToTimeInput", "PromotionActiveInput", "CategoryInput", "VariantInput", "ExcludeVariantButton" };
             ((Control)view.FindName(keyboardFields[0])).Focus();
             for (var i = 1; i < keyboardFields.Length; i++)
             {
@@ -299,6 +333,15 @@ internal static class BankPromotionViewChecks
             Check(vm.BinPrefixes.Count == 0, "Rendered Delete button removes an active BIN");
         }
         finally { keyboardWindow.Close(); }
+        foreach (var longerBin in new[] { "0012345", "00123456" })
+        {
+            vm.BinPrefix = longerBin;
+            vm.SaveBinCommand.Execute(null);
+            Check(vm.BinPrefixes.Any(b => b.BINPrefix == longerBin), "UI saves seven and eight digits including leading zeros");
+        }
+        vm.BinPrefix = "001234567";
+        vm.SaveBinCommand.Execute(null);
+        Check(vm.HasError && vm.BinPrefixes.Count == 2, "UI validation rejects more than eight digits");
         Console.WriteLine("Bank promotion navigation, insert/update, validation, asynchronous loading and XAML rendering passed. Preview: " + args[0]);
     }
 
@@ -337,7 +380,7 @@ internal static class BankPromotionViewChecks
         public TaskCompletionSource<IEnumerable<BankBINMapping>> PendingBins;
         public Task<IEnumerable<BankPromotionDto>> GetAllAsync() => Task.FromResult<IEnumerable<BankPromotionDto>>(new[]
         {
-            new BankPromotionDto { ValidFrom = new DateTime(2026, 10, 28, 9, 15, 30), ValidTo = new DateTime(2026, 10, 29, 22, 45, 15), Id = 77, BankId = 1, RequiredCardType = "Credit", BankName = "Sample Bank", PromoName = "Existing", DiscountPercentage = 10,
+            new BankPromotionDto { ValidFrom = new DateTime(2026, 10, 28, 9, 15, 30), ValidTo = new DateTime(2026, 10, 29, 22, 45, 15), Id = 77, BankId = 1, MinBillAmount = 100.5m, MaxBillAmount = 500.75m, RequiredCardType = "Credit", BankName = "Sample Bank", PromoName = "Existing", DiscountPercentage = 10,
                 ExcludedVariants = new List<Variant> { new Variant { Id = 101, Name = "Existing excluded variant" } } }
         });
         public Task<IEnumerable<BankBINMapping>> GetBinsAsync(int bankId) => bankId == 2 && PendingBins != null ? PendingBins.Task : Task.FromResult<IEnumerable<BankBINMapping>>(Bins.Where(b => b.BankId == bankId).ToList());

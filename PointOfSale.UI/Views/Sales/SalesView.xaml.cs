@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -131,7 +131,7 @@ namespace PointOfSale.UI.Views.Sales
                 return;
             }
 
-            if (sender == CardReferenceNumberTextBox && WouldExceedMaxLength(CardReferenceNumberTextBox, e.Text, 6))
+            if (sender == CardReferenceNumberTextBox && WouldExceedMaxLength(CardReferenceNumberTextBox, e.Text, 8))
             {
                 e.Handled = true;
             }
@@ -152,7 +152,7 @@ namespace PointOfSale.UI.Views.Sales
                 return;
             }
 
-            if (sender == CardReferenceNumberTextBox && WouldExceedMaxLength(CardReferenceNumberTextBox, text, 6))
+            if (sender == CardReferenceNumberTextBox && WouldExceedMaxLength(CardReferenceNumberTextBox, text, 8))
             {
                 e.CancelCommand();
             }
@@ -399,7 +399,7 @@ namespace PointOfSale.UI.Views.Sales
             {
                 if (targetTextBox == CardReferenceNumberTextBox)
                 {
-                    if (!IsDigitsOnly(value) || WouldExceedMaxLength(targetTextBox, value, 6))
+                    if (!IsDigitsOnly(value) || WouldExceedMaxLength(targetTextBox, value, 8))
                         return;
                 }
 

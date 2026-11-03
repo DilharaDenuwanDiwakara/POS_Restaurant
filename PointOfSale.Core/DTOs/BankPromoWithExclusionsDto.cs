@@ -11,6 +11,8 @@ namespace PointOfSale.Core.DTOs
         public string CardBrand { get; set; }
         public string RequiredCardType { get; set; }
         public decimal DiscountPercentage { get; set; }
+        public decimal? MinBillAmount { get; set; }
+        public decimal? MaxBillAmount { get; set; }
         public List<int> ExcludedVariantIds { get; } = new List<int>();
     }
 }

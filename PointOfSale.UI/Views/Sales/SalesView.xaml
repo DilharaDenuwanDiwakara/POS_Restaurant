@@ -891,12 +891,12 @@
                                             <TextBlock
                                                 Margin="0,0,0,6"
                                                 Style="{StaticResource InputLabelStyle}"
-                                                Text="Reference No / Auth Code (6 digits):" />
+                                                Text="Reference No / Auth Code (6-8 digits):" />
                                             <TextBox
                                                 x:Name="CardReferenceNumberTextBox"
                                                 DataObject.Pasting="DigitsOnly_Pasting"
                                                 InputScope="Number"
-                                                MaxLength="6"
+                                                MaxLength="8"
                                                 PreviewTextInput="DigitsOnly_PreviewTextInput"
                                                 Style="{StaticResource CashInputStyle}"
                                                 Text="{Binding ReferenceNumber, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"

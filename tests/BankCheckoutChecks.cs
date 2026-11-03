@@ -71,13 +71,51 @@ internal static class BankCheckoutChecks
             "Bank eligibility must exclude base/manual/promo discounts and excluded variants");
         Check(cart[2].ManualDiscount == 20 && cart[3].BaseDiscountPerUnit == 5 && cart[4].PromoDiscount == 5,
             "Applying a bank promotion must preserve existing line discounts");
-        foreach (var bin in new[] { null, "", "12345", "1234567", "12a456", "１２３４５６" })
+        foreach (var bin in new[] { null, "", "12345", "123456789", "12a456", "１２３４５６" })
         {
             try { service.ApplyBankPromotionAsync(bin, cart).GetAwaiter().GetResult(); throw new Exception("Invalid BIN accepted"); }
             catch (ArgumentException) { }
         }
+        foreach (var longerBin in new[] { "0012345", "00123456" })
+            Check(service.ApplyBankPromotionAsync(longerBin, cart).GetAwaiter().GetResult().DiscountAmount == 10, "Checkout accepts seven and eight digit BINs");
         Check(CheckoutService.CalculateBankPromotion(Offer(1, 5), new[] { new SalesLine { UnitPrice = 0.10m, Quantity = 1 } }).DiscountAmount == 0.01m,
             "Half-cent discounts must round away from zero, matching SQL ROUND");
+
+        var limited = Offer();
+        limited.MinBillAmount = limited.MaxBillAmount = 470m;
+        Check(CheckoutService.CalculateBankPromotion(limited, cart).DiscountAmount == 10m,
+            "Inclusive limits use all bill lines after line discounts, including excluded items, before bank discount");
+        limited.MinBillAmount = 470.01m; limited.MaxBillAmount = null;
+        Check(CheckoutService.CalculateBankPromotion(limited, cart).DiscountAmount == 0m, "Bill below minimum receives no bank discount");
+        limited.MinBillAmount = null; limited.MaxBillAmount = 469.99m;
+        Check(CheckoutService.CalculateBankPromotion(limited, cart).DiscountAmount == 0m, "Bill above maximum receives no bank discount");
+        limited.MinBillAmount = limited.MaxBillAmount = null;
+        Check(CheckoutService.CalculateBankPromotion(limited, cart).DiscountAmount == 10m, "Blank limits retain existing discount behavior");
+        var thresholdSales = new FakeSales { Current = Offer() };
+        thresholdSales.Current.MinBillAmount = thresholdSales.Current.MaxBillAmount = 100m;
+        var thresholdVm = ViewModel(thresholdSales);
+        thresholdVm.CartItems.Add(new SalesLine { ProductId = 101, UnitPrice = 100, Quantity = 1 });
+        thresholdVm.SelectedPaymentMethod = "CARD";
+        thresholdVm.ReferenceNumber = "012345";
+        Wait(thresholdVm.BankPromotionEvaluation);
+        Check(thresholdVm.HasBankPromotion && thresholdVm.NetAmount == 90m, "Threshold uses the bill before bank discount");
+        thresholdVm.PaymentTerminals.Add(new PaymentTerminal { Id = 1, TerminalName = "Test terminal" });
+        thresholdVm.SelectedPaymentTerminal = thresholdVm.PaymentTerminals[0];
+        thresholdVm.IsPaymentInputVisible = true;
+        thresholdVm.CurrentPaymentAmount = 89m;
+        Check(!Can(thresholdVm, "CanAddPayment"), "Threshold promotion still rejects a partial card amount");
+        thresholdVm.CurrentPaymentAmount = 90m;
+        Check(Can(thresholdVm, "CanAddPayment"), "Full discounted bill qualifies for one card payment");
+        thresholdVm.CartItems[0].UnitPrice = 101m;
+        Check(thresholdVm.BankDiscountAmount == 0m && !Can(thresholdVm, "CanAddPayment"), "Cart edits outside the threshold remove savings and block stale bank payment");
+        thresholdVm.ReferenceNumber = ""; thresholdVm.ReferenceNumber = "012345";
+        Wait(thresholdVm.BankPromotionEvaluation);
+        Check(!thresholdVm.HasBankPromotion, "Out-of-range bill cannot apply a bank promotion");
+        thresholdVm.CartItems[0].UnitPrice = 100m;
+        thresholdVm.AppliedPayments.Add(new PaymentDetail { PaymentMethod = "CASH", Amount = 10 });
+        thresholdVm.ReferenceNumber = ""; thresholdVm.ReferenceNumber = "012345";
+        Wait(thresholdVm.BankPromotionEvaluation);
+        Check(!thresholdVm.HasBankPromotion && !Can(thresholdVm, "CanAddPayment"), "Existing split payment blocks promotion application");
 
         var vm = ViewModel(sales);
         foreach (var line in cart.Take(3)) vm.CartItems.Add(line);
@@ -98,6 +136,16 @@ internal static class BankCheckoutChecks
         Check(!vm.HasBankPromotion && vm.NetAmount == 380, "Switching away from card clears its reference and restores the normal total");
         vm.PaymentTerminals.Add(new PaymentTerminal { Id = 1, TerminalName = "Test terminal" });
         vm.SelectedPaymentMethod = "CARD";
+        vm.ReferenceNumber = "012345";
+        Wait(vm.BankPromotionEvaluation);
+        foreach (var longerBin in new[] { "0012345", "00123456" })
+        {
+            vm.ReferenceNumber = longerBin;
+            Wait(vm.BankPromotionEvaluation);
+            Check(vm.ReferenceNumber == longerBin && vm.HasBankPromotion, "Card input preserves and evaluates seven and eight digits");
+        }
+        vm.ReferenceNumber = "001234567";
+        Check(vm.ReferenceNumber == "00123456", "Card input enforces the eight digit maximum");
         vm.ReferenceNumber = "012345";
         Wait(vm.BankPromotionEvaluation);
         vm.CurrentPaymentAmount = vm.NetAmount - 1;

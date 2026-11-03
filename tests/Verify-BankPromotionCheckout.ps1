@@ -39,13 +39,13 @@ try {
     Invoke-Sql $connection @'
 INSERT INTO [Sales].[BankPromotion](BankId,PromoName,DiscountPercentage,IsActive,ValidFrom,ValidTo,RequiredCardType)
 VALUES(1,'Test offer',10,1,DATEADD(DAY,-1,GETDATE()),DATEADD(DAY,1,GETDATE()),'CREDIT');
-INSERT INTO [System].[BankBINMapping](BankId,BINPrefix,IsActive,CardType) VALUES(1,'012345',1,'CREDIT');
+INSERT INTO [System].[BankBINMapping](BankId,BINPrefix,IsActive,CardType) VALUES(1,'012345',1,'CREDIT'),(1,'01234567',1,'CREDIT');
 INSERT INTO [Sales].[BankPromoExcludedVariant] VALUES(1,102);
 UPDATE [Sales].[Sales] SET PromoType='BANK',PromoBankId=1,BankPromotionId=1,BankDiscountAmount=10;
 '@
     $cases = @(
         @{ Payments = "(1,'CARD',370,'1234')"; Error = 52031 },
-        @{ Payments = "(1,'CARD',370,'0123456')"; Error = 52031 },
+        @{ Payments = "(1,'CARD',370,'012345678')"; Error = 52031 },
         @{ Payments = "(1,'CARD',370,'12a456')"; Error = 52031 },
         @{ Payments = "(1,'CARD',370,NULL)"; Error = 52031 },
         @{ Payments = ''; Error = 52030 },
@@ -59,6 +59,8 @@ UPDATE [Sales].[Sales] SET PromoType='BANK',PromoBankId=1,BankPromotionId=1,Bank
         @{ Payments = "(1,'CARD',370,'012345')"; Setup = 'UPDATE Sales.Sales SET PromoBankId=2'; Cleanup = 'UPDATE Sales.Sales SET PromoBankId=1'; Error = 52032 },
         @{ Payments = "(1,'CARD',370,'012345')"; Setup = 'UPDATE Sales.Sales SET PromoBankId=NULL'; Cleanup = 'UPDATE Sales.Sales SET PromoBankId=1'; Error = 52031 },
         @{ Payments = "(1,'CARD',370,'012345')"; Setup = 'UPDATE Sales.BankPromotion SET ValidTo=DATEADD(SECOND,-1,GETDATE())'; Cleanup = 'UPDATE Sales.BankPromotion SET ValidTo=DATEADD(DAY,1,GETDATE())'; Error = 52032 },
+        @{ Payments = "(1,'CARD',370,'012345')"; Setup = 'UPDATE Sales.BankPromotion SET MinBillAmount=380.01'; Cleanup = 'UPDATE Sales.BankPromotion SET MinBillAmount=NULL'; Error = 52039 },
+        @{ Payments = "(1,'CARD',370,'012345')"; Setup = 'UPDATE Sales.BankPromotion SET MaxBillAmount=379.99'; Cleanup = 'UPDATE Sales.BankPromotion SET MaxBillAmount=NULL'; Error = 52039 },
         @{ Payments = "(1,'CARD',370,'012345')"; Setup = 'UPDATE Sales.Sales SET DiscountAmount=15'; Cleanup = 'UPDATE Sales.Sales SET DiscountAmount=10'; Error = 52033 },
         @{ Payments = "(1,'CARD',370,'012345')"; Setup = 'UPDATE Sales.Sales SET BankDiscountAmount=20'; Cleanup = 'UPDATE Sales.Sales SET BankDiscountAmount=10'; Error = 52033 },
         @{ Payments = "(1,'CARD',370,'012345')"; Setup = "DELETE FROM System.AccountMapping WHERE MappingKey='BANK_PROMO_EXPENSE'"; Cleanup = "INSERT INTO System.AccountMapping VALUES('BANK_PROMO_EXPENSE',6)"; Error = 52036 }
@@ -76,7 +78,9 @@ UPDATE [Sales].[Sales] SET PromoType='BANK',PromoBankId=1,BankPromotionId=1,Bank
         }
         Assert-Sql $connection '(SELECT COUNT(*) FROM Sales.Payment)=0 AND (SELECT COUNT(*) FROM Accounts.JournalEntry)=0 AND (SELECT SUM(AvailableQuantity) FROM Inventory.LocationStock)=300' 'Rejected promotion must leave payments stock and ledger unchanged'
     }
+    Invoke-Sql $connection "UPDATE Sales.BankPromotion SET MinBillAmount=380,MaxBillAmount=380 WHERE Id=1;"
     Invoke-Sql $connection "DECLARE @p Sales.PaymentListType; INSERT INTO @p VALUES(1,'CARD',370,'012345'); EXEC Sales.uspFinalizeSale @SalesId=1,@CreatedBy=1,@Payments=@p;"
+    Invoke-Sql $connection "UPDATE Sales.BankPromotion SET MinBillAmount=NULL,MaxBillAmount=NULL WHERE Id=1;"
     Assert-Sql $connection "(SELECT PaymentStatus FROM Sales.Sales WHERE Id=1)='PAID' AND (SELECT BalanceAmount FROM Sales.Sales WHERE Id=1)=0" 'Discounted invoice must be fully paid'
     Assert-Sql $connection '(SELECT COUNT(*) FROM Sales.Payment)=1 AND (SELECT SUM(AvailableQuantity) FROM Inventory.LocationStock)=297' 'Valid bank invoice must post exactly once'
     Assert-Sql $connection '(SELECT SUM(DebitAmount) FROM Accounts.JournalEntryLine WHERE AccountId=6)=10 AND (SELECT SUM(DebitAmount) FROM Accounts.JournalEntryLine WHERE AccountId=5)=20' 'Bank and item discounts must use separate accounts'
@@ -91,7 +95,7 @@ UPDATE Sales.BankPromotion SET DiscountPercentage=50 WHERE Id=1;
 INSERT INTO Sales.Sales(Id,BranchId,InvoiceNumber,SubTotal,DiscountAmount,TaxAmount,ServiceCharge,PromoType,PromoBankId,BankPromotionId,BankDiscountAmount)
 VALUES(2,1,'TEST-FRACTION',1.01,0.50,0,0,'BANK',1,1,0.50);
 INSERT INTO Sales.SalesLine VALUES(2,101,1.005,1,0,0);
-DECLARE @p Sales.PaymentListType; INSERT INTO @p VALUES(1,'CARD',0.51,'012345');
+DECLARE @p Sales.PaymentListType; INSERT INTO @p VALUES(1,'CARD',0.51,'01234567');
 EXEC Sales.uspFinalizeSale @SalesId=2,@CreatedBy=1,@Payments=@p;
 UPDATE Sales.BankPromotion SET DiscountPercentage=10 WHERE Id=1;
 INSERT INTO Sales.Sales(Id,BranchId,InvoiceNumber,SubTotal,DiscountAmount,TaxAmount,ServiceCharge,PromoType)

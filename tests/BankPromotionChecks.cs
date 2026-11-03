@@ -26,7 +26,7 @@ internal static class BankPromotionChecks
     private static void RejectSql(SqlConnection connection, string sql)
     {
         try { Execute(connection, sql); }
-        catch (SqlException ex) when (ex.Number == 547 || ex.Number == 2601 || ex.Number == 2627) { return; }
+        catch (SqlException ex) when (ex.Number == 547 || ex.Number == 2601 || ex.Number == 2627 || ex.Number == 8152 || ex.Number == 2628) { return; }
         throw new Exception("Expected a constraint violation: " + sql);
     }
 
@@ -84,14 +84,21 @@ INSERT INTO [System].[BankBINMapping](BankPromotionId,BINPrefix,IsActive) VALUES
                     Assert(migrated.Count == 2 && migrated.Single(b => b.BINPrefix == "012345").IsActive, "Migration preserves bank ownership and active mapping while consolidating duplicates");
                     Assert(repository.GetBankPromoWithExclusionsAsync("012345").GetAwaiter().GetResult().PromoName == "Legacy", "Checkout resolves migrated bank BIN");
                     Assert(repository.GetBankPromoWithExclusionsAsync("234567").GetAwaiter().GetResult() == null, "Inactive BIN does not apply");
-                    foreach (var prefix in new[] { null, "", "12345", "1234567", "12a456", " 12345", "??????" })
+                    foreach (var prefix in new[] { null, "", "12345", "123456789", "12a456", " 12345", "??????" })
                     {
                         try { repository.GetBankPromoWithExclusionsAsync(prefix).GetAwaiter().GetResult(); }
                         catch (ArgumentException) { continue; }
                         throw new Exception("Expected invalid BIN rejection");
                     }
-                    var draft = new BankPromotion { ValidFrom = new DateTime(2000, 1, 1), ValidTo = new DateTime(2099, 12, 31), BankId = 2, PromoName = "New offer", DiscountPercentage = 25m };
+                    var draft = new BankPromotion { ValidFrom = new DateTime(2000, 1, 1), ValidTo = new DateTime(2099, 12, 31), BankId = 2, PromoName = "New offer", DiscountPercentage = 25m, MinBillAmount = 100.25m, MaxBillAmount = 5000.75m };
                     var id = admin.SaveAsync(draft, new[] { 101, 201 }).GetAwaiter().GetResult();
+                    var limitReadback = admin.GetAllAsync().GetAwaiter().GetResult().Single(p => p.Id == id);
+                    Assert(limitReadback.MinBillAmount == 100.25m && limitReadback.MaxBillAmount == 5000.75m, "Decimal limits survive insert and promotion list readback");
+                    draft.Id = id;
+                    draft.MinBillAmount = draft.MaxBillAmount = null;
+                    admin.SaveAsync(draft, new[] { 101, 201 }).GetAwaiter().GetResult();
+                    limitReadback = admin.GetAllAsync().GetAwaiter().GetResult().Single(p => p.Id == id);
+                    Assert(limitReadback.MinBillAmount == null && limitReadback.MaxBillAmount == null, "Editing clears limits to SQL NULL");
                     Assert(!admin.GetBinsAsync(2).GetAwaiter().GetResult().Any(), "Promotion creation requires no BIN and cannot modify global settings");
                     admin.AddBinAsync(new BankBINMapping { BankId = 2, BINPrefix = "567890", CardType = "  cReDiT  ", CardBrand = "  vIsA  " }).GetAwaiter().GetResult();
                     var editableBin = admin.GetBinsAsync(2).GetAwaiter().GetResult().Single();
@@ -118,7 +125,31 @@ INSERT INTO [System].[BankBINMapping](BankPromotionId,BINPrefix,IsActive) VALUES
                     Assert(repository.GetBankPromoWithExclusionsAsync("001234").GetAwaiter().GetResult() == null, "Deactivated BIN does not apply");
                     editableBin.BINPrefix = "567890"; editableBin.IsActive = true;
                     admin.UpdateBinAsync(editableBin).GetAwaiter().GetResult();
+                    foreach (var longerBin in new[] { "0056789", "00567890" })
+                    {
+                        editableBin.BINPrefix = longerBin;
+                        admin.UpdateBinAsync(editableBin).GetAwaiter().GetResult();
+                        Assert(admin.GetBinsAsync(2).GetAwaiter().GetResult().Single().BINPrefix == longerBin, "Longer BIN saves without losing leading zeros");
+                        Assert(repository.GetBankPromoWithExclusionsAsync(longerBin).GetAwaiter().GetResult().BankPromotionId == id, "Longer BIN resolves its promotion without truncation");
+                        Assert(new BankPromotionCheckoutService(repository).GetDiscountPercentageAsync(longerBin).GetAwaiter().GetResult() == 25m, "Checkout retains all entered BIN digits");
+                    }
+                    editableBin.BINPrefix = "567890";
+                    admin.UpdateBinAsync(editableBin).GetAwaiter().GetResult();
+                    draft.MinBillAmount = 100.25m; draft.MaxBillAmount = 5000.75m;
+                    admin.SaveAsync(draft, new[] { 101, 201 }).GetAwaiter().GetResult();
                     var saved = repository.GetBankPromoWithExclusionsAsync("567890").GetAwaiter().GetResult();
+                    Assert(saved.MinBillAmount == 100.25m && saved.MaxBillAmount == 5000.75m, "Checkout lookup loads both bill limits");
+                    foreach (var invalidLimit in new[] { -1m, 1.001m, 10000000000000000m })
+                    {
+                        draft.MinBillAmount = invalidLimit;
+                        try { admin.SaveAsync(draft, new[] { 101, 201 }).GetAwaiter().GetResult(); throw new Exception("Invalid bill limit accepted"); }
+                        catch (ArgumentException) { }
+                    }
+                    draft.MinBillAmount = 6000m;
+                    try { admin.SaveAsync(draft, new[] { 101, 201 }).GetAwaiter().GetResult(); throw new Exception("Reversed limits accepted"); }
+                    catch (ArgumentException) { }
+                    draft.MinBillAmount = draft.MaxBillAmount = null;
+                    admin.SaveAsync(draft, new[] { 101, 201 }).GetAwaiter().GetResult();
                     Assert(saved.BankPromotionId == id && saved.ExcludedVariantIds.SequenceEqual(new[] { 101, 201 }), "Aggregate insert and global BIN lookup");
                     var checkout = new BankPromotionCheckoutService(repository);
                     var binsRepository = new BINMappingRepository(new DatabaseConnection());
@@ -230,6 +261,10 @@ INSERT INTO [System].[BankBINMapping](BankPromotionId,BINPrefix,IsActive) VALUES
                     binsRepository.DeleteAsync(inactiveDeleteId, 3).GetAwaiter().GetResult();
                     Assert(!binsRepository.GetByBankIdAsync(3).GetAwaiter().GetResult().Any(), "Inactive BINs can be deleted from database");
                     RejectSql(connection, "INSERT INTO [System].[BankBINMapping](BankId,BINPrefix) VALUES (2,'12345');");
+                    RejectSql(connection, "INSERT INTO [System].[BankBINMapping](BankId,BINPrefix) VALUES (2,'123456789');");
+                    RejectSql(connection, "INSERT INTO [System].[BankBINMapping](BankId,BINPrefix) VALUES (2,'1234567x');");
+                    RejectSql(connection, "UPDATE [Sales].[BankPromotion] SET MinBillAmount=-1 WHERE Id=1;");
+                    RejectSql(connection, "UPDATE [Sales].[BankPromotion] SET MinBillAmount=100,MaxBillAmount=99 WHERE Id=1;");
                     RejectSql(connection, "INSERT INTO [Sales].[BankPromoExcludedVariant] VALUES (1,999);");
 
                 }

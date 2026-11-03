@@ -50,17 +50,29 @@ IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE parent_object_id = OBJE
     EXEC(N'ALTER TABLE [Sales].[BankPromotion] WITH CHECK ADD CONSTRAINT [CK_BankPromotion_Validity]
            CHECK ([ValidTo] > [ValidFrom]);');
 
+-- Optional inclusive limits use the complete bill before the bank discount.
+IF COL_LENGTH(N'Sales.BankPromotion', N'MinBillAmount') IS NULL
+    ALTER TABLE [Sales].[BankPromotion] ADD [MinBillAmount] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'Sales.BankPromotion', N'MaxBillAmount') IS NULL
+    ALTER TABLE [Sales].[BankPromotion] ADD [MaxBillAmount] DECIMAL(18,2) NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID(N'[Sales].[BankPromotion]')
+               AND name = N'CK_BankPromotion_BillAmounts')
+    EXEC(N'ALTER TABLE [Sales].[BankPromotion] WITH CHECK ADD CONSTRAINT [CK_BankPromotion_BillAmounts]
+           CHECK ((MinBillAmount IS NULL OR MinBillAmount >= 0)
+              AND (MaxBillAmount IS NULL OR MaxBillAmount >= 0)
+              AND (MinBillAmount IS NULL OR MaxBillAmount IS NULL OR MinBillAmount <= MaxBillAmount));');
+
 IF OBJECT_ID(N'[System].[BankBINMapping]', N'U') IS NULL
 BEGIN
     CREATE TABLE [System].[BankBINMapping]
     (
         [Id] INT IDENTITY(1,1) NOT NULL CONSTRAINT [PK_BankBINMapping] PRIMARY KEY,
         [BankId] INT NOT NULL,
-        [BINPrefix] VARCHAR(6) NOT NULL,
+        [BINPrefix] VARCHAR(8) NOT NULL,
         [IsActive] BIT NOT NULL CONSTRAINT [DF_BankBINMapping_IsActive] DEFAULT (1),
         CONSTRAINT [FK_BankBINMapping_Bank] FOREIGN KEY ([BankId]) REFERENCES [System].[Bank] ([Id]),
         CONSTRAINT [CK_BankBINMapping_BINPrefix] CHECK
-            (DATALENGTH([BINPrefix]) = 6 AND [BINPrefix] COLLATE Latin1_General_100_BIN2 NOT LIKE '%[^0-9]%')
+            (DATALENGTH([BINPrefix]) BETWEEN 6 AND 8 AND [BINPrefix] COLLATE Latin1_General_100_BIN2 NOT LIKE '%[^0-9]%')
     );
     -- A BIN identifies one active bank globally.
     CREATE UNIQUE INDEX [UX_BankBINMapping_ActiveBINPrefix]
@@ -87,6 +99,22 @@ BEGIN
            FOREIGN KEY ([BankId]) REFERENCES [System].[Bank] ([Id]);');
     EXEC(N'CREATE UNIQUE INDEX [UX_BankBINMapping_BankId_BINPrefix]
            ON [System].[BankBINMapping] ([BankId], [BINPrefix]);');
+END;
+
+-- Widen existing six-digit BINs while preserving assignments and uniqueness.
+IF COL_LENGTH(N'System.BankBINMapping', N'BINPrefix') < 8
+BEGIN
+    ALTER TABLE [System].[BankBINMapping] DROP CONSTRAINT [CK_BankBINMapping_BINPrefix];
+    DROP INDEX [UX_BankBINMapping_ActiveBINPrefix] ON [System].[BankBINMapping];
+    DROP INDEX [UX_BankBINMapping_BankId_BINPrefix] ON [System].[BankBINMapping];
+    ALTER TABLE [System].[BankBINMapping] ALTER COLUMN [BINPrefix] VARCHAR(8) NOT NULL;
+    ALTER TABLE [System].[BankBINMapping] WITH CHECK ADD CONSTRAINT [CK_BankBINMapping_BINPrefix]
+        CHECK (DATALENGTH([BINPrefix]) BETWEEN 6 AND 8
+               AND [BINPrefix] COLLATE Latin1_General_100_BIN2 NOT LIKE '%[^0-9]%');
+    CREATE UNIQUE INDEX [UX_BankBINMapping_ActiveBINPrefix]
+        ON [System].[BankBINMapping] ([BINPrefix]) WHERE [IsActive] = 1;
+    CREATE UNIQUE INDEX [UX_BankBINMapping_BankId_BINPrefix]
+        ON [System].[BankBINMapping] ([BankId], [BINPrefix]);
 END;
 
 -- Card metadata is nullable for existing, unclassified BINs. Such BINs only match All offers.

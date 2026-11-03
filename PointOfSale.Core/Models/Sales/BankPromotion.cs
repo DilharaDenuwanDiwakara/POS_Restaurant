@@ -8,6 +8,8 @@ namespace PointOfSale.Core.Models.Sales
         public int BankId { get; set; }
         public string PromoName { get; set; }
         public decimal DiscountPercentage { get; set; }
+        public decimal? MinBillAmount { get; set; }
+        public decimal? MaxBillAmount { get; set; }
         public DateTime ValidFrom { get; set; }
         public DateTime ValidTo { get; set; }
         private string _requiredCardType = "ALL";

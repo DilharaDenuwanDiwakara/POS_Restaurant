@@ -72,7 +72,7 @@ internal static class BankCheckoutPersistenceChecks
             SalesId = id, CreatedBy = 1,
             Payments = new System.Collections.Generic.List<SalePaymentRequestDto>
             {
-                new SalePaymentRequestDto { PaymentMethod = "CARD", PaymentTerminalId = 1, Amount = 90, ReferenceNumber = "012345" }
+                new SalePaymentRequestDto { PaymentMethod = "CARD", PaymentTerminalId = 1, Amount = 90, ReferenceNumber = "01234567" }
             }
         }).GetAwaiter().GetResult();
         using (var connection = new SqlConnection(connectionString))
@@ -81,8 +81,8 @@ internal static class BankCheckoutPersistenceChecks
             connection.Open();
             command.CommandText = "SELECT ReferenceNumber FROM Sales.Payment WHERE SalesId=@Id";
             command.Parameters.AddWithValue("@Id", id);
-            Check((string)command.ExecuteScalar() == "012345", "The repository must persist all six reference digits, including the leading zero, via the existing payment TVP");
+            Check((string)command.ExecuteScalar() == "01234567", "The repository must persist all eight reference digits, including the leading zero, via the existing payment TVP");
         }
-        Console.WriteLine("Repository checks: hold/recall, atomic rollback, promotion removal and six-digit payment reference database round trip passed.");
+        Console.WriteLine("Repository checks: hold/recall, atomic rollback, promotion removal and eight-digit payment reference database round trip passed.");
     }
 }

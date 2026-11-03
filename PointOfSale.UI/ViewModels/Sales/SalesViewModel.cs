@@ -437,8 +437,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             set
             {
                 var normalizedValue = IsPaymentTypeCard ? KeepDigitsOnly(value) : value;
-                if (IsPaymentTypeCard && normalizedValue?.Length > 6)
-                    normalizedValue = normalizedValue.Substring(0, 6);
+                if (IsPaymentTypeCard && normalizedValue?.Length > 8)
+                    normalizedValue = normalizedValue.Substring(0, 8);
 
                 if (SetProperty(ref _referenceNumber, normalizedValue))
                 {
@@ -755,7 +755,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             BankPaymentEntryIsValid() &&
             IsPaymentPanelVisible &&
             CurrentPaymentAmount > 0 &&
-            (!IsPaymentTypeCard || (SelectedPaymentTerminal != null && HasSixDigitReference(ReferenceNumber))) &&
+            (!IsPaymentTypeCard || (SelectedPaymentTerminal != null && HasValidCardReference(ReferenceNumber))) &&
             (!IsPaymentTypeCredit || (HasSelectedStoreCreditCustomer() && !string.IsNullOrWhiteSpace(ReferenceNumber))) &&
             (!IsPaymentTypeBankTransfer || !string.IsNullOrWhiteSpace(ReferenceNumber));
         #endregion
@@ -1257,7 +1257,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             if (!IsPaymentTypeCash && CurrentPaymentAmount > RemainingBalance) return false;
 
             if (IsPaymentTypeCard &&
-                (SelectedPaymentTerminal == null || !HasSixDigitReference(ReferenceNumber)))
+                (SelectedPaymentTerminal == null || !HasValidCardReference(ReferenceNumber)))
                 return false;
 
             if (IsPaymentTypeCredit &&
@@ -3342,11 +3342,11 @@ namespace PointOfSale.UI.ViewModels.Sales
             }
             else if (IsPaymentTypeCard && string.IsNullOrWhiteSpace(ReferenceNumber))
             {
-                PaymentErrorMessage = "Enter the 6 digit reference or auth code.";
+                PaymentErrorMessage = "Enter the 6 to 8 digit reference or auth code.";
             }
-            else if (IsPaymentTypeCard && !HasSixDigitReference(ReferenceNumber))
+            else if (IsPaymentTypeCard && !HasValidCardReference(ReferenceNumber))
             {
-                PaymentErrorMessage = "Reference number must be exactly 6 digits.";
+                PaymentErrorMessage = "Reference number must be 6 to 8 digits.";
             }
             else if (IsPaymentTypeCredit && !HasSelectedStoreCreditCustomer())
             {
@@ -3459,9 +3459,9 @@ namespace PointOfSale.UI.ViewModels.Sales
             return !string.IsNullOrWhiteSpace(value) && value.All(IsAsciiDigit);
         }
 
-        private static bool HasSixDigitReference(string value)
+        private static bool HasValidCardReference(string value)
         {
-            return HasDigitsOnlyReference(value) && value.Length == 6;
+            return HasDigitsOnlyReference(value) && value.Length >= 6 && value.Length <= 8;
         }
 
         private static bool IsAsciiDigit(char value)

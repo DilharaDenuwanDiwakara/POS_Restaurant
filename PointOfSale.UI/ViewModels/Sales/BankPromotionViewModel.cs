@@ -114,6 +114,10 @@ namespace PointOfSale.UI.ViewModels.Sales
         // Keep raw input so invalid text cannot leave a previously valid decimal available to Save.
         private string _discountPercentage = string.Empty;
         public string DiscountPercentage { get => _discountPercentage; set { if (SetProperty(ref _discountPercentage, value)) { ValidatePercentage(out _); StatusMessage = string.Empty; } } }
+        private string _minBillAmount = string.Empty;
+        public string MinBillAmount { get => _minBillAmount; set { if (SetProperty(ref _minBillAmount, value)) { ValidateBillLimits(out _, out _); StatusMessage = string.Empty; } } }
+        private string _maxBillAmount = string.Empty;
+        public string MaxBillAmount { get => _maxBillAmount; set { if (SetProperty(ref _maxBillAmount, value)) { ValidateBillLimits(out _, out _); StatusMessage = string.Empty; } } }
         public string[] TimeOptions { get; } = Enumerable.Range(0, 96)
             .Select(i => TimeSpan.FromMinutes(i * 15).ToString(@"hh\:mm")).ToArray();
         private DateTime? _validFromDate = DateTime.Today;
@@ -338,6 +342,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             SelectedBank = Banks.FirstOrDefault(b => b.Id == promotion.BankId);
             PromoName = promotion.PromoName;
             DiscountPercentage = promotion.DiscountPercentage.ToString("0.##", CultureInfo.CurrentCulture);
+            MinBillAmount = promotion.MinBillAmount?.ToString("0.##", CultureInfo.CurrentCulture) ?? string.Empty;
+            MaxBillAmount = promotion.MaxBillAmount?.ToString("0.##", CultureInfo.CurrentCulture) ?? string.Empty;
             IsActive = promotion.IsActive;
             RequiredCardType = promotion.RequiredCardType;
             // The initial validity migration used 1900-01-01 for previously unscheduled offers.
@@ -380,7 +386,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             ErrorMessage = StatusMessage = string.Empty;
             if (SelectedGlobalBank == null) { ErrorMessage = "Select a bank for the BIN."; return; }
             if (!ValidateBin(true))
-            { ErrorMessage = "Enter exactly six digits for the BIN prefix."; return; }
+            { ErrorMessage = "Enter 6 to 8 digits for the BIN prefix."; return; }
             if (BinPrefixes.Any(b => b.BINPrefix == BinPrefix && b.Id != (_editingBin?.Id ?? 0)))
             { ErrorMessage = "That BIN prefix is already saved for this bank."; return; }
             var bin = new BankBINMapping { Id = _editingBin?.Id ?? 0, BankId = SelectedGlobalBank.Id, BINPrefix = BinPrefix, IsActive = IsBinActive, CardType = BinCardType, CardBrand = BinCardBrand };
@@ -430,12 +436,43 @@ namespace PointOfSale.UI.ViewModels.Sales
             return false;
         }
 
+        private bool ValidateBillLimits(out decimal? minimum, out decimal? maximum)
+        {
+            var validMin = ValidateOptionalAmount(MinBillAmount, nameof(MinBillAmount), out minimum);
+            var validMax = ValidateOptionalAmount(MaxBillAmount, nameof(MaxBillAmount), out maximum);
+            if (validMin && validMax && minimum > maximum)
+            {
+                AddError(nameof(MaxBillAmount), "Max Bill Amount must be greater than or equal to Min Bill Amount.");
+                return false;
+            }
+            return validMin && validMax;
+        }
+
+        private bool ValidateOptionalAmount(string text, string property, out decimal? amount)
+        {
+            ClearErrors(property);
+            amount = null;
+            if (string.IsNullOrWhiteSpace(text)) return true;
+            var separator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            var parts = text.Split(new[] { separator }, StringSplitOptions.None);
+            if (parts.Length <= 2 && parts[0].Length > 0 && parts[0].All(c => c >= '0' && c <= '9') &&
+                (parts.Length == 1 || (parts[1].Length >= 1 && parts[1].Length <= 2 && parts[1].All(c => c >= '0' && c <= '9'))) &&
+                decimal.TryParse(text, NumberStyles.AllowDecimalPoint, CultureInfo.CurrentCulture, out var value) &&
+                value <= 9999999999999999.99m)
+            {
+                amount = value;
+                return true;
+            }
+            AddError(property, "Enter a non-negative amount with up to two decimal places, or leave blank for no limit.");
+            return false;
+        }
+
         private bool ValidateBin(bool required)
         {
             ClearErrors(nameof(BinPrefix));
             if (!required && string.IsNullOrEmpty(BinPrefix)) return true;
-            if (BinPrefix != null && BinPrefix.Length == 6 && BinPrefix.All(c => c >= '0' && c <= '9')) return true;
-            AddError(nameof(BinPrefix), "BIN prefix must contain exactly six digits (0–9).");
+            if (BinPrefix != null && BinPrefix.Length >= 6 && BinPrefix.Length <= 8 && BinPrefix.All(c => c >= '0' && c <= '9')) return true;
+            AddError(nameof(BinPrefix), "BIN prefix must contain 6 to 8 digits (0–9).");
             return false;
         }
 
@@ -483,7 +520,8 @@ namespace PointOfSale.UI.ViewModels.Sales
             var validName = ValidatePromoName();
             var validPercentage = ValidatePercentage(out var percentage);
             var validDates = ValidateValidity();
-            if (!validName || !validPercentage || !validDates)
+            var validLimits = ValidateBillLimits(out var minimum, out var maximum);
+            if (!validName || !validPercentage || !validDates || !validLimits)
             { ErrorMessage = "Correct the highlighted fields before saving."; return; }
             IsBusy = true;
             try
@@ -495,6 +533,8 @@ namespace PointOfSale.UI.ViewModels.Sales
                     BankId = SelectedBank.Id,
                     PromoName = PromoName.Trim(),
                     DiscountPercentage = percentage,
+                    MinBillAmount = minimum,
+                    MaxBillAmount = maximum,
                     IsActive = IsActive,
                     ValidFrom = ValidFrom,
                     ValidTo = ValidTo,
@@ -518,6 +558,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             RequiredCardType = "ALL";
             SelectedPromotion = null;
             SelectedBank = null; PromoName = string.Empty; DiscountPercentage = string.Empty; IsActive = true;
+            MinBillAmount = MaxBillAmount = string.Empty;
             ValidFromDate = DateTime.Today; ValidFromTime = "00:00";
             ValidToDate = DateTime.Today; ValidToTime = "23:59:59";
             ValidFrom = ValidTo = default;

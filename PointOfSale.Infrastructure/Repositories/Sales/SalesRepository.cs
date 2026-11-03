@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -19,12 +19,12 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
         {
             if (binPrefix == null)
                 throw new ArgumentNullException(nameof(binPrefix));
-            if (binPrefix.Length != 6 || binPrefix.Any(c => c < '0' || c > '9'))
-                throw new ArgumentException("BIN prefix must contain exactly six ASCII digits.", nameof(binPrefix));
+            if ((binPrefix.Length < 6 || binPrefix.Length > 8) || binPrefix.Any(c => c < '0' || c > '9'))
+                throw new ArgumentException("BIN prefix must contain 6 to 8 ASCII digits.", nameof(binPrefix));
 
             const string sql = @"
 SELECT bp.[Id] AS BankPromotionId, bp.[BankId], bp.[PromoName],
-       bp.[DiscountPercentage], ev.[VariantId], UPPER(LTRIM(RTRIM(bm.[CardType]))) AS CardType,
+       bp.[DiscountPercentage], bp.[MinBillAmount], bp.[MaxBillAmount], ev.[VariantId], UPPER(LTRIM(RTRIM(bm.[CardType]))) AS CardType,
        UPPER(LTRIM(RTRIM(bm.[CardBrand]))) AS CardBrand, UPPER(LTRIM(RTRIM(bp.[RequiredCardType]))) AS RequiredCardType
 FROM [System].[BankBINMapping] bm
 INNER JOIN [Sales].[BankPromotion] bp ON bp.[BankId] = bm.[BankId]
@@ -41,7 +41,7 @@ ORDER BY bp.[Id], ev.[VariantId];";
             using (var connection = GetConnection())
             using (var command = new SqlCommand(sql, connection))
             {
-                command.Parameters.Add("@BINPrefix", SqlDbType.VarChar, 6).Value = binPrefix;
+                command.Parameters.Add("@BINPrefix", SqlDbType.VarChar, 8).Value = binPrefix;
                 await connection.OpenAsync();
 
                 using (var reader = await command.ExecuteReaderAsync())
@@ -58,6 +58,8 @@ ORDER BY bp.[Id], ev.[VariantId];";
                                 BankId = GetValue<int>(reader, "BankId"),
                                 PromoName = GetValue<string>(reader, "PromoName"),
                                 DiscountPercentage = GetValue<decimal>(reader, "DiscountPercentage"),
+                                MinBillAmount = reader.IsDBNull(reader.GetOrdinal("MinBillAmount")) ? (decimal?)null : reader.GetDecimal(reader.GetOrdinal("MinBillAmount")),
+                                MaxBillAmount = reader.IsDBNull(reader.GetOrdinal("MaxBillAmount")) ? (decimal?)null : reader.GetDecimal(reader.GetOrdinal("MaxBillAmount")),
                                 CardType = GetValue<string>(reader, "CardType"),
                                 CardBrand = GetValue<string>(reader, "CardBrand"),
                                 RequiredCardType = GetValue<string>(reader, "RequiredCardType")

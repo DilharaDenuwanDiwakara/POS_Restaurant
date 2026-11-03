@@ -59,8 +59,8 @@
                 <DockPanel Margin="0,12,0,0" LastChildFill="True">
                     <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource Brush.Card.Border}" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,12,0,0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button KeyboardNavigation.TabIndex="12" Content="Clear" Command="{Binding ClearCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                            <Button KeyboardNavigation.TabIndex="13" Content="Save Promotion" Width="170" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+                            <Button KeyboardNavigation.TabIndex="14" Content="Clear" Command="{Binding ClearCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                            <Button KeyboardNavigation.TabIndex="15" Content="Save Promotion" Width="170" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
                         </StackPanel>
                     </Border>
                     <Grid>
@@ -82,8 +82,16 @@
                                     <TextBox x:Name="DiscountInput" KeyboardNavigation.TabIndex="2" Text="{Binding DiscountPercentage, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" Tag="Percentage"
                                              PreviewTextInput="NumericInput_PreviewTextInput" PreviewKeyDown="NumericInput_PreviewKeyDown" DataObject.Pasting="NumericInput_Pasting"
                                              Style="{StaticResource TextBoxStyle}"/>
+                                    <TextBlock Text="Min Bill Amount" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox x:Name="MinBillAmountInput" KeyboardNavigation.TabIndex="3" Text="{Binding MinBillAmount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" Tag="Amount"
+                                             ToolTip="Optional. Leave blank for no minimum bill amount." PreviewTextInput="NumericInput_PreviewTextInput" PreviewKeyDown="NumericInput_PreviewKeyDown" DataObject.Pasting="NumericInput_Pasting"
+                                             Style="{StaticResource TextBoxStyle}"/>
+                                    <TextBlock Text="Max Bill Amount" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox x:Name="MaxBillAmountInput" KeyboardNavigation.TabIndex="4" Text="{Binding MaxBillAmount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" Tag="Amount"
+                                             ToolTip="Optional. Leave blank for no maximum bill amount." PreviewTextInput="NumericInput_PreviewTextInput" PreviewKeyDown="NumericInput_PreviewKeyDown" DataObject.Pasting="NumericInput_Pasting"
+                                             Style="{StaticResource TextBoxStyle}"/>
                                     <TextBlock Text="Required Card Type" Style="{StaticResource LabelStyle}"/>
-                                    <ComboBox x:Name="RequiredCardTypeInput" KeyboardNavigation.TabIndex="3" PreviewKeyDown="MoveFocusOnEnter"
+                                    <ComboBox x:Name="RequiredCardTypeInput" KeyboardNavigation.TabIndex="5" PreviewKeyDown="MoveFocusOnEnter"
                                               ItemsSource="{Binding RequiredCardTypes}" SelectedItem="{Binding RequiredCardType, UpdateSourceTrigger=PropertyChanged}"
                                               ToolTip="All accepts both credit and debit cards." Style="{StaticResource ComboBoxStyle}"/>
                                     <TextBlock Text="Valid From" Style="{StaticResource LabelStyle}"/>
@@ -92,7 +100,7 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="110"/>
                                         </Grid.ColumnDefinitions>
-                                        <DatePicker x:Name="ValidFromDateInput" KeyboardNavigation.TabIndex="4" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="0" Margin="0,0,8,12" SelectedDate="{Binding ValidFromDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                        <DatePicker x:Name="ValidFromDateInput" KeyboardNavigation.TabIndex="6" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="0" Margin="0,0,8,12" SelectedDate="{Binding ValidFromDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                                                     DisplayDateStart="1753-01-01" Style="{StaticResource DatePickerStyle}">
                                             <DatePicker.Resources>
                                                 <Style TargetType="{x:Type DatePickerTextBox}">
@@ -100,7 +108,7 @@
                                                 </Style>
                                             </DatePicker.Resources>
                                         </DatePicker>
-                                        <ComboBox x:Name="ValidFromTimeInput" KeyboardNavigation.TabIndex="5" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="1" ItemsSource="{Binding TimeOptions}" IsEditable="True" IsTextSearchEnabled="False"
+                                        <ComboBox x:Name="ValidFromTimeInput" KeyboardNavigation.TabIndex="7" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="1" ItemsSource="{Binding TimeOptions}" IsEditable="True" IsTextSearchEnabled="False"
                                                   Text="{Binding ValidFromTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                                                   ToolTip="24-hour time: HH:mm or HH:mm:ss" Style="{StaticResource ComboBoxStyle}"/>
                                     </Grid>
@@ -110,7 +118,7 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="110"/>
                                         </Grid.ColumnDefinitions>
-                                        <DatePicker x:Name="ValidToDateInput" KeyboardNavigation.TabIndex="6" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="0" Margin="0,0,8,12" SelectedDate="{Binding ValidToDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                        <DatePicker x:Name="ValidToDateInput" KeyboardNavigation.TabIndex="8" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="0" Margin="0,0,8,12" SelectedDate="{Binding ValidToDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                                                     DisplayDateStart="1753-01-01" Style="{StaticResource DatePickerStyle}">
                                             <DatePicker.Resources>
                                                 <Style TargetType="{x:Type DatePickerTextBox}">
@@ -118,13 +126,13 @@
                                                 </Style>
                                             </DatePicker.Resources>
                                         </DatePicker>
-                                        <ComboBox x:Name="ValidToTimeInput" KeyboardNavigation.TabIndex="7" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="1" ItemsSource="{Binding TimeOptions}" IsEditable="True" IsTextSearchEnabled="False"
+                                        <ComboBox x:Name="ValidToTimeInput" KeyboardNavigation.TabIndex="9" PreviewKeyDown="MoveFocusOnEnter" Grid.Column="1" ItemsSource="{Binding TimeOptions}" IsEditable="True" IsTextSearchEnabled="False"
                                                   Text="{Binding ValidToTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                                                   ToolTip="24-hour time: HH:mm or HH:mm:ss" Style="{StaticResource ComboBoxStyle}"/>
                                     </Grid>
                                     <TextBlock Text="24-hour time (HH:mm or HH:mm:ss), using the database server's local time."
                                                Style="{StaticResource Style.View.BankPromotionView.HelpText}"/>
-                                    <CheckBox x:Name="PromotionActiveInput" KeyboardNavigation.TabIndex="8" PreviewKeyDown="MoveFocusOnEnter" Content="Promotion is active" IsChecked="{Binding IsActive}" Margin="0,12,0,0"/>
+                                    <CheckBox x:Name="PromotionActiveInput" KeyboardNavigation.TabIndex="10" PreviewKeyDown="MoveFocusOnEnter" Content="Promotion is active" IsChecked="{Binding IsActive}" Margin="0,12,0,0"/>
                                 </StackPanel>
                             </ScrollViewer>
                         </Border>
@@ -144,15 +152,15 @@
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                             <TextBlock Text="1. Select Category" Style="{StaticResource LabelStyle}"/>
-                                            <ComboBox x:Name="CategoryInput" KeyboardNavigation.TabIndex="9" PreviewKeyDown="MoveFocusOnEnter" ItemsSource="{Binding Categories}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedCategory}"
+                                            <ComboBox x:Name="CategoryInput" KeyboardNavigation.TabIndex="11" PreviewKeyDown="MoveFocusOnEnter" ItemsSource="{Binding Categories}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedCategory}"
                                                       Style="{StaticResource ComboBoxStyle}"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Margin="0,0,8,0">
                                             <TextBlock Text="2. Select Variant" Style="{StaticResource LabelStyle}"/>
-                                            <ComboBox x:Name="VariantInput" KeyboardNavigation.TabIndex="10" PreviewKeyDown="MoveFocusOnEnter" ItemsSource="{Binding AvailableVariants}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedVariant}"
+                                            <ComboBox x:Name="VariantInput" KeyboardNavigation.TabIndex="12" PreviewKeyDown="MoveFocusOnEnter" ItemsSource="{Binding AvailableVariants}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedVariant}"
                                                       IsEnabled="{Binding CanSelectVariant}" Style="{StaticResource ComboBoxStyle}"/>
                                         </StackPanel>
-                                        <Button x:Name="ExcludeVariantButton" KeyboardNavigation.TabIndex="11" Grid.Column="2" Content="Exclude Variant" Width="150" Height="30" Command="{Binding AddExcludedVariantCommand}"
+                                        <Button x:Name="ExcludeVariantButton" KeyboardNavigation.TabIndex="13" Grid.Column="2" Content="Exclude Variant" Width="150" Height="30" Command="{Binding AddExcludedVariantCommand}"
                                                 Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Top" Margin="0,19,0,12"/>
                                     </Grid>
                                     <TextBlock Text="{Binding VariantStatusMessage}" Style="{StaticResource Style.View.BankPromotionView.HelpText}" Margin="0,0,0,12"/>
@@ -190,8 +198,8 @@
                                 <TextBlock Text="Bank" Style="{StaticResource LabelStyle}"/>
                                 <ComboBox x:Name="GlobalBankInput" KeyboardNavigation.TabIndex="0" PreviewKeyDown="MoveFocusOnEnter" ItemsSource="{Binding Banks}" SelectedItem="{Binding SelectedGlobalBank}" DisplayMemberPath="BankName" IsEnabled="{Binding CanChangeGlobalBank}"
                                           Style="{StaticResource ComboBoxStyle}"/>
-                                <TextBlock Text="BIN Prefix (6 digits)" Style="{StaticResource LabelStyle}"/>
-                                <TextBox x:Name="BinPrefixInput" KeyboardNavigation.TabIndex="1" Text="{Binding BinPrefix, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" MaxLength="6" Tag="BIN"
+                                <TextBlock Text="BIN Prefix (6-8 digits)" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="BinPrefixInput" KeyboardNavigation.TabIndex="1" Text="{Binding BinPrefix, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" MaxLength="8" Tag="BIN"
                                          PreviewTextInput="NumericInput_PreviewTextInput" PreviewKeyDown="NumericInput_PreviewKeyDown" DataObject.Pasting="NumericInput_Pasting"
                                          Style="{StaticResource TextBoxStyle}"/>
                                 <TextBlock Text="Card Type" Style="{StaticResource LabelStyle}"/>

@@ -39,8 +39,10 @@ namespace PointOfSale.UI.Views.Sales
         private static bool AcceptsInput(TextBox box, string insertedText)
         {
             var candidate = box.Text.Remove(box.SelectionStart, box.SelectionLength).Insert(box.SelectionStart, insertedText);
-            if ((string)box.Tag == "BIN") return Regex.IsMatch(candidate, @"\A[0-9]{0,6}\z");
+            if ((string)box.Tag == "BIN") return Regex.IsMatch(candidate, @"\A[0-9]{0,8}\z");
             var separator = Regex.Escape(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            if ((string)box.Tag == "Amount")
+                return Regex.IsMatch(candidate, @"\A[0-9]{0,16}(?:" + separator + @"[0-9]{0,2})?\z");
             return Regex.IsMatch(candidate, @"\A[0-9]{0,3}(?:" + separator + @"[0-9]{0,2})?\z");
         }
 

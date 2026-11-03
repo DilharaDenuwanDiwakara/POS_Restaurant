@@ -24,14 +24,14 @@ debits the bank promotion account. A missing bank mapping rolls back settlement.
 
 `PromoType` and `PromoBankId` are reused. The migration also adds `BankPromotionId`
 and `BankDiscountAmount`, so held bills retain their restrictions and SQL
-can independently validate the selected offer and eligible amount. The six-digit lookup
+can independently validate the selected offer and eligible amount. The 6 to 8 digit lookup
 value is sent as the existing payment `ReferenceNumber`, not a separate BIN parameter or
 invoice header column. The existing hold/recall procedures and payment TVP signatures are unchanged;
 the repository saves the held header, lines and promotion metadata in one transaction.
 
 ## Cashier flow
 
-Select CARD and enter six digits in the existing Reference No / Auth Code field.
+Select CARD and enter 6 to 8 digits in the existing Reference No / Auth Code field.
 There is no separate BIN field or promotion button. The reference triggers the active bank BIN lookup,
 promotion schedule and required card type. Existing line discounts and excluded variants
 remain untouched and do not contribute to the bank eligible subtotal. The bank discount
@@ -39,9 +39,17 @@ is applied once as a bill discount. Automatic item promotions may still apply to
 own items; automatic bill discounts, manual bill discounts, coupon discounts and loyalty
 redemption cannot stack with the bank discount.
 
+Promotion Details includes optional decimal Min Bill Amount and Max Bill Amount fields.
+Blank values save as NULL and impose no limit; supplied amounts must be non-negative,
+have at most two decimal places, and the maximum must be at least the minimum.
+Both limits are inclusive and checked against the full bill after line discounts,
+before the bank discount, including excluded items. Only the existing eligible subtotal
+receives the discount percentage. Checkout rechecks these limits when the cart changes
+and before saving; SQL settlement also validates them before posting.
+
 The cashier must remove existing payments and conflicting bill discounts before applying
 a matching bank promotion. After a bank promotion is applied, add exactly one CARD payment equal to the
-invoice net amount, using the existing terminal and six-digit reference.
+invoice net amount, using the existing terminal and 6 to 8 digit reference.
 Editing or shortening the reference clears the associated promotion/payment and invalidates older asynchronous
 responses. Cart changes recalculate eligibility and block saving stale payment amounts.
 The summary displays the bank promotion name, rate and discount amount.
@@ -80,7 +88,7 @@ disposable LocalDB database, run the complete finalize procedure with representa
 and ledger fixtures, verify rollback on rejected payments, and verify separate discount
 accounts, duplicate rejection, fractional quantities and ordinary split payments.
 Repository checks cover metadata hold/recall, atomic rollback, promotion removal, and an
-end-to-end six-digit `ReferenceNumber` payment round trip including a leading zero.
+end-to-end eight-digit `ReferenceNumber` payment round trip including a leading zero.
 
 The fixture uses contract stubs for the unchanged hold/recall procedures. It does not
 replace a staging acceptance test with the deployed stock, tax and accounting setup.

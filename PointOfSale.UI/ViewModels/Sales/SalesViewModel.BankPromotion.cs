@@ -25,7 +25,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         {
             // User edits invalidate older lookups and any payment tied to the old reference.
             ResetBankPromotion();
-            if (IsPaymentTypeCard && ReferenceNumber?.Length == 6)
+            if (IsPaymentTypeCard && HasValidCardReference(ReferenceNumber))
                 BankPromotionEvaluation = ApplyBankPromotionAsync(ReferenceNumber);
         }
 
@@ -73,7 +73,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 if (version != _bankEvaluationVersion) return;
                 // Recheck mutable state after awaiting the database.
                 if (result.DiscountAmount > 0 && (AppliedPayments.Any() || LineDiscountPercent > 0 || HasAppliedDiscountCode || HasAppliedLoyaltyPoints || _autoBillDiscountAmount > 0))
-                    throw new InvalidOperationException("Clear payments and other bill discounts, then re-enter the six-digit reference to apply the bank promotion.");
+                    throw new InvalidOperationException("Clear payments and other bill discounts, then re-enter the 6 to 8 digit reference to apply the bank promotion.");
                 _bankPromotionReference = referenceNumber;
                 _bankPromotion = result.DiscountAmount > 0 ? result.Promotion : null;
                 NotifyBankPromotion();
@@ -123,7 +123,7 @@ namespace PointOfSale.UI.ViewModels.Sales
         private bool BankPaymentsAreValid() => !IsBankPromotionEvaluating && !_bankPromotionLookupFailed &&
             (!HasBankPromotion || (BankDiscountAmount > 0 && AppliedPayments.Count == 1 &&
                 AppliedPayments[0].PaymentMethod == CardPaymentMethod && AppliedPayments[0].Amount == NetAmount &&
-                AppliedPayments[0].PaymentTerminalId.HasValue && HasSixDigitReference(AppliedPayments[0].ReferenceNumber) &&
+                AppliedPayments[0].PaymentTerminalId.HasValue && HasValidCardReference(AppliedPayments[0].ReferenceNumber) &&
                 AppliedPayments[0].ReferenceNumber == _bankPromotionReference));
 
         private async Task RevalidateBankPromotionForSaveAsync()
@@ -136,7 +136,7 @@ namespace PointOfSale.UI.ViewModels.Sales
                 current.Promotion.BankId != PromoBankId || current.DiscountAmount != previousDiscount)
             {
                 ResetBankPromotion();
-                throw new InvalidOperationException("The bank promotion changed or expired. Re-enter the six-digit reference and apply the card payment again.");
+                throw new InvalidOperationException("The bank promotion changed or expired. Re-enter the 6 to 8 digit reference and apply the card payment again.");
             }
         }
 
@@ -154,7 +154,7 @@ namespace PointOfSale.UI.ViewModels.Sales
             };
             _recalledBankDiscountAmount = sale.BankDiscountAmount;
             _bankPromotionLookupFailed = true;
-            BankPromotionMessage = "Enter the six-digit card reference again to validate this held promotion.";
+            BankPromotionMessage = "Enter the 6 to 8 digit card reference again to validate this held promotion.";
             NotifyBankPromotion();
             CalculateTotals();
             return Task.CompletedTask;

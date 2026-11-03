@@ -17,7 +17,7 @@ BEGIN
         DECLARE @TotalAmount DECIMAL(18,2), @Discount DECIMAL(18,2), @TaxAmount DECIMAL(18,2);
         DECLARE @ServiceChargeAmount DECIMAL(18,2), @ExistingCustomerId INT;
         DECLARE @PromoType VARCHAR(20), @PromoBankId INT, @BankPromotionId INT;
-        DECLARE @BankPromoBin VARCHAR(6), @BankDiscountAmount DECIMAL(18,2);
+        DECLARE @BankPromoBin VARCHAR(8), @BankDiscountAmount DECIMAL(18,2);
         DECLARE @AmountDue DECIMAL(18,2);
         
         SELECT 
@@ -46,15 +46,16 @@ BEGIN
             -- Reuse the existing payment reference; no BIN parameter/header column is required.
             SELECT @BankPromoBin=ReferenceNumber FROM @Payments;
             IF EXISTS (SELECT 1 FROM @Payments WHERE ReferenceNumber IS NULL
-                OR LEN(ReferenceNumber) <> 6
+                OR LEN(ReferenceNumber) NOT BETWEEN 6 AND 8
                 OR ReferenceNumber COLLATE Latin1_General_100_BIN2 LIKE '%[^0-9]%')
-                THROW 52031, 'Enter exactly six digits in the card payment reference.', 1;
+                THROW 52031, 'Enter 6 to 8 digits in the card payment reference.', 1;
 
             IF @PromoBankId IS NULL OR @BankPromotionId IS NULL
                 THROW 52031, 'Bank promotion metadata is missing. Reapply the promotion.', 1;
 
             DECLARE @BankRate DECIMAL(5,2), @EligibleSubtotal DECIMAL(28,5);
-            SELECT @BankRate = bp.DiscountPercentage
+            DECLARE @MinBillAmount DECIMAL(18,2), @MaxBillAmount DECIMAL(18,2);
+            SELECT @BankRate = bp.DiscountPercentage, @MinBillAmount = bp.MinBillAmount, @MaxBillAmount = bp.MaxBillAmount
             FROM [Sales].[BankPromotion] bp WITH (HOLDLOCK)
             INNER JOIN [System].[BankBINMapping] bm WITH (HOLDLOCK)
                 ON bm.BankId=bp.BankId AND bm.BINPrefix=@BankPromoBin AND bm.IsActive=1
@@ -64,6 +65,9 @@ BEGIN
                    OR UPPER(LTRIM(RTRIM(bp.RequiredCardType)))=UPPER(LTRIM(RTRIM(bm.CardType))));
             IF @BankRate IS NULL OR @BankRate <= 0 OR @BankRate > 100
                 THROW 52032, 'The bank promotion has expired or does not match this BIN.', 1;
+
+            IF @TotalAmount < @MinBillAmount OR @TotalAmount > @MaxBillAmount
+                THROW 52039, 'The full bill before bank discount is outside this promotion''s bill limits.', 1;
 
             SELECT @EligibleSubtotal=ISNULL(SUM(sl.Quantity*sl.UnitPrice),0)
             FROM [Sales].[SalesLine] sl WITH (HOLDLOCK)

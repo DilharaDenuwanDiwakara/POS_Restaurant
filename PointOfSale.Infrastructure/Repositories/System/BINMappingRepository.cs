@@ -52,8 +52,8 @@ namespace PointOfSale.Infrastructure.Repositories.System
         private async Task<int> SaveBinAsync(BankBINMapping bin, bool update)
         {
             if (bin == null) throw new ArgumentNullException(nameof(bin));
-            if ((update && bin.Id <= 0) || bin.BankId <= 0 || bin.BINPrefix == null || bin.BINPrefix.Length != 6 || bin.BINPrefix.Any(c => c < '0' || c > '9'))
-                throw new ArgumentException("Select a bank and enter exactly six digits for the BIN prefix.");
+            if ((update && bin.Id <= 0) || bin.BankId <= 0 || bin.BINPrefix == null || (bin.BINPrefix.Length < 6 || bin.BINPrefix.Length > 8) || bin.BINPrefix.Any(c => c < '0' || c > '9'))
+                throw new ArgumentException("Select a bank and enter 6 to 8 digits for the BIN prefix.");
             string cardType = null;
             if (!string.IsNullOrWhiteSpace(bin.CardType))
             {
@@ -72,7 +72,7 @@ OUTPUT INSERTED.Id VALUES (@BankId,@BIN,@Active,@CardType,@CardBrand);";
             {
                 if (update) command.Parameters.Add("@Id", SqlDbType.Int).Value = bin.Id;
                 command.Parameters.Add("@BankId", SqlDbType.Int).Value = bin.BankId;
-                command.Parameters.Add("@BIN", SqlDbType.VarChar, 6).Value = bin.BINPrefix;
+                command.Parameters.Add("@BIN", SqlDbType.VarChar, 8).Value = bin.BINPrefix;
                 command.Parameters.Add("@Active", SqlDbType.Bit).Value = bin.IsActive;
                 command.Parameters.Add("@CardType", SqlDbType.VarChar, 20).Value = (object)cardType ?? DBNull.Value;
                 command.Parameters.Add("@CardBrand", SqlDbType.VarChar, 30).Value = (object)cardBrand ?? DBNull.Value;
