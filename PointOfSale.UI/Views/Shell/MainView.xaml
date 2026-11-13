@@ -699,6 +699,15 @@
                                     </StackPanel>
                                 </RadioButton>
 
+                                <RadioButton
+                                    Command="{Binding NavigateToRestaurantReportCommand}"
+                                    Style="{StaticResource Style.Nav.RadioButton}"
+                                    Visibility="{Binding CanNavRestaurantReport, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Restaurant Reports" />
+                                    </StackPanel>
+                                </RadioButton>
+
                             </StackPanel>
                         </Expander>
 
@@ -806,7 +815,7 @@
                 </Grid.ColumnDefinitions>
                 
                 <TextBlock Grid.Column="2" Style="{StaticResource Style.Text.Status}" Margin="20,0,0,0">
-                    <Run Text="v1.7.0 | "/>
+                    <Run Text="v1.7.2 | "/>
                     <Run Text="{Binding CurrentDateTime, StringFormat='dd/MM/yyyy - HH:mm:ss'}"/>
                 </TextBlock>
 

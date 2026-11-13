@@ -268,7 +268,8 @@ namespace PointOfSale.Infrastructure.Repositories.Sales
                 Balance = GetValue<decimal>(record, "Balance"),
                 ActualBalance = GetOptionalValue(record, "ActualBalance", GetOptionalValue(record, "Balance", 0m)),
                 LoyaltyPoints = GetOptionalValue(record, "LoyaltyPoints", 0),
-                IsActive = GetValue<bool>(record, "IsActive")
+                IsActive = GetValue<bool>(record, "IsActive"),
+                IsAnonymous = GetOptionalValue(record, "IsAnonymous", false)
             };
         }
 

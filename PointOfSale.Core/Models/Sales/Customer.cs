@@ -15,5 +15,6 @@ namespace PointOfSale.Core.Models.Sales
         public int LoyaltyPoints { get; set; }
         public bool IsActive { get; set; }
         public bool IsDefault { get; set; }
+        public bool IsAnonymous { get; set; }
     }
 }

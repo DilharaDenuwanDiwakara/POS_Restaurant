@@ -131,6 +131,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public bool CanAccessReports => _userSessionService.HasPermission("ACCESS_REPORTS");
         public bool CanNavInvReport => _userSessionService.HasPermission("NAV_REPORT_INVENTORY");
         public bool CanNavSalesReport => _userSessionService.HasPermission("NAV_REPORT_SALES");
+        public bool CanNavRestaurantReport => _userSessionService.HasPermission("NAV_REPORT_SALES");
 
         // --- SECURITY ---
         public bool CanAccessSecurity => _userSessionService.HasPermission("ACCESS_SECURITY");
@@ -231,6 +232,7 @@ namespace PointOfSale.UI.ViewModels.Shell
         public ICommand OpenSalesViewCommand { get; private set; }
         public ICommand NavigateToInventoryReportCommand { get; private set; }
         public ICommand NavigateToSalesReportCommand { get; private set; }
+        public ICommand NavigateToRestaurantReportCommand { get; private set; }
         public ICommand NavigateToStockAdjustmentCommand { get; private set; }
         public ICommand NavigateToOpeningStockCommand { get; private set; }
         public ICommand NavigateToWastageApprovalCommand { get; private set; }
@@ -394,6 +396,9 @@ namespace PointOfSale.UI.ViewModels.Shell
 
             NavigateToSalesReportCommand = new RelayCommand(_ =>
                 NavigateTo<SalesReportsViewModel>("Reports  →  Sales Reports"));
+
+            NavigateToRestaurantReportCommand = new RelayCommand(_ =>
+                NavigateTo<RestaurantReportsViewModel>("Reports  →  Restaurant Reports"));
 
             // --- Security Module ---
             NavigateToUserCommand = new RelayCommand(_ =>

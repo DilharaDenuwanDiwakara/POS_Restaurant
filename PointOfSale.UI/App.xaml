@@ -142,6 +142,10 @@
                 <viewrestaurant:MenuProfitabilityView />
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type viewmodelrestaurant:RestaurantReportsViewModel}">
+                <viewrestaurant:RestaurantReportsView />
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type viewmodelrestaurant:StationViewModel}">
                 <viewrestaurantdialog:StationWindow />
             </DataTemplate>

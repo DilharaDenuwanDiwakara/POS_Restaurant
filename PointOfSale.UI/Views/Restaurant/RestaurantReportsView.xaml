@@ -1,0 +1,248 @@
+<UserControl
+    x:Class="PointOfSale.UI.Views.Restaurant.RestaurantReportsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="760"
+    d:DesignWidth="1280"
+    mc:Ignorable="d">
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Restaurant Reports Dashboard" />
+
+        <Border
+            Grid.Row="1"
+            Margin="0,0,0,8"
+            Style="{StaticResource PanelCardStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="196" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="Branch" />
+                    <ComboBox
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding Branches}"
+                        SelectedItem="{Binding SelectedBranch}"
+                        Style="{StaticResource ComboBoxStyle}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="Start Date" />
+                    <DatePicker SelectedDate="{Binding StartDate}" Style="{StaticResource DatePickerStyle}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="4">
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="End Date" />
+                    <DatePicker SelectedDate="{Binding EndDate}" Style="{StaticResource DatePickerStyle}" />
+                </StackPanel>
+
+                <Button
+                    Grid.Column="5"
+                    Width="180"
+                    Height="42"
+                    Margin="16,18,0,0"
+                    Padding="12,0"
+                    Command="{Binding GenerateReportCommand}"
+                    Content="GENERATE REPORT"
+                    Style="{StaticResource PrimaryButtonStyle}" />
+            </Grid>
+        </Border>
+
+        <StackPanel Grid.Row="2">
+            <Border
+                Margin="0,0,0,8"
+                Style="{StaticResource PanelErrorStyle}"
+                Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock
+                    Foreground="{StaticResource DangerBrush}"
+                    Text="{Binding ErrorMessage}"
+                    TextWrapping="Wrap" />
+            </Border>
+
+            <UniformGrid Columns="7" Margin="0,0,0,8">
+                <Border Margin="0,0,6,0" Style="{StaticResource PanelCardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource LabelStyle}" Text="TOTAL GUESTS" TextWrapping="Wrap" />
+                        <TextBlock FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" Text="{Binding TotalGuestsServed, StringFormat=N0}" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,0,6,0" Style="{StaticResource PanelCardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource LabelStyle}" Text="TABLE VISITS" TextWrapping="Wrap" />
+                        <TextBlock FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" Text="{Binding TotalTableVisits, StringFormat=N0}" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,0,6,0" Style="{StaticResource PanelCardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource LabelStyle}" Text="REPEAT CUSTOMERS" TextWrapping="Wrap" />
+                        <TextBlock FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" Text="{Binding RepeatCustomerCount, StringFormat=N0}" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,0,6,0" Style="{StaticResource PanelCardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource LabelStyle}" Text="HIGHEST REPEAT" TextWrapping="Wrap" />
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" Text="{Binding HighestRepeatCustomerDisplay}" TextTrimming="CharacterEllipsis" ToolTip="{Binding HighestRepeatCustomerDisplay}" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,0,6,0" Style="{StaticResource PanelCardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource LabelStyle}" Text="TOP STEWARD" TextWrapping="Wrap" />
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" Text="{Binding TopPerformingStewardDisplay}" TextTrimming="CharacterEllipsis" ToolTip="{Binding TopPerformingStewardDisplay}" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,0,6,0" Style="{StaticResource PanelCardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource LabelStyle}" Text="NET SALES" TextWrapping="Wrap" />
+                        <TextBlock FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" Text="{Binding TotalNetSales, StringFormat='Rs. {0:N2}'}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource PanelCardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource LabelStyle}" Text="PER HEAD VALUE" TextWrapping="Wrap" />
+                        <TextBlock FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" Text="{Binding AveragePerHeadValue, StringFormat='Rs. {0:N2}'}" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+        </StackPanel>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="8" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.RowSpan="3" Style="{StaticResource PanelCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource SubHeaderTextStyle}" Text="{Binding RepeatCustomerSectionTitle}" />
+                        <CheckBox
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Content="Show Top 3 only"
+                            IsChecked="{Binding ShowTopThreeRepeatCustomers}" />
+                    </Grid>
+                    <DataGrid
+                        Grid.Row="1"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        EnableColumnVirtualization="True"
+                        EnableRowVirtualization="True"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding RepeatCustomers}"
+                        Style="{StaticResource DataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Width="*" Binding="{Binding CustomerName}" Header="Customer Name" />
+                            <DataGridTextColumn Width="130" Binding="{Binding ContactNumber}" Header="Contact Number" />
+                            <DataGridTextColumn Width="85" Binding="{Binding VisitCount, StringFormat=N0}" Header="Visits" />
+                            <DataGridTextColumn Width="95" Binding="{Binding TotalGuests, StringFormat=N0}" Header="Guests" />
+                            <DataGridTextColumn Width="155" Binding="{Binding FirstVisit, StringFormat='dd/MM/yyyy HH:mm'}" Header="First Visit" />
+                            <DataGridTextColumn Width="155" Binding="{Binding LastVisit, StringFormat='dd/MM/yyyy HH:mm'}" Header="Last Visit" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource PanelCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Margin="0,0,0,10" Style="{StaticResource SubHeaderTextStyle}" Text="Steward-wise Serving Count" />
+                    <lvc:CartesianChart Grid.Row="1" Series="{Binding StewardServingSeries}" XAxes="{Binding StewardServingXAxes}" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource PanelCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Margin="0,0,0,10" Style="{StaticResource SubHeaderTextStyle}" Text="Steward Sales Performance" />
+                    <DataGrid
+                        Grid.Row="1"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        EnableColumnVirtualization="True"
+                        EnableRowVirtualization="True"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding StewardPerformance}"
+                        Style="{StaticResource DataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Width="*" Binding="{Binding StewardName}" Header="Steward" />
+                            <DataGridTextColumn Width="70" Binding="{Binding ServingCount, StringFormat=N0}" Header="Visits" />
+                            <DataGridTextColumn Width="70" Binding="{Binding TotalGuestsServed, StringFormat=N0}" Header="Guests" />
+                            <DataGridTextColumn Width="105" Binding="{Binding NetSales, StringFormat='Rs. {0:N2}'}" Header="Net Sales" />
+                            <DataGridTextColumn Width="105" Binding="{Binding AverageSalesPerGuest, StringFormat='Rs. {0:N2}'}" Header="Avg / Guest" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border
+                Grid.RowSpan="3"
+                Grid.ColumnSpan="3"
+                Panel.ZIndex="5"
+                Background="#F4FFFFFF"
+                IsHitTestVisible="False"
+                Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="18"
+                    Foreground="{StaticResource Brush.Text.Muted}"
+                    Text="No completed restaurant sales were found for the selected filters." />
+            </Border>
+        </Grid>
+
+        <Border
+            Grid.RowSpan="4"
+            Panel.ZIndex="10"
+            Background="#80FFFFFF"
+            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+            <ProgressBar
+                Width="50"
+                Height="50"
+                IsIndeterminate="True"
+                Style="{StaticResource MaterialDesignCircularProgressBar}" />
+        </Border>
+    </Grid>
+</UserControl>

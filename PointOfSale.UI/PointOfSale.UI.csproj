@@ -486,6 +486,7 @@
     <Compile Include="ViewModels\Restaurant\MenuCategoryViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\MenuItemListViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\MenuProfitabilityViewModel.cs" />
+    <Compile Include="ViewModels\Restaurant\RestaurantReportsViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\MealPeriodViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\RoomBookingViewModel.cs" />
@@ -494,6 +495,9 @@
     <Compile Include="ViewModels\Restaurant\PriceUpdateViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\StationViewModel.cs" />
     <Compile Include="ViewModels\Restaurant\TableViewModel.cs" />
+    <Compile Include="Views\Restaurant\RestaurantReportsView.xaml.cs">
+      <DependentUpon>RestaurantReportsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\Sales\CashInOutViewModel.cs" />
     <Compile Include="ViewModels\Sales\CloseShiftDialogViewModel.cs" />
     <Compile Include="ViewModels\Sales\CustomerViewModel.cs" />
@@ -1015,6 +1019,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Restaurant\MenuProfitabilityView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Restaurant\RestaurantReportsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -92,6 +92,7 @@
     <Compile Include="DTOs\BatchProductionRequest.cs" />
     <Compile Include="DTOs\CategoryLookupItem.cs" />
     <Compile Include="DTOs\MenuProfitabilityDto.cs" />
+    <Compile Include="DTOs\RestaurantReportDtos.cs" />
     <Compile Include="DTOs\CategoryTreeNode.cs" />
     <Compile Include="DTOs\CategoryValueDto.cs" />
     <Compile Include="DTOs\DashboardOverviewDto.cs" />
@@ -164,6 +165,7 @@
     <Compile Include="Interfaces\Repositories\Purchasing\ISupplierReturnRepository.cs" />
     <Compile Include="Interfaces\Repositories\Restaurant\IMenuCategoryRepository.cs" />
     <Compile Include="Interfaces\Repositories\Restaurant\IMenuProfitabilityRepository.cs" />
+    <Compile Include="Interfaces\Repositories\Restaurant\IRestaurantReportRepository.cs" />
     <Compile Include="Interfaces\Repositories\Restaurant\IMenuItemRepository.cs" />
     <Compile Include="Interfaces\Repositories\Restaurant\IMealPeriodRepository.cs" />
     <Compile Include="Interfaces\Repositories\Restaurant\IOrderRepository.cs" />
